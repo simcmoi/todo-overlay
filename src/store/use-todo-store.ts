@@ -73,8 +73,14 @@ export const useTodoStore = create<TodoStore>((set, get) => ({
       return
     }
 
-    const data = await createTodoCommand(trimmedTitle, details, reminderAt)
-    set({ todos: data.todos, settings: data.settings, error: null })
+    try {
+      const data = await createTodoCommand(trimmedTitle, details, reminderAt)
+      set({ todos: data.todos, settings: data.settings, error: null })
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Impossible de créer la tâche'
+      set({ error: message })
+      throw error instanceof Error ? error : new Error(message)
+    }
   },
   updateTodo: async ({ id, title, details, reminderAt }) => {
     const trimmedTitle = title.trim()
@@ -82,8 +88,14 @@ export const useTodoStore = create<TodoStore>((set, get) => ({
       return
     }
 
-    const data = await updateTodoCommand(id, trimmedTitle, details, reminderAt)
-    set({ todos: data.todos, settings: data.settings, error: null })
+    try {
+      const data = await updateTodoCommand(id, trimmedTitle, details, reminderAt)
+      set({ todos: data.todos, settings: data.settings, error: null })
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Impossible de mettre à jour la tâche'
+      set({ error: message })
+      throw error instanceof Error ? error : new Error(message)
+    }
   },
   completeTodo: async (id) => {
     const data = await completeTodoCommand(id)

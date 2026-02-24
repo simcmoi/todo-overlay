@@ -97,6 +97,7 @@ export function TodoList({
 }: TodoListProps) {
   const [editingId, setEditingId] = useState<string | 'new' | null>(null)
   const [draft, setDraft] = useState<TodoDraft>({ title: '', details: '' })
+  const [saveError, setSaveError] = useState<string | null>(null)
   const [showDetails, setShowDetails] = useState(false)
   const [showDate, setShowDate] = useState(false)
   const [dateMode, setDateMode] = useState<DateEditMode>(null)
@@ -176,6 +177,7 @@ export function TodoList({
   const closeEditor = () => {
     setEditingId(null)
     setDraft({ title: '', details: '' })
+    setSaveError(null)
     setShowDetails(false)
     setShowDate(false)
     setDateMode(null)
@@ -183,13 +185,15 @@ export function TodoList({
     setDateTimeInput('')
   }
 
-  const persistAndMaybeClose = async (shouldClose: boolean) => {
+  const persistAndMaybeClose = async (shouldClose: boolean): Promise<boolean> => {
     if (editingId === null || saveInFlightRef.current) {
-      return
+      return false
     }
 
     const editingIdAtStart = editingId
+    let persistSucceeded = true
     saveInFlightRef.current = true
+    setSaveError(null)
 
     try {
       const title = draft.title.trim()
@@ -207,21 +211,30 @@ export function TodoList({
           reminderAt: draft.reminderAt,
         })
       }
+    } catch (error) {
+      persistSucceeded = false
+      setSaveError(error instanceof Error ? error.message : 'Échec de sauvegarde')
     } finally {
       saveInFlightRef.current = false
-      if (shouldClose && editingIdRef.current === editingIdAtStart) {
+      if (persistSucceeded && shouldClose && editingIdRef.current === editingIdAtStart) {
         closeEditor()
       }
     }
+
+    return persistSucceeded
   }
 
   const openCreateEditor = async () => {
     if (editingId !== null) {
-      await persistAndMaybeClose(true)
+      const previousSaveSucceeded = await persistAndMaybeClose(true)
+      if (!previousSaveSucceeded) {
+        return
+      }
     }
 
     setEditingId('new')
     setDraft({ title: '', details: '' })
+    setSaveError(null)
     setShowDetails(false)
     setShowDate(false)
     setDateMode(null)
@@ -235,7 +248,10 @@ export function TodoList({
     }
 
     if (editingId !== null) {
-      await persistAndMaybeClose(true)
+      const previousSaveSucceeded = await persistAndMaybeClose(true)
+      if (!previousSaveSucceeded) {
+        return
+      }
     }
 
     setEditingId(todo.id)
@@ -244,6 +260,7 @@ export function TodoList({
       details: todo.details ?? '',
       reminderAt: todo.reminderAt,
     })
+    setSaveError(null)
     setShowDetails(Boolean(todo.details))
     setShowDate(Boolean(todo.reminderAt))
     setDateMode(null)
@@ -334,6 +351,7 @@ export function TodoList({
               }}
               value={draft.title}
               onChange={(event) => {
+                setSaveError(null)
                 setDraft((previous) => ({
                   ...previous,
                   title: event.target.value,
@@ -359,6 +377,7 @@ export function TodoList({
                 <textarea
                   value={draft.details}
                   onChange={(event) => {
+                    setSaveError(null)
                     setDraft((previous) => ({
                       ...previous,
                       details: event.target.value,
@@ -409,6 +428,7 @@ export function TodoList({
                     variant="outline"
                     className="h-7 px-2 text-xs"
                     onClick={() => {
+                      setSaveError(null)
                       applyReminder(getTodayAtDefaultHour())
                     }}
                   >
@@ -420,6 +440,7 @@ export function TodoList({
                     variant="outline"
                     className="h-7 px-2 text-xs"
                     onClick={() => {
+                      setSaveError(null)
                       applyReminder(getTomorrowAtDefaultHour())
                     }}
                   >
@@ -431,6 +452,7 @@ export function TodoList({
                     variant="outline"
                     className="h-7 px-2 text-xs"
                     onClick={() => {
+                      setSaveError(null)
                       setDateMode('date')
                     }}
                   >
@@ -442,6 +464,7 @@ export function TodoList({
                     variant="outline"
                     className="h-7 px-2 text-xs"
                     onClick={() => {
+                      setSaveError(null)
                       setDateMode('datetime')
                     }}
                   >
@@ -454,6 +477,7 @@ export function TodoList({
                       variant="ghost"
                       className="h-7 px-2 text-xs"
                       onClick={() => {
+                        setSaveError(null)
                         applyReminder(undefined)
                       }}
                     >
@@ -467,6 +491,7 @@ export function TodoList({
                     type="date"
                     value={dateInput}
                     onChange={(event) => {
+                      setSaveError(null)
                       setDateInput(event.target.value)
                       applyReminder(fromDateInputValue(event.target.value))
                     }}
@@ -479,6 +504,7 @@ export function TodoList({
                     type="datetime-local"
                     value={dateTimeInput}
                     onChange={(event) => {
+                      setSaveError(null)
                       setDateTimeInput(event.target.value)
                       applyReminder(fromDateTimeInputValue(event.target.value))
                     }}
@@ -491,6 +517,7 @@ export function TodoList({
               <button
                 type="button"
                 onClick={() => {
+                  setSaveError(null)
                   setShowDate(true)
                 }}
                 className="text-xs text-muted-foreground hover:text-foreground"
@@ -498,6 +525,8 @@ export function TodoList({
                 Ajouter une date
               </button>
             )}
+
+            {saveError ? <p className="text-xs text-muted-foreground">{`Échec de sauvegarde: ${saveError}`}</p> : null}
           </div>
         </div>
       </li>
