@@ -1,10 +1,10 @@
 import { create } from 'zustand'
 import {
   clearHistory as clearHistoryCommand,
-  completeTodo as completeTodoCommand,
   createTodo as createTodoCommand,
   deleteTodo as deleteTodoCommand,
   loadState,
+  setTodoCompleted as setTodoCompletedCommand,
   updateTodo as updateTodoCommand,
   updateSettings as updateSettingsCommand,
 } from '@/lib/tauri'
@@ -30,7 +30,7 @@ type TodoStore = {
     details?: string
     reminderAt?: number
   }) => Promise<void>
-  completeTodo: (id: string) => Promise<void>
+  setTodoCompleted: (id: string, completed: boolean) => Promise<void>
   deleteTodo: (id: string) => Promise<void>
   clearHistory: () => Promise<void>
   updateSettings: (partial: Partial<Settings>) => Promise<void>
@@ -39,6 +39,7 @@ type TodoStore = {
 const defaultSettings: Settings = {
   sortOrder: 'desc',
   autoCloseOnBlur: true,
+  listName: 'Mes tâches',
 }
 
 export const useTodoStore = create<TodoStore>((set, get) => ({
@@ -97,8 +98,8 @@ export const useTodoStore = create<TodoStore>((set, get) => ({
       throw error instanceof Error ? error : new Error(message)
     }
   },
-  completeTodo: async (id) => {
-    const data = await completeTodoCommand(id)
+  setTodoCompleted: async (id, completed) => {
+    const data = await setTodoCompletedCommand(id, completed)
     set({ todos: data.todos, settings: data.settings, error: null })
   },
   deleteTodo: async (id) => {

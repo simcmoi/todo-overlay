@@ -12,6 +12,7 @@ export type Todo = {
 export type Settings = {
   sortOrder: SortOrder
   autoCloseOnBlur: boolean
+  listName: string
 }
 
 export type AppData = {

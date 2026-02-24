@@ -41,6 +41,13 @@ export async function completeTodo(id: string): Promise<AppData> {
   return invoke<AppData>('complete_todo', { id })
 }
 
+export async function setTodoCompleted(
+  id: string,
+  completed: boolean,
+): Promise<AppData> {
+  return invoke<AppData>('set_todo_completed', { id, completed })
+}
+
 export async function deleteTodo(id: string): Promise<AppData> {
   return invoke<AppData>('delete_todo', { id })
 }

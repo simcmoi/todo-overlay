@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef } from 'react'
 import { motion } from 'framer-motion'
 import { SettingsMenu } from '@/components/settings-menu'
 import { TodoList } from '@/components/todo-list'
+import { Input } from '@/components/ui/input'
 import { useWindowBehavior } from '@/hooks/use-window-behavior'
 import { useTodoStore } from '@/store/use-todo-store'
 import type { Todo } from '@/types/todo'
@@ -17,6 +18,7 @@ function sortTodos(todos: Todo[], sortOrder: 'asc' | 'desc'): Todo[] {
 
 export default function App() {
   const inputRef = useRef<HTMLInputElement>(null)
+  const listNameInputRef = useRef<HTMLInputElement>(null)
 
   const {
     hydrated,
@@ -26,8 +28,8 @@ export default function App() {
     settings,
     hydrate,
     createTodo,
-    completeTodo,
     deleteTodo,
+    setTodoCompleted,
     updateSettings,
     updateTodo,
   } = useTodoStore()
@@ -53,16 +55,46 @@ export default function App() {
     [sortedTodos],
   )
 
+  const persistListName = async (value: string) => {
+    const normalizedName = value.trim() || 'Mes tâches'
+    if (listNameInputRef.current) {
+      listNameInputRef.current.value = normalizedName
+    }
+
+    if (normalizedName !== settings.listName) {
+      await updateSettings({ listName: normalizedName })
+    }
+  }
+
   return (
-    <main className="h-screen w-screen bg-background p-1 text-foreground">
+    <main className="h-screen w-screen bg-transparent p-1 text-foreground">
       <motion.section
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.12 }}
         className="mx-auto flex h-full w-full flex-col overflow-hidden rounded-2xl border border-border bg-card px-3 pb-3 pt-2"
       >
-        <div className="mb-2 flex items-center justify-between">
-          <img src="/app-icon.png" alt="ToDo Overlay" className="h-4 w-4 rounded-sm" />
+        <div className="mb-2 flex items-center justify-between gap-2">
+          <div className="flex min-w-0 items-center gap-2">
+            <img src="/app-icon.png" alt="ToDo Overlay" className="h-4 w-4 rounded-sm" />
+            <Input
+              key={settings.listName}
+              ref={listNameInputRef}
+              defaultValue={settings.listName}
+              onBlur={(event) => {
+                void persistListName(event.currentTarget.value)
+              }}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter') {
+                  event.preventDefault()
+                  event.currentTarget.blur()
+                }
+              }}
+              className="h-7 max-w-[220px] border-none bg-transparent px-1 text-sm font-medium shadow-none focus-visible:ring-0"
+              aria-label="Nom de la liste"
+              placeholder="Nom de la liste"
+            />
+          </div>
           <SettingsMenu
             settings={settings}
             onSortOrderChange={async (sortOrder) => {
@@ -90,8 +122,8 @@ export default function App() {
               onUpdate={async (payload) => {
                 await updateTodo(payload)
               }}
-              onComplete={async (id) => {
-                await completeTodo(id)
+              onSetCompleted={async (id, completed) => {
+                await setTodoCompleted(id, completed)
               }}
               onDeleteCompleted={async (id) => {
                 await deleteTodo(id)

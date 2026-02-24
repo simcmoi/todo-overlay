@@ -41,6 +41,8 @@ pub struct Settings {
     pub sort_order: SortOrder,
     #[serde(default = "default_auto_close_on_blur")]
     pub auto_close_on_blur: bool,
+    #[serde(default = "default_list_name")]
+    pub list_name: String,
 }
 
 impl Default for Settings {
@@ -48,6 +50,7 @@ impl Default for Settings {
         Self {
             sort_order: SortOrder::Desc,
             auto_close_on_blur: true,
+            list_name: default_list_name(),
         }
     }
 }
@@ -84,6 +87,10 @@ impl AppState {
 
 fn default_auto_close_on_blur() -> bool {
     true
+}
+
+fn default_list_name() -> String {
+    "Mes tâches".to_string()
 }
 
 fn storage_path(app: &AppHandle) -> Result<PathBuf, String> {

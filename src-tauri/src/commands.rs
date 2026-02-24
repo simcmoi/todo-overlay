@@ -142,6 +142,32 @@ pub fn complete_todo(id: String, app: AppHandle, state: State<'_, AppState>) -> 
 }
 
 #[tauri::command]
+pub fn set_todo_completed(
+    id: String,
+    completed: bool,
+    app: AppHandle,
+    state: State<'_, AppState>,
+) -> Result<AppData, String> {
+    {
+        let mut guard = state.data.lock().map_err(|_| lock_error("todo"))?;
+
+        if let Some(todo) = guard.todos.iter_mut().find(|todo| todo.id == id) {
+            todo.completed_at = if completed { Some(now_millis()) } else { None };
+        }
+    }
+
+    if completed {
+        let mut notified_guard = state
+            .notified_todos
+            .lock()
+            .map_err(|_| lock_error("reminder"))?;
+        notified_guard.remove(&id);
+    }
+
+    persist_state(&app, &state)
+}
+
+#[tauri::command]
 pub fn delete_todo(id: String, app: AppHandle, state: State<'_, AppState>) -> Result<AppData, String> {
     {
         let mut guard = state.data.lock().map_err(|_| lock_error("todo"))?;

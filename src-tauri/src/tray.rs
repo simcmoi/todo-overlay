@@ -12,7 +12,8 @@ pub fn create_tray(app: &tauri::AppHandle) -> tauri::Result<()> {
         .item(&quit_item)
         .build()?;
 
-    TrayIconBuilder::new()
+    let mut tray_builder = TrayIconBuilder::new()
+        .icon_as_template(cfg!(target_os = "macos"))
         .tooltip("ToDo Overlay")
         .menu(&menu)
         .show_menu_on_left_click(false)
@@ -38,8 +39,13 @@ pub fn create_tray(app: &tauri::AppHandle) -> tauri::Result<()> {
                     log::error!("failed to toggle window from tray click: {error}");
                 }
             }
-        })
-        .build(app)?;
+        });
+
+    if let Some(icon) = app.default_window_icon().cloned() {
+        tray_builder = tray_builder.icon(icon);
+    }
+
+    tray_builder.build(app)?;
 
     Ok(())
 }

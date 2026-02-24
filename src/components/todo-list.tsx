@@ -1,6 +1,6 @@
-import { type MutableRefObject, useEffect, useMemo, useRef, useState } from 'react'
+import { type FocusEvent, type MutableRefObject, useEffect, useMemo, useRef, useState } from 'react'
 import { CalendarClock, ChevronDown, ChevronRight, FileText, Plus, Trash2 } from 'lucide-react'
-import { AnimatePresence, motion } from 'framer-motion'
+import { AnimatePresence, LayoutGroup, motion } from 'framer-motion'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
@@ -18,7 +18,7 @@ type TodoListProps = {
     details?: string
     reminderAt?: number
   }) => Promise<void>
-  onComplete: (id: string) => Promise<void>
+  onSetCompleted: (id: string, completed: boolean) => Promise<void>
   onDeleteCompleted: (id: string) => Promise<void>
   emptyLabel: string
 }
@@ -91,7 +91,7 @@ export function TodoList({
   completedTodos,
   onCreate,
   onUpdate,
-  onComplete,
+  onSetCompleted,
   onDeleteCompleted,
   emptyLabel,
 }: TodoListProps) {
@@ -110,6 +110,7 @@ export function TodoList({
   const editorContainerRef = useRef<HTMLDivElement | null>(null)
   const saveInFlightRef = useRef(false)
   const editingIdRef = useRef<string | 'new' | null>(null)
+  const lastPointerInsideEditorAtRef = useRef(0)
 
   const reminderFormatter = useMemo(
     () =>
@@ -268,10 +269,20 @@ export function TodoList({
     setDateTimeInput(todo.reminderAt ? toDateTimeInputValue(todo.reminderAt) : '')
   }
 
-  const onEditorBlur = () => {
+  const onEditorBlur = (event: FocusEvent<HTMLDivElement>) => {
+    const nextFocused = event.relatedTarget
+    if (nextFocused && event.currentTarget.contains(nextFocused)) {
+      return
+    }
+
     window.setTimeout(() => {
       const root = editorContainerRef.current
       if (!root) {
+        return
+      }
+
+      // macOS may not focus buttons on click; keep editor open for recent internal pointer interactions.
+      if (window.performance.now() - lastPointerInsideEditorAtRef.current < 200) {
         return
       }
 
@@ -321,12 +332,18 @@ export function TodoList({
 
   const renderEditorRow = (targetId: string | 'new') => {
     const isExistingTodo = targetId !== 'new'
+    const reminderEditorVisible = showDate || Boolean(draft.reminderAt)
+    const showQuickDetailsAction = !showDetails
+    const showQuickDateAction = !reminderEditorVisible
 
     return (
       <li key={targetId === 'new' ? 'new-editor' : `editor-${targetId}`} className="px-2 py-2">
         <div
           ref={editorContainerRef}
           className="flex items-start gap-2 rounded-md border border-border/80 bg-card px-2 py-2"
+          onPointerDownCapture={() => {
+            lastPointerInsideEditorAtRef.current = window.performance.now()
+          }}
           onBlur={onEditorBlur}
         >
           {isExistingTodo ? (
@@ -334,7 +351,7 @@ export function TodoList({
               className="mt-1"
               checked={false}
               onCheckedChange={async () => {
-                await onComplete(targetId)
+                await onSetCompleted(targetId, true)
                 closeEditor()
               }}
               aria-label="Marquer la tâche en cours d'édition comme terminée"
@@ -401,19 +418,9 @@ export function TodoList({
                   Supprimer les détails
                 </button>
               </div>
-            ) : (
-              <button
-                type="button"
-                onClick={() => {
-                  setShowDetails(true)
-                }}
-                className="text-xs text-muted-foreground hover:text-foreground"
-              >
-                Ajouter des détails
-              </button>
-            )}
+            ) : null}
 
-            {showDate || draft.reminderAt ? (
+            {reminderEditorVisible ? (
               <div className="space-y-1">
                 {draft.reminderAt ? (
                   <p className="text-xs text-muted-foreground">
@@ -513,18 +520,42 @@ export function TodoList({
                   />
                 ) : null}
               </div>
-            ) : (
-              <button
-                type="button"
-                onClick={() => {
-                  setSaveError(null)
-                  setShowDate(true)
-                }}
-                className="text-xs text-muted-foreground hover:text-foreground"
-              >
-                Ajouter une date
-              </button>
-            )}
+            ) : null}
+
+            {showQuickDetailsAction || showQuickDateAction ? (
+              <motion.div layout className="flex flex-wrap items-center gap-2 pt-0.5">
+                {showQuickDetailsAction ? (
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    className="h-7 rounded-full px-2.5 text-xs"
+                    onClick={() => {
+                      setSaveError(null)
+                      setShowDetails(true)
+                    }}
+                  >
+                    <FileText className="mr-1 h-3.5 w-3.5" />
+                    Ajouter des détails
+                  </Button>
+                ) : null}
+                {showQuickDateAction ? (
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    className="h-7 rounded-full px-2.5 text-xs"
+                    onClick={() => {
+                      setSaveError(null)
+                      setShowDate(true)
+                    }}
+                  >
+                    <CalendarClock className="mr-1 h-3.5 w-3.5" />
+                    Ajouter une date
+                  </Button>
+                ) : null}
+              </motion.div>
+            ) : null}
 
             {saveError ? <p className="text-xs text-muted-foreground">{`Échec de sauvegarde: ${saveError}`}</p> : null}
           </div>
@@ -540,149 +571,178 @@ export function TodoList({
 
   return (
     <ScrollArea className="h-full rounded-md border border-border">
-      <ul className="py-1">
-        <li className="px-2 py-1">
-          <Button
-            type="button"
-            variant="ghost"
-            className="h-8 w-full justify-start px-2 text-sm text-muted-foreground hover:text-foreground"
-            onClick={() => {
-              void openCreateEditor()
-            }}
-          >
-            <Plus className="mr-1 h-4 w-4" />
-            Ajouter une tâche
-          </Button>
-        </li>
+      <LayoutGroup id="todo-items">
+        <ul className="py-1">
+          <li className="px-2 py-1">
+            <Button
+              type="button"
+              variant="ghost"
+              className="h-8 w-full justify-start px-2 text-sm text-muted-foreground hover:text-foreground"
+              onClick={() => {
+                void openCreateEditor()
+              }}
+            >
+              <Plus className="mr-1 h-4 w-4" />
+              Ajouter une tâche
+            </Button>
+          </li>
 
-        {editingId === 'new' ? renderEditorRow('new') : null}
+          {editingId === 'new' ? renderEditorRow('new') : null}
 
-        {activeTodos.length === 0 ? (
-          <li className="px-4 py-4 text-center text-sm text-muted-foreground">{emptyLabel}</li>
-        ) : (
-          <AnimatePresence initial={false}>
-            {activeTodos.map((todo) =>
-              editingId === todo.id ? (
-                renderEditorRow(todo.id)
-              ) : (
-                <motion.li
-                  key={todo.id}
-                  layout
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.15 }}
-                  className="px-2 py-1"
-                >
-                  <div className="flex items-start gap-2 rounded-md px-1 py-1 hover:bg-muted/40">
-                    <Checkbox
-                      className="mt-1"
-                      checked={Boolean(todo.completedAt)}
-                      onCheckedChange={async () => {
-                        if (!todo.completedAt) {
-                          await onComplete(todo.id)
-                        }
-                      }}
-                      aria-label={`Marquer "${todo.title}" comme terminée`}
-                    />
+          {activeTodos.length === 0 ? (
+            <li className="px-4 py-4 text-center text-sm text-muted-foreground">{emptyLabel}</li>
+          ) : (
+            <AnimatePresence initial={false}>
+              {activeTodos.map((todo) =>
+                editingId === todo.id ? (
+                  renderEditorRow(todo.id)
+                ) : (
+                  <motion.li
+                    key={todo.id}
+                    layout
+                    initial={{ opacity: 0, y: 6, scale: 0.985 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, x: -12, scale: 0.96 }}
+                    transition={{ type: 'spring', stiffness: 520, damping: 36, mass: 0.55 }}
+                    className="px-2 py-1"
+                  >
+                    <motion.div
+                      layout
+                      layoutId={`todo-card-${todo.id}`}
+                      className="flex items-start gap-2 rounded-md px-1 py-1 hover:bg-muted/40"
+                    >
+                      <Checkbox
+                        className="mt-1"
+                        checked={Boolean(todo.completedAt)}
+                        onCheckedChange={async (checked) => {
+                          if (checked === true) {
+                            await onSetCompleted(todo.id, true)
+                          }
+                        }}
+                        aria-label={`Marquer "${todo.title}" comme terminée`}
+                      />
 
+                      <button
+                        type="button"
+                        className="min-w-0 flex-1 text-left"
+                        onClick={() => {
+                          void openTodoEditor(todo)
+                        }}
+                      >
+                        <p className="truncate text-sm text-foreground">{todo.title}</p>
+                        {(todo.details || todo.reminderAt) && (
+                          <div className="mt-0.5 flex items-center gap-2 text-[11px] text-muted-foreground">
+                            {todo.reminderAt ? (
+                              <span className="inline-flex items-center gap-1">
+                                <CalendarClock className="h-3 w-3" />
+                                {compactReminderLabel(todo.reminderAt)}
+                              </span>
+                            ) : null}
+                            {todo.details ? (
+                              <span className="inline-flex items-center gap-1">
+                                <FileText className="h-3 w-3" />
+                                Détails
+                              </span>
+                            ) : null}
+                          </div>
+                        )}
+                      </button>
+                    </motion.div>
+                  </motion.li>
+                ),
+              )}
+            </AnimatePresence>
+          )}
+
+          <li className="mt-2 border-t border-border px-2 pt-2">
+            <button
+              type="button"
+              className="flex w-full items-center gap-1 text-left text-sm text-muted-foreground hover:text-foreground"
+              onClick={() => {
+                setCompletedExpanded((current) => !current)
+              }}
+            >
+              {completedExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+              <span>{`Tâches terminées (${completedTodos.length})`}</span>
+            </button>
+          </li>
+
+          {completedExpanded ? (
+            completedTodos.length === 0 ? (
+              <li className="px-4 py-3 text-sm text-muted-foreground">Aucune tâche terminée</li>
+            ) : (
+              <>
+                <AnimatePresence initial={false}>
+                  {visibleCompletedTodos.map((todo) => (
+                    <motion.li
+                      key={`completed-${todo.id}`}
+                      layout
+                      initial={{ opacity: 0, y: 8, scale: 0.985 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, x: 10, scale: 0.96 }}
+                      transition={{ type: 'spring', stiffness: 460, damping: 34, mass: 0.52 }}
+                      className="px-2 py-1"
+                    >
+                      <motion.div
+                        layout
+                        layoutId={`todo-card-${todo.id}`}
+                        className="flex items-start gap-2 rounded-md px-1 py-1 hover:bg-muted/30"
+                      >
+                        <Checkbox
+                          checked
+                          className="mt-1"
+                          onCheckedChange={async (checked) => {
+                            if (checked === false) {
+                              await onSetCompleted(todo.id, false)
+                            }
+                          }}
+                          aria-label={`Rouvrir ${todo.title}`}
+                        />
+
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-sm text-muted-foreground line-through">{todo.title}</p>
+                          <p className="mt-0.5 text-[11px] text-muted-foreground">
+                            {todo.completedAt
+                              ? `Terminée le ${completedFormatter.format(new Date(todo.completedAt))}`
+                              : 'Terminée'}
+                          </p>
+                        </div>
+
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                          onClick={async () => {
+                            await onDeleteCompleted(todo.id)
+                          }}
+                          aria-label={`Supprimer ${todo.title}`}
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      </motion.div>
+                    </motion.li>
+                  ))}
+                </AnimatePresence>
+
+                {hasMoreCompleted ? (
+                  <li className="px-3 pb-2 pt-1">
                     <button
                       type="button"
-                      className="min-w-0 flex-1 text-left"
+                      className="text-xs text-muted-foreground hover:text-foreground"
                       onClick={() => {
-                        void openTodoEditor(todo)
+                        setCompletedVisibleCount((current) => current + COMPLETED_VISIBLE_STEP)
                       }}
                     >
-                      <p className="truncate text-sm text-foreground">{todo.title}</p>
-                      {(todo.details || todo.reminderAt) && (
-                        <div className="mt-0.5 flex items-center gap-2 text-[11px] text-muted-foreground">
-                          {todo.reminderAt ? (
-                            <span className="inline-flex items-center gap-1">
-                              <CalendarClock className="h-3 w-3" />
-                              {compactReminderLabel(todo.reminderAt)}
-                            </span>
-                          ) : null}
-                          {todo.details ? (
-                            <span className="inline-flex items-center gap-1">
-                              <FileText className="h-3 w-3" />
-                              Détails
-                            </span>
-                          ) : null}
-                        </div>
-                      )}
+                      Afficher plus
                     </button>
-                  </div>
-                </motion.li>
-              ),
-            )}
-          </AnimatePresence>
-        )}
-
-        <li className="mt-2 border-t border-border px-2 pt-2">
-          <button
-            type="button"
-            className="flex w-full items-center gap-1 text-left text-sm text-muted-foreground hover:text-foreground"
-            onClick={() => {
-              setCompletedExpanded((current) => !current)
-            }}
-          >
-            {completedExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-            <span>{`Tâches terminées (${completedTodos.length})`}</span>
-          </button>
-        </li>
-
-        {completedExpanded ? (
-          completedTodos.length === 0 ? (
-            <li className="px-4 py-3 text-sm text-muted-foreground">Aucune tâche terminée</li>
-          ) : (
-            <>
-              {visibleCompletedTodos.map((todo) => (
-                <li key={`completed-${todo.id}`} className="px-2 py-1">
-                  <div className="flex items-start gap-2 rounded-md px-1 py-1">
-                    <Checkbox checked disabled className="mt-1" aria-label={`${todo.title} terminée`} />
-
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm text-muted-foreground line-through">{todo.title}</p>
-                      <p className="mt-0.5 text-[11px] text-muted-foreground">
-                        {todo.completedAt
-                          ? `Terminée le ${completedFormatter.format(new Date(todo.completedAt))}`
-                          : 'Terminée'}
-                      </p>
-                    </div>
-
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      className="h-7 w-7 text-muted-foreground hover:text-foreground"
-                      onClick={async () => {
-                        await onDeleteCompleted(todo.id)
-                      }}
-                      aria-label={`Supprimer ${todo.title}`}
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </Button>
-                  </div>
-                </li>
-              ))}
-
-              {hasMoreCompleted ? (
-                <li className="px-3 pb-2 pt-1">
-                  <button
-                    type="button"
-                    className="text-xs text-muted-foreground hover:text-foreground"
-                    onClick={() => {
-                      setCompletedVisibleCount((current) => current + COMPLETED_VISIBLE_STEP)
-                    }}
-                  >
-                    Afficher plus
-                  </button>
-                </li>
-              ) : null}
-            </>
-          )
-        ) : null}
-      </ul>
+                  </li>
+                ) : null}
+              </>
+            )
+          ) : null}
+        </ul>
+      </LayoutGroup>
     </ScrollArea>
   )
 }
