@@ -1,14 +1,30 @@
-import { useEffect, useMemo, useRef } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { ChevronDown, Plus, Star } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { SettingsMenu } from '@/components/settings-menu'
 import { TodoList } from '@/components/todo-list'
+import { Button } from '@/components/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { Input } from '@/components/ui/input'
 import { useWindowBehavior } from '@/hooks/use-window-behavior'
 import { useTodoStore } from '@/store/use-todo-store'
+import { cn } from '@/lib/utils'
 import type { Todo } from '@/types/todo'
 
 function sortTodos(todos: Todo[], sortOrder: 'asc' | 'desc'): Todo[] {
   return [...todos].sort((a, b) => {
+    const starredDelta = Number(Boolean(b.starred)) - Number(Boolean(a.starred))
+    if (starredDelta !== 0) {
+      return starredDelta
+    }
+
     if (sortOrder === 'asc') {
       return a.createdAt - b.createdAt
     }
@@ -19,6 +35,9 @@ function sortTodos(todos: Todo[], sortOrder: 'asc' | 'desc'): Todo[] {
 export default function App() {
   const inputRef = useRef<HTMLInputElement>(null)
   const listNameInputRef = useRef<HTMLInputElement>(null)
+  const [renamingListId, setRenamingListId] = useState<string | null>(null)
+  const [listNameDraft, setListNameDraft] = useState('')
+  const [favoritesOnly, setFavoritesOnly] = useState(false)
 
   const {
     hydrated,
@@ -28,8 +47,12 @@ export default function App() {
     settings,
     hydrate,
     createTodo,
+    createList,
     deleteTodo,
+    renameList,
+    setActiveList,
     setTodoCompleted,
+    setTodoStarred,
     updateSettings,
     updateTodo,
   } = useTodoStore()
@@ -40,30 +63,56 @@ export default function App() {
     void hydrate()
   }, [hydrate])
 
+  const activeList = useMemo(() => {
+    if (settings.lists.length === 0) {
+      return undefined
+    }
+    return settings.lists.find((list) => list.id === settings.activeListId) ?? settings.lists[0]
+  }, [settings.activeListId, settings.lists])
+
+  const listScopedTodos = useMemo(() => {
+    if (!activeList) {
+      return [] as Todo[]
+    }
+    return todos.filter((todo) => (todo.listId ?? activeList.id) === activeList.id)
+  }, [activeList, todos])
+
   const sortedTodos = useMemo(
-    () => sortTodos(todos, settings.sortOrder),
-    [settings.sortOrder, todos],
+    () => sortTodos(listScopedTodos, settings.sortOrder),
+    [listScopedTodos, settings.sortOrder],
+  )
+
+  const visibleTodos = useMemo(
+    () => (favoritesOnly ? sortedTodos.filter((todo) => todo.starred) : sortedTodos),
+    [favoritesOnly, sortedTodos],
   )
 
   const activeTodos = useMemo(
-    () => sortedTodos.filter((todo) => typeof todo.completedAt !== 'number'),
-    [sortedTodos],
+    () => visibleTodos.filter((todo) => typeof todo.completedAt !== 'number'),
+    [visibleTodos],
   )
 
   const completedTodos = useMemo(
-    () => sortedTodos.filter((todo) => typeof todo.completedAt === 'number'),
-    [sortedTodos],
+    () => visibleTodos.filter((todo) => typeof todo.completedAt === 'number'),
+    [visibleTodos],
   )
 
-  const persistListName = async (value: string) => {
-    const normalizedName = value.trim() || 'Mes tâches'
+  const persistListRename = async () => {
+    if (!activeList || renamingListId !== activeList.id) {
+      setRenamingListId(null)
+      return
+    }
+
+    const normalizedName = listNameDraft.trim() || 'Nouvelle liste'
     if (listNameInputRef.current) {
       listNameInputRef.current.value = normalizedName
     }
 
-    if (normalizedName !== settings.listName) {
-      await updateSettings({ listName: normalizedName })
+    if (normalizedName !== activeList.name) {
+      await renameList(activeList.id, normalizedName)
     }
+
+    setRenamingListId(null)
   }
 
   return (
@@ -77,23 +126,95 @@ export default function App() {
         <div className="mb-2 flex items-center justify-between gap-2">
           <div className="flex min-w-0 items-center gap-2">
             <img src="/app-icon.png" alt="ToDo Overlay" className="h-4 w-4 rounded-sm" />
-            <Input
-              key={settings.listName}
-              ref={listNameInputRef}
-              defaultValue={settings.listName}
-              onBlur={(event) => {
-                void persistListName(event.currentTarget.value)
+            {activeList && renamingListId === activeList.id ? (
+              <Input
+                ref={listNameInputRef}
+                value={listNameDraft}
+                onChange={(event) => {
+                  setListNameDraft(event.currentTarget.value)
+                }}
+                onBlur={() => {
+                  void persistListRename()
+                }}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter') {
+                    event.preventDefault()
+                    event.currentTarget.blur()
+                  }
+                  if (event.key === 'Escape') {
+                    event.preventDefault()
+                    setRenamingListId(null)
+                  }
+                }}
+                className="h-7 max-w-[220px] border-none bg-transparent px-1 text-sm font-medium shadow-none focus-visible:ring-0"
+                aria-label="Renommer la liste"
+                placeholder="Nom de la liste"
+                autoFocus
+              />
+            ) : (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    className="h-7 max-w-[220px] justify-start gap-1 px-1 text-sm font-medium"
+                  >
+                    <span className="truncate">{activeList?.name ?? 'Mes tâches'}</span>
+                    <ChevronDown className="h-3.5 w-3.5" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-56">
+                  <DropdownMenuLabel>Listes</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  {settings.lists.map((list) => (
+                    <DropdownMenuItem
+                      key={list.id}
+                      onSelect={() => {
+                        void setActiveList(list.id)
+                      }}
+                      className={cn(list.id === activeList?.id ? 'font-medium' : undefined)}
+                    >
+                      {list.name}
+                    </DropdownMenuItem>
+                  ))}
+                  <DropdownMenuSeparator />
+                  {activeList ? (
+                    <DropdownMenuItem
+                      onSelect={() => {
+                        setRenamingListId(activeList.id)
+                        setListNameDraft(activeList.name)
+                      }}
+                    >
+                      Renommer la liste
+                    </DropdownMenuItem>
+                  ) : null}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7 text-muted-foreground hover:text-foreground"
+              onClick={async () => {
+                await createList('Nouvelle liste')
               }}
-              onKeyDown={(event) => {
-                if (event.key === 'Enter') {
-                  event.preventDefault()
-                  event.currentTarget.blur()
-                }
+              aria-label="Ajouter une liste"
+            >
+              <Plus className="h-3.5 w-3.5" />
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7 text-muted-foreground hover:text-foreground"
+              onClick={() => {
+                setFavoritesOnly((current) => !current)
               }}
-              className="h-7 max-w-[220px] border-none bg-transparent px-1 text-sm font-medium shadow-none focus-visible:ring-0"
-              aria-label="Nom de la liste"
-              placeholder="Nom de la liste"
-            />
+              aria-label={favoritesOnly ? 'Afficher toutes les tâches' : 'Afficher uniquement les favoris'}
+            >
+              <Star className={cn('h-3.5 w-3.5', favoritesOnly ? 'fill-foreground text-foreground' : undefined)} />
+            </Button>
           </div>
           <SettingsMenu
             settings={settings}
@@ -117,13 +238,19 @@ export default function App() {
               activeTodos={activeTodos}
               completedTodos={completedTodos}
               onCreate={async (payload) => {
-                await createTodo(payload)
+                await createTodo({
+                  ...payload,
+                  listId: activeList?.id,
+                })
               }}
               onUpdate={async (payload) => {
                 await updateTodo(payload)
               }}
               onSetCompleted={async (id, completed) => {
                 await setTodoCompleted(id, completed)
+              }}
+              onSetStarred={async (id, starred) => {
+                await setTodoStarred(id, starred)
               }}
               onDeleteCompleted={async (id) => {
                 await deleteTodo(id)

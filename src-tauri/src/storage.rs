@@ -7,6 +7,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 use tauri::{AppHandle, Manager};
 
 const STORAGE_FILE_NAME: &str = "todos.json";
+pub const DEFAULT_LIST_ID: &str = "default";
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "lowercase")]
@@ -23,12 +24,26 @@ impl Default for SortOrder {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
+pub struct TodoList {
+    pub id: String,
+    pub name: String,
+    pub created_at: i64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct Todo {
     pub id: String,
     #[serde(default, alias = "text")]
     pub title: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub details: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub parent_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub list_id: Option<String>,
+    #[serde(default)]
+    pub starred: bool,
     pub created_at: i64,
     pub completed_at: Option<i64>,
     pub reminder_at: Option<i64>,
@@ -41,8 +56,12 @@ pub struct Settings {
     pub sort_order: SortOrder,
     #[serde(default = "default_auto_close_on_blur")]
     pub auto_close_on_blur: bool,
-    #[serde(default = "default_list_name")]
-    pub list_name: String,
+    #[serde(default = "default_lists")]
+    pub lists: Vec<TodoList>,
+    #[serde(default = "default_active_list_id")]
+    pub active_list_id: String,
+    #[serde(default, alias = "listName", alias = "list_name", skip_serializing)]
+    pub legacy_list_name: Option<String>,
 }
 
 impl Default for Settings {
@@ -50,7 +69,9 @@ impl Default for Settings {
         Self {
             sort_order: SortOrder::Desc,
             auto_close_on_blur: true,
-            list_name: default_list_name(),
+            lists: default_lists(),
+            active_list_id: default_active_list_id(),
+            legacy_list_name: None,
         }
     }
 }
@@ -93,6 +114,83 @@ fn default_list_name() -> String {
     "Mes tâches".to_string()
 }
 
+fn default_active_list_id() -> String {
+    DEFAULT_LIST_ID.to_string()
+}
+
+fn default_lists() -> Vec<TodoList> {
+    vec![TodoList {
+        id: default_active_list_id(),
+        name: default_list_name(),
+        created_at: 0,
+    }]
+}
+
+fn normalize_name(value: &str, fallback: &str) -> String {
+    let trimmed = value.trim();
+    if trimmed.is_empty() {
+        fallback.to_string()
+    } else {
+        trimmed.to_string()
+    }
+}
+
+fn normalize_data(mut data: AppData) -> AppData {
+    let mut lists = data.settings.lists.clone();
+
+    if lists.is_empty() {
+        let legacy_name = data
+            .settings
+            .legacy_list_name
+            .as_deref()
+            .map(|name| normalize_name(name, &default_list_name()))
+            .unwrap_or_else(default_list_name);
+
+        lists.push(TodoList {
+            id: default_active_list_id(),
+            name: legacy_name,
+            created_at: now_millis(),
+        });
+    } else {
+        for (index, list) in lists.iter_mut().enumerate() {
+            let fallback = if index == 0 {
+                "Mes tâches"
+            } else {
+                "Nouvelle liste"
+            };
+            list.name = normalize_name(&list.name, fallback);
+        }
+    }
+
+    let active_list_id = if lists
+        .iter()
+        .any(|list| list.id == data.settings.active_list_id)
+    {
+        data.settings.active_list_id.clone()
+    } else {
+        lists
+            .first()
+            .map(|list| list.id.clone())
+            .unwrap_or_else(default_active_list_id)
+    };
+
+    let valid_list_ids: HashSet<String> = lists.iter().map(|list| list.id.clone()).collect();
+    for todo in &mut data.todos {
+        let fallback_id = active_list_id.clone();
+        match todo.list_id.as_deref() {
+            Some(list_id) if valid_list_ids.contains(list_id) => {}
+            _ => {
+                todo.list_id = Some(fallback_id);
+            }
+        }
+    }
+
+    data.settings.lists = lists;
+    data.settings.active_list_id = active_list_id;
+    data.settings.legacy_list_name = None;
+    data
+}
+
 fn storage_path(app: &AppHandle) -> Result<PathBuf, String> {
     let app_dir = app
         .path()
@@ -118,7 +216,11 @@ pub fn load_or_create(app: &AppHandle) -> Result<AppData, String> {
         .map_err(|error| format!("failed to read storage file {}: {error}", path.display()))?;
 
     match serde_json::from_str::<AppData>(&raw) {
-        Ok(data) => Ok(data),
+        Ok(data) => {
+            let normalized = normalize_data(data);
+            persist(app, &normalized)?;
+            Ok(normalized)
+        }
         Err(error) => {
             log::warn!(
                 "failed to deserialize storage file {}: {error}; resetting with defaults",

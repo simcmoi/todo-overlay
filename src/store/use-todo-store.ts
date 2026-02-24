@@ -1,10 +1,14 @@
 import { create } from 'zustand'
 import {
   clearHistory as clearHistoryCommand,
+  createList as createListCommand,
   createTodo as createTodoCommand,
   deleteTodo as deleteTodoCommand,
   loadState,
+  renameList as renameListCommand,
+  setActiveList as setActiveListCommand,
   setTodoCompleted as setTodoCompletedCommand,
+  setTodoStarred as setTodoStarredCommand,
   updateTodo as updateTodoCommand,
   updateSettings as updateSettingsCommand,
 } from '@/lib/tauri'
@@ -23,6 +27,8 @@ type TodoStore = {
     title: string
     details?: string
     reminderAt?: number
+    parentId?: string
+    listId?: string
   }) => Promise<void>
   updateTodo: (payload: {
     id: string
@@ -31,6 +37,10 @@ type TodoStore = {
     reminderAt?: number
   }) => Promise<void>
   setTodoCompleted: (id: string, completed: boolean) => Promise<void>
+  setTodoStarred: (id: string, starred: boolean) => Promise<void>
+  createList: (name: string) => Promise<void>
+  renameList: (id: string, name: string) => Promise<void>
+  setActiveList: (id: string) => Promise<void>
   deleteTodo: (id: string) => Promise<void>
   clearHistory: () => Promise<void>
   updateSettings: (partial: Partial<Settings>) => Promise<void>
@@ -39,7 +49,8 @@ type TodoStore = {
 const defaultSettings: Settings = {
   sortOrder: 'desc',
   autoCloseOnBlur: true,
-  listName: 'Mes tâches',
+  activeListId: 'default',
+  lists: [{ id: 'default', name: 'Mes tâches', createdAt: 0 }],
 }
 
 export const useTodoStore = create<TodoStore>((set, get) => ({
@@ -68,14 +79,14 @@ export const useTodoStore = create<TodoStore>((set, get) => ({
     }
   },
   setView: (view) => set({ view }),
-  createTodo: async ({ title, details, reminderAt }) => {
+  createTodo: async ({ title, details, reminderAt, parentId, listId }) => {
     const trimmedTitle = title.trim()
     if (!trimmedTitle) {
       return
     }
 
     try {
-      const data = await createTodoCommand(trimmedTitle, details, reminderAt)
+      const data = await createTodoCommand(trimmedTitle, details, reminderAt, parentId, listId)
       set({ todos: data.todos, settings: data.settings, error: null })
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Impossible de créer la tâche'
@@ -100,6 +111,22 @@ export const useTodoStore = create<TodoStore>((set, get) => ({
   },
   setTodoCompleted: async (id, completed) => {
     const data = await setTodoCompletedCommand(id, completed)
+    set({ todos: data.todos, settings: data.settings, error: null })
+  },
+  setTodoStarred: async (id, starred) => {
+    const data = await setTodoStarredCommand(id, starred)
+    set({ todos: data.todos, settings: data.settings, error: null })
+  },
+  createList: async (name) => {
+    const data = await createListCommand(name)
+    set({ todos: data.todos, settings: data.settings, error: null })
+  },
+  renameList: async (id, name) => {
+    const data = await renameListCommand(id, name)
+    set({ todos: data.todos, settings: data.settings, error: null })
+  },
+  setActiveList: async (id) => {
+    const data = await setActiveListCommand(id)
     set({ todos: data.todos, settings: data.settings, error: null })
   },
   deleteTodo: async (id) => {

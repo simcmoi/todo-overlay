@@ -1,17 +1,29 @@
-import { type FocusEvent, type MutableRefObject, useEffect, useMemo, useRef, useState } from 'react'
-import { CalendarClock, ChevronDown, ChevronRight, FileText, Plus, Trash2 } from 'lucide-react'
+import { type FocusEvent, type MutableRefObject, type ReactNode, useEffect, useMemo, useRef, useState } from 'react'
+import { CalendarClock, ChevronDown, ChevronRight, Ellipsis, FileText, Plus, Star } from 'lucide-react'
 import { AnimatePresence, LayoutGroup, motion } from 'framer-motion'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { Input } from '@/components/ui/input'
 import { ScrollArea } from '@/components/ui/scroll-area'
+import { cn } from '@/lib/utils'
 import type { Todo } from '@/types/todo'
 
 type TodoListProps = {
   composeInputRef: MutableRefObject<HTMLInputElement | null>
   activeTodos: Todo[]
   completedTodos: Todo[]
-  onCreate: (payload: { title: string; details?: string; reminderAt?: number }) => Promise<void>
+  onCreate: (payload: {
+    title: string
+    details?: string
+    reminderAt?: number
+    parentId?: string
+  }) => Promise<void>
   onUpdate: (payload: {
     id: string
     title: string
@@ -19,6 +31,7 @@ type TodoListProps = {
     reminderAt?: number
   }) => Promise<void>
   onSetCompleted: (id: string, completed: boolean) => Promise<void>
+  onSetStarred: (id: string, starred: boolean) => Promise<void>
   onDeleteCompleted: (id: string) => Promise<void>
   emptyLabel: string
 }
@@ -29,6 +42,11 @@ type TodoDraft = {
   title: string
   details: string
   reminderAt?: number
+}
+
+type TodoWithDepth = {
+  todo: Todo
+  depth: number
 }
 
 const INITIAL_COMPLETED_VISIBLE_COUNT = 5
@@ -77,12 +95,49 @@ function getTomorrowAtDefaultHour(): number {
   return tomorrow.getTime()
 }
 
-function reminderIsSameDay(a: Date, b: Date): boolean {
-  return (
-    a.getFullYear() === b.getFullYear() &&
-    a.getMonth() === b.getMonth() &&
-    a.getDate() === b.getDate()
-  )
+function buildTodoWithDepth(todos: Todo[]): TodoWithDepth[] {
+  const todosById = new Map(todos.map((todo) => [todo.id, todo]))
+  const childrenByParent = new Map<string, Todo[]>()
+
+  for (const todo of todos) {
+    if (!todo.parentId || !todosById.has(todo.parentId)) {
+      continue
+    }
+
+    const siblings = childrenByParent.get(todo.parentId) ?? []
+    siblings.push(todo)
+    childrenByParent.set(todo.parentId, siblings)
+  }
+
+  const roots = todos.filter((todo) => !todo.parentId || !todosById.has(todo.parentId))
+  const ordered: TodoWithDepth[] = []
+  const visited = new Set<string>()
+
+  const walk = (todo: Todo, depth: number) => {
+    if (visited.has(todo.id)) {
+      return
+    }
+
+    visited.add(todo.id)
+    ordered.push({ todo, depth })
+
+    const children = childrenByParent.get(todo.id) ?? []
+    for (const child of children) {
+      walk(child, depth + 1)
+    }
+  }
+
+  for (const root of roots) {
+    walk(root, 0)
+  }
+
+  for (const orphan of todos) {
+    if (!visited.has(orphan.id)) {
+      walk(orphan, 0)
+    }
+  }
+
+  return ordered
 }
 
 export function TodoList({
@@ -92,10 +147,12 @@ export function TodoList({
   onCreate,
   onUpdate,
   onSetCompleted,
+  onSetStarred,
   onDeleteCompleted,
   emptyLabel,
 }: TodoListProps) {
   const [editingId, setEditingId] = useState<string | 'new' | null>(null)
+  const [newParentId, setNewParentId] = useState<string | null>(null)
   const [draft, setDraft] = useState<TodoDraft>({ title: '', details: '' })
   const [saveError, setSaveError] = useState<string | null>(null)
   const [showDetails, setShowDetails] = useState(false)
@@ -105,6 +162,9 @@ export function TodoList({
   const [dateTimeInput, setDateTimeInput] = useState('')
   const [completedExpanded, setCompletedExpanded] = useState(false)
   const [completedVisibleCount, setCompletedVisibleCount] = useState(INITIAL_COMPLETED_VISIBLE_COUNT)
+
+  const activeItems = useMemo(() => buildTodoWithDepth(activeTodos), [activeTodos])
+  const completedItems = useMemo(() => buildTodoWithDepth(completedTodos), [completedTodos])
 
   const titleInputRef = useRef<HTMLInputElement | null>(null)
   const editorContainerRef = useRef<HTMLDivElement | null>(null)
@@ -121,29 +181,22 @@ export function TodoList({
     [],
   )
 
-  const completedFormatter = useMemo(
+  const compactDateFormatter = useMemo(
     () =>
       new Intl.DateTimeFormat('fr-FR', {
-        dateStyle: 'short',
-        timeStyle: 'short',
+        weekday: 'short',
+        day: '2-digit',
+        month: 'short',
       }),
     [],
   )
 
-  const timeFormatter = useMemo(
-    () =>
-      new Intl.DateTimeFormat('fr-FR', {
-        hour: '2-digit',
-        minute: '2-digit',
-      }),
-    [],
-  )
-
-  const dateCompactFormatter = useMemo(
+  const fullDateFormatter = useMemo(
     () =>
       new Intl.DateTimeFormat('fr-FR', {
         day: '2-digit',
-        month: '2-digit',
+        month: 'long',
+        year: 'numeric',
       }),
     [],
   )
@@ -171,12 +224,13 @@ export function TodoList({
     }
 
     setCompletedVisibleCount((current) =>
-      Math.min(Math.max(current, INITIAL_COMPLETED_VISIBLE_COUNT), completedTodos.length || INITIAL_COMPLETED_VISIBLE_COUNT),
+      Math.min(Math.max(current, INITIAL_COMPLETED_VISIBLE_COUNT), completedItems.length || INITIAL_COMPLETED_VISIBLE_COUNT),
     )
-  }, [completedExpanded, completedTodos.length])
+  }, [completedExpanded, completedItems.length])
 
   const closeEditor = () => {
     setEditingId(null)
+    setNewParentId(null)
     setDraft({ title: '', details: '' })
     setSaveError(null)
     setShowDetails(false)
@@ -192,6 +246,7 @@ export function TodoList({
     }
 
     const editingIdAtStart = editingId
+    const newParentIdAtStart = newParentId
     let persistSucceeded = true
     saveInFlightRef.current = true
     setSaveError(null)
@@ -202,7 +257,12 @@ export function TodoList({
 
       if (editingIdAtStart === 'new') {
         if (title) {
-          await onCreate({ title, details, reminderAt: draft.reminderAt })
+          await onCreate({
+            title,
+            details,
+            reminderAt: draft.reminderAt,
+            parentId: newParentIdAtStart ?? undefined,
+          })
         }
       } else if (title) {
         await onUpdate({
@@ -225,7 +285,7 @@ export function TodoList({
     return persistSucceeded
   }
 
-  const openCreateEditor = async () => {
+  const openCreateEditor = async (parentId?: string) => {
     if (editingId !== null) {
       const previousSaveSucceeded = await persistAndMaybeClose(true)
       if (!previousSaveSucceeded) {
@@ -234,6 +294,7 @@ export function TodoList({
     }
 
     setEditingId('new')
+    setNewParentId(parentId ?? null)
     setDraft({ title: '', details: '' })
     setSaveError(null)
     setShowDetails(false)
@@ -261,6 +322,7 @@ export function TodoList({
       details: todo.details ?? '',
       reminderAt: todo.reminderAt,
     })
+    setNewParentId(null)
     setSaveError(null)
     setShowDetails(Boolean(todo.details))
     setShowDate(Boolean(todo.reminderAt))
@@ -311,36 +373,70 @@ export function TodoList({
     setDateTimeInput(toDateTimeInputValue(timestamp))
   }
 
-  const compactReminderLabel = (reminderAt: number): string => {
-    const reminderDate = new Date(reminderAt)
-    const now = new Date()
-    const tomorrow = new Date()
-    tomorrow.setDate(now.getDate() + 1)
-
-    const timeLabel = timeFormatter.format(reminderDate)
-
-    if (reminderIsSameDay(reminderDate, now)) {
-      return `Aujourd'hui ${timeLabel}`
-    }
-
-    if (reminderIsSameDay(reminderDate, tomorrow)) {
-      return `Demain ${timeLabel}`
-    }
-
-    return `${dateCompactFormatter.format(reminderDate)} ${timeLabel}`
+  const normalizeDateLabel = (label: string): string => {
+    return label.replace(',', '').replace(/\s+/g, ' ').trim()
   }
 
-  const renderEditorRow = (targetId: string | 'new') => {
+  const formatDateLabel = (timestamp: number): string => {
+    const date = new Date(timestamp)
+    const now = new Date()
+
+    if (date.getFullYear() === now.getFullYear()) {
+      return normalizeDateLabel(compactDateFormatter.format(date))
+    }
+
+    return normalizeDateLabel(fullDateFormatter.format(date))
+  }
+
+  const reminderMeta = (reminderAt: number): { label: string; overdue: boolean } => {
+    const reminderDate = new Date(reminderAt)
+    const now = new Date()
+    const dayMs = 24 * 60 * 60 * 1000
+
+    const reminderDay = new Date(reminderDate)
+    reminderDay.setHours(0, 0, 0, 0)
+
+    const todayDay = new Date(now)
+    todayDay.setHours(0, 0, 0, 0)
+
+    const dayDiff = Math.round((reminderDay.getTime() - todayDay.getTime()) / dayMs)
+    const overdue = dayDiff < 0
+
+    if (dayDiff === 0) {
+      return { label: "Aujourd'hui", overdue: false }
+    }
+
+    if (dayDiff === 1) {
+      return { label: 'Demain', overdue: false }
+    }
+
+    if (dayDiff === -1) {
+      return { label: 'Il y a un jour', overdue: true }
+    }
+
+    if (dayDiff < -1) {
+      return { label: `Il y a ${Math.abs(dayDiff)} jours`, overdue: true }
+    }
+
+    return { label: formatDateLabel(reminderAt), overdue }
+  }
+
+  const renderEditorRow = (targetId: string | 'new', depth = 0) => {
     const isExistingTodo = targetId !== 'new'
     const reminderEditorVisible = showDate || Boolean(draft.reminderAt)
     const showQuickDetailsAction = !showDetails
     const showQuickDateAction = !reminderEditorVisible
+    const leftOffset = Math.min(depth, 6) * 16
 
     return (
-      <li key={targetId === 'new' ? 'new-editor' : `editor-${targetId}`} className="px-2 py-2">
+      <li
+        key={targetId === 'new' ? 'new-editor' : `editor-${targetId}`}
+        className="px-2 py-2"
+        style={leftOffset > 0 ? { paddingLeft: `${leftOffset + 8}px` } : undefined}
+      >
         <div
           ref={editorContainerRef}
-          className="flex items-start gap-2 rounded-md border border-border/80 bg-card px-2 py-2"
+          className="flex items-start gap-2 rounded-md bg-muted/50 px-2 py-2"
           onPointerDownCapture={() => {
             lastPointerInsideEditorAtRef.current = window.performance.now()
           }}
@@ -564,15 +660,15 @@ export function TodoList({
     )
   }
 
-  const visibleCompletedTodos = completedExpanded
-    ? completedTodos.slice(0, completedVisibleCount)
+  const visibleCompletedItems = completedExpanded
+    ? completedItems.slice(0, completedVisibleCount)
     : []
-  const hasMoreCompleted = completedExpanded && completedVisibleCount < completedTodos.length
+  const hasMoreCompleted = completedExpanded && completedVisibleCount < completedItems.length
 
   return (
     <ScrollArea className="h-full rounded-md border border-border">
       <LayoutGroup id="todo-items">
-        <ul className="py-1">
+        <ul className="py-1 pr-2">
           <li className="px-2 py-1">
             <Button
               type="button"
@@ -587,74 +683,133 @@ export function TodoList({
             </Button>
           </li>
 
-          {editingId === 'new' ? renderEditorRow('new') : null}
+          {editingId === 'new' && newParentId === null ? renderEditorRow('new', 0) : null}
 
           {activeTodos.length === 0 ? (
             <li className="px-4 py-4 text-center text-sm text-muted-foreground">{emptyLabel}</li>
           ) : (
             <AnimatePresence initial={false}>
-              {activeTodos.map((todo) =>
-                editingId === todo.id ? (
-                  renderEditorRow(todo.id)
-                ) : (
-                  <motion.li
-                    key={todo.id}
-                    layout
-                    initial={{ opacity: 0, y: 6, scale: 0.985 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, x: -12, scale: 0.96 }}
-                    transition={{ type: 'spring', stiffness: 520, damping: 36, mass: 0.55 }}
-                    className="px-2 py-1"
-                  >
-                    <motion.div
-                      layout
-                      layoutId={`todo-card-${todo.id}`}
-                      className="flex items-start gap-2 rounded-md px-1 py-1 hover:bg-muted/40"
-                    >
-                      <Checkbox
-                        className="mt-1"
-                        checked={Boolean(todo.completedAt)}
-                        onCheckedChange={async (checked) => {
-                          if (checked === true) {
-                            await onSetCompleted(todo.id, true)
-                          }
-                        }}
-                        aria-label={`Marquer "${todo.title}" comme terminée`}
-                      />
+              {activeItems.flatMap(({ todo, depth }) => {
+                const leftOffset = Math.min(depth, 6) * 16
+                const dueMeta = todo.reminderAt ? reminderMeta(todo.reminderAt) : null
+                const rows: ReactNode[] = []
 
-                      <button
-                        type="button"
-                        className="min-w-0 flex-1 text-left"
-                        onClick={() => {
-                          void openTodoEditor(todo)
-                        }}
+                if (editingId === todo.id) {
+                  rows.push(renderEditorRow(todo.id, depth))
+                } else {
+                  rows.push(
+                    <motion.li
+                      key={todo.id}
+                      layout
+                      initial={{ opacity: 0, y: 6, scale: 0.985 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, x: -12, scale: 0.96 }}
+                      transition={{ type: 'spring', stiffness: 520, damping: 36, mass: 0.55 }}
+                      className="px-2 py-1"
+                      style={leftOffset > 0 ? { paddingLeft: `${leftOffset + 8}px` } : undefined}
+                    >
+                      <motion.div
+                        layout
+                        layoutId={`todo-card-${todo.id}`}
+                        className="flex items-start gap-2 rounded-md px-1 py-1 hover:bg-muted/40"
                       >
-                        <p className="truncate text-sm text-foreground">{todo.title}</p>
-                        {(todo.details || todo.reminderAt) && (
-                          <div className="mt-0.5 flex items-center gap-2 text-[11px] text-muted-foreground">
-                            {todo.reminderAt ? (
-                              <span className="inline-flex items-center gap-1">
-                                <CalendarClock className="h-3 w-3" />
-                                {compactReminderLabel(todo.reminderAt)}
-                              </span>
-                            ) : null}
-                            {todo.details ? (
-                              <span className="inline-flex items-center gap-1">
-                                <FileText className="h-3 w-3" />
-                                Détails
-                              </span>
-                            ) : null}
-                          </div>
-                        )}
-                      </button>
-                    </motion.div>
-                  </motion.li>
-                ),
-              )}
+                        <Checkbox
+                          className="mt-1"
+                          checked={Boolean(todo.completedAt)}
+                          onCheckedChange={async (checked) => {
+                            if (checked === true) {
+                              await onSetCompleted(todo.id, true)
+                            }
+                          }}
+                          aria-label={`Marquer "${todo.title}" comme terminée`}
+                        />
+
+                        <button
+                          type="button"
+                          className="min-w-0 flex-1 text-left"
+                          onClick={() => {
+                            void openTodoEditor(todo)
+                          }}
+                        >
+                          <p className="truncate text-sm text-foreground">{todo.title}</p>
+                          {(todo.details || todo.reminderAt) && (
+                            <div className="mt-0.5 flex items-center gap-2 text-[11px] text-muted-foreground">
+                              {dueMeta ? (
+                                <span
+                                  className={cn(
+                                    'inline-flex items-center gap-1',
+                                    dueMeta.overdue ? 'text-destructive' : 'text-muted-foreground',
+                                  )}
+                                >
+                                  <CalendarClock className="h-3 w-3" />
+                                  {dueMeta.label}
+                                </span>
+                              ) : null}
+                              {todo.details ? (
+                                <span className="inline-flex items-center gap-1">
+                                  <FileText className="h-3 w-3" />
+                                  Détails
+                                </span>
+                              ) : null}
+                            </div>
+                          )}
+                        </button>
+
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                          onClick={async () => {
+                            await onSetStarred(todo.id, !todo.starred)
+                          }}
+                          aria-label={todo.starred ? `Retirer ${todo.title} des favoris` : `Ajouter ${todo.title} aux favoris`}
+                        >
+                          <Star
+                            className={cn(
+                              'h-3.5 w-3.5',
+                              todo.starred ? 'fill-foreground text-foreground' : 'text-muted-foreground',
+                            )}
+                          />
+                        </Button>
+
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                              aria-label={`Actions pour ${todo.title}`}
+                            >
+                              <Ellipsis className="h-3.5 w-3.5" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-44">
+                            <DropdownMenuItem
+                              onSelect={() => {
+                                void openCreateEditor(todo.id)
+                              }}
+                            >
+                              Ajouter une sous-tâche
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </motion.div>
+                    </motion.li>,
+                  )
+                }
+
+                if (editingId === 'new' && newParentId === todo.id) {
+                  rows.push(renderEditorRow('new', depth + 1))
+                }
+
+                return rows
+              })}
             </AnimatePresence>
           )}
 
-          <li className="mt-2 border-t border-border px-2 pt-2">
+          <li className="mt-2 px-2 pt-1">
             <button
               type="button"
               className="flex w-full items-center gap-1 text-left text-sm text-muted-foreground hover:text-foreground"
@@ -673,56 +828,96 @@ export function TodoList({
             ) : (
               <>
                 <AnimatePresence initial={false}>
-                  {visibleCompletedTodos.map((todo) => (
-                    <motion.li
-                      key={`completed-${todo.id}`}
-                      layout
-                      initial={{ opacity: 0, y: 8, scale: 0.985 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, x: 10, scale: 0.96 }}
-                      transition={{ type: 'spring', stiffness: 460, damping: 34, mass: 0.52 }}
-                      className="px-2 py-1"
-                    >
-                      <motion.div
+                  {visibleCompletedItems.map(({ todo, depth }) => {
+                    const leftOffset = Math.min(depth, 6) * 16
+
+                    return (
+                      <motion.li
+                        key={`completed-${todo.id}`}
                         layout
-                        layoutId={`todo-card-${todo.id}`}
-                        className="flex items-start gap-2 rounded-md px-1 py-1 hover:bg-muted/30"
+                        initial={{ opacity: 0, y: 8, scale: 0.985 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, x: 10, scale: 0.96 }}
+                        transition={{ type: 'spring', stiffness: 460, damping: 34, mass: 0.52 }}
+                        className="px-2 py-1"
+                        style={leftOffset > 0 ? { paddingLeft: `${leftOffset + 8}px` } : undefined}
                       >
-                        <Checkbox
-                          checked
-                          className="mt-1"
-                          onCheckedChange={async (checked) => {
-                            if (checked === false) {
-                              await onSetCompleted(todo.id, false)
-                            }
-                          }}
-                          aria-label={`Rouvrir ${todo.title}`}
-                        />
-
-                        <div className="min-w-0 flex-1">
-                          <p className="truncate text-sm text-muted-foreground line-through">{todo.title}</p>
-                          <p className="mt-0.5 text-[11px] text-muted-foreground">
-                            {todo.completedAt
-                              ? `Terminée le ${completedFormatter.format(new Date(todo.completedAt))}`
-                              : 'Terminée'}
-                          </p>
-                        </div>
-
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          className="h-7 w-7 text-muted-foreground hover:text-foreground"
-                          onClick={async () => {
-                            await onDeleteCompleted(todo.id)
-                          }}
-                          aria-label={`Supprimer ${todo.title}`}
+                        <motion.div
+                          layout
+                          layoutId={`todo-card-${todo.id}`}
+                          className="flex items-start gap-2 rounded-md px-1 py-1 hover:bg-muted/30"
                         >
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </Button>
-                      </motion.div>
-                    </motion.li>
-                  ))}
+                          <Checkbox
+                            checked
+                            className="mt-1"
+                            onCheckedChange={async (checked) => {
+                              if (checked === false) {
+                                await onSetCompleted(todo.id, false)
+                              }
+                            }}
+                            aria-label={`Rouvrir ${todo.title}`}
+                          />
+
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate text-sm text-muted-foreground line-through">{todo.title}</p>
+                            <p className="mt-0.5 text-[11px] text-muted-foreground">
+                              {todo.completedAt
+                                ? `Terminée ${formatDateLabel(todo.completedAt)}`
+                                : 'Terminée'}
+                            </p>
+                          </div>
+
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                            onClick={async () => {
+                              await onSetStarred(todo.id, !todo.starred)
+                            }}
+                            aria-label={todo.starred ? `Retirer ${todo.title} des favoris` : `Ajouter ${todo.title} aux favoris`}
+                          >
+                            <Star
+                              className={cn(
+                                'h-3.5 w-3.5',
+                                todo.starred ? 'fill-foreground text-foreground' : 'text-muted-foreground',
+                              )}
+                            />
+                          </Button>
+
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                                aria-label={`Actions pour ${todo.title}`}
+                              >
+                                <Ellipsis className="h-3.5 w-3.5" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-44">
+                              <DropdownMenuItem
+                                onSelect={() => {
+                                  void onSetCompleted(todo.id, false)
+                                }}
+                              >
+                                Rouvrir la tâche
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onSelect={() => {
+                                  void onDeleteCompleted(todo.id)
+                                }}
+                              >
+                                Supprimer la tâche
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </motion.div>
+                      </motion.li>
+                    )
+                  })}
                 </AnimatePresence>
 
                 {hasMoreCompleted ? (

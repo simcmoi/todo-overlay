@@ -13,11 +13,15 @@ export async function createTodo(
   title: string,
   details: string | undefined,
   reminderAt: number | undefined,
+  parentId: string | undefined,
+  listId: string | undefined,
 ): Promise<AppData> {
   return invoke<AppData>('create_todo', {
     title,
     details: details ?? null,
     reminderAt: reminderAt ?? null,
+    parentId: parentId ?? null,
+    listId: listId ?? null,
   })
 }
 
@@ -48,6 +52,13 @@ export async function setTodoCompleted(
   return invoke<AppData>('set_todo_completed', { id, completed })
 }
 
+export async function setTodoStarred(
+  id: string,
+  starred: boolean,
+): Promise<AppData> {
+  return invoke<AppData>('set_todo_starred', { id, starred })
+}
+
 export async function deleteTodo(id: string): Promise<AppData> {
   return invoke<AppData>('delete_todo', { id })
 }
@@ -58,6 +69,18 @@ export async function clearHistory(): Promise<AppData> {
 
 export async function updateSettings(settings: Settings): Promise<AppData> {
   return invoke<AppData>('update_settings', { settings })
+}
+
+export async function createList(name: string): Promise<AppData> {
+  return invoke<AppData>('create_list', { name })
+}
+
+export async function renameList(id: string, name: string): Promise<AppData> {
+  return invoke<AppData>('rename_list', { id, name })
+}
+
+export async function setActiveList(id: string): Promise<AppData> {
+  return invoke<AppData>('set_active_list', { id })
 }
 
 export async function setTodoReminder(

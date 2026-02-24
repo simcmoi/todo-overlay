@@ -1,9 +1,18 @@
 export type SortOrder = 'asc' | 'desc'
 
+export type TodoListMeta = {
+  id: string
+  name: string
+  createdAt: number
+}
+
 export type Todo = {
   id: string
   title: string
   details?: string
+  parentId?: string
+  listId?: string
+  starred?: boolean
   createdAt: number
   completedAt?: number
   reminderAt?: number
@@ -12,7 +21,8 @@ export type Todo = {
 export type Settings = {
   sortOrder: SortOrder
   autoCloseOnBlur: boolean
-  listName: string
+  activeListId: string
+  lists: TodoListMeta[]
 }
 
 export type AppData = {
