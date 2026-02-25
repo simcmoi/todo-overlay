@@ -730,6 +730,13 @@ export class CloudStorageProvider implements StorageProvider {
     const newRecord = payload.new as DbTodo | undefined
     const oldRecord = payload.old as { id: string } | undefined
     
+    // Ignorer les événements qui viennent de ce device pour éviter les doubles animations
+    // (les changements locaux sont déjà appliqués optimistiquement)
+    if (newRecord?.device_id === this.getDeviceId()) {
+      console.log('[CloudStorage] Ignoring change from same device:', eventType, newRecord?.id)
+      return
+    }
+    
     let todos = [...this.currentData.todos]
     
     if (eventType === 'INSERT' && newRecord) {
@@ -763,6 +770,12 @@ export class CloudStorageProvider implements StorageProvider {
     const eventType = payload.eventType
     const newRecord = payload.new as DbList | undefined
     const oldRecord = payload.old as { id: string } | undefined
+    
+    // Ignorer les événements qui viennent de ce device pour éviter les doubles animations
+    if (newRecord?.device_id === this.getDeviceId()) {
+      console.log('[CloudStorage] Ignoring list change from same device:', eventType, newRecord?.id)
+      return
+    }
     
     let lists = [...this.currentData.settings.lists]
     
@@ -805,6 +818,12 @@ export class CloudStorageProvider implements StorageProvider {
     const eventType = payload.eventType
     const newRecord = payload.new as DbLabel | undefined
     const oldRecord = payload.old as { id: string } | undefined
+    
+    // Ignorer les événements qui viennent de ce device pour éviter les doubles animations
+    if (newRecord?.device_id === this.getDeviceId()) {
+      console.log('[CloudStorage] Ignoring label change from same device:', eventType, newRecord?.id)
+      return
+    }
     
     let labels = [...this.currentData.settings.labels]
     
