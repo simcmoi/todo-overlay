@@ -753,7 +753,18 @@ export function TodoList({
                   className="h-7 border-none bg-transparent px-0 text-xs shadow-none focus-visible:ring-0"
                 />
               </motion.div>
-            ) : null}
+            ) : (
+              <button
+                type="button"
+                onClick={() => {
+                  setShowDetails(true)
+                  setTimeout(() => detailsInputRef.current?.focus(), 0)
+                }}
+                className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+              >
+                Détails
+              </button>
+            )}
 
             {reminderEditorVisible ? (
               <div className="space-y-1">
