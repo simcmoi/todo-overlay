@@ -30,7 +30,8 @@ npm run tauri build
 
 ### Pour les Développeurs
 
-- **[docs/GENERER_CLES.md](docs/GENERER_CLES.md)** ⭐ **COMMENCE ICI** - Guide simple pour générer les clés de signature
+- **[docs/RELEASE_WORKFLOW.md](docs/RELEASE_WORKFLOW.md)** 🚀 **COMMENCE ICI** - Workflow de release automatisé (une seule commande !)
+- **[docs/GENERER_CLES.md](docs/GENERER_CLES.md)** 🔑 - Guide simple pour générer les clés de signature
 - **[CHANGELOG.md](CHANGELOG.md)** - Historique des versions et modifications
 - **[docs/AUTO_UPDATE_SETUP.md](docs/AUTO_UPDATE_SETUP.md)** - Documentation complète du système d'auto-update
 - **[docs/UPDATER.md](docs/UPDATER.md)** - Configuration détaillée du serveur de mises à jour
@@ -89,31 +90,26 @@ Sans les clés :
 
 ## 📝 Workflow de Release
 
-### 1. Faire des modifications
+**➡️ UTILISE LE SCRIPT AUTOMATIQUE : [docs/RELEASE_WORKFLOW.md](docs/RELEASE_WORKFLOW.md)**
+
+### Commande Rapide (Tout Automatique)
 
 ```bash
-# Editer le code...
-git add .
-git commit -m "feat: nouvelle fonctionnalité"
+npm run release          # Patch: 0.2.1 → 0.2.2
+npm run release:minor    # Minor: 0.2.1 → 0.3.0
+npm run release:major    # Major: 0.2.1 → 1.0.0
 ```
 
-### 2. Créer une nouvelle version
+Le script fait TOUT automatiquement :
+- ✅ Bump `package.json` + `src-tauri/tauri.conf.json`
+- ✅ Met à jour `CHANGELOG.md`
+- ✅ Crée le commit et le tag
+- ✅ Push sur GitHub
+- ✅ Déclenche le build automatique
 
-```bash
-npm version patch  # 0.2.0 → 0.2.1 (bugfix)
-# ou
-npm version minor  # 0.2.0 → 0.3.0 (nouvelle feature)
-# ou
-npm version major  # 0.2.0 → 1.0.0 (breaking change)
-```
+### Ce Qui Se Passe Ensuite
 
-### 3. Pousser
-
-```bash
-git push && git push --tags
-```
-
-Le workflow GitHub Actions va automatiquement :
+GitHub Actions va automatiquement :
 - Builder les binaires pour macOS, Windows, Linux
 - Les signer (si les clés sont configurées)
 - Créer une release GitHub
