@@ -1,0 +1,102 @@
+{
+  "app": {
+    "title": "टूडू ओवरले",
+    "settings": "सेटिंग्स",
+    "changelog": "परिवर्तन लॉग"
+  },
+  "todo": {
+    "placeholder": "कार्य जोड़ें...",
+    "details": "विवरण",
+    "priority": "प्राथमिकता",
+    "label": "लेबल",
+    "reminder": "अनुस्मारक",
+    "completed": "पूर्ण",
+    "active": "सक्रिय"
+  },
+  "list": {
+    "myTasks": "मेरे कार्य",
+    "newList": "नई सूची",
+    "renameList": "सूची का नाम बदलें",
+    "renameAndChangeIcon": "नाम बदलें और आइकन बदलें",
+    "deleteList": "सूची हटाएं",
+    "printList": "सूची प्रिंट करें",
+    "clearCompleted": "पूर्ण कार्य हटाएं"
+  },
+  "sort": {
+    "recent": "हाल का",
+    "priority": "प्राथमिकता",
+    "alphabetical": "वर्णमाला क्रम",
+    "ascending": "आरोही",
+    "descending": "अवरोही"
+  },
+  "settings": {
+    "general": "सामान्य",
+    "appearance": "दिखावट",
+    "shortcuts": "शॉर्टकट",
+    "about": "के बारे में",
+    "language": "भाषा",
+    "selectLanguage": "भाषा चुनें",
+    "theme": "थीम",
+    "themeSystem": "सिस्टम",
+    "themeLight": "हल्का",
+    "themeDark": "गहरा",
+    "autoCloseOnBlur": "बाहरी क्लिक पर स्वचालित रूप से बंद करें",
+    "globalShortcut": "ग्लोबल शॉर्टकट",
+    "enableAutostart": "सिस्टम लॉन्च पर स्वचालित रूप से प्रारंभ करें",
+    "enableSoundEffects": "ध्वनि प्रभाव सक्षम करें",
+    "storage": "भंडारण",
+    "labels": "लेबल",
+    "deleteAllData": "सभी डेटा हटाएं",
+    "deleteAllDataConfirm": "क्या आप बिल्कुल निश्चित हैं?",
+    "deleteAllDataDescription": "यह क्रिया अपरिवर्तनीय है और आपके सभी कार्य और सेटिंग्स हटा देगी।"
+  },
+  "priority": {
+    "urgent": "अत्यावश्यक",
+    "high": "उच्च",
+    "medium": "मध्यम",
+    "low": "निम्न"
+  },
+  "time": {
+    "today": "आज",
+    "ago": "पहले",
+    "day": "दिन",
+    "days": "दिन",
+    "week": "सप्ताह",
+    "weeks": "सप्ताह",
+    "year": "वर्ष",
+    "years": "वर्ष"
+  },
+  "common": {
+    "cancel": "रद्द करें",
+    "confirm": "पुष्टि करें",
+    "delete": "हटाएं",
+    "save": "सहेजें",
+    "search": "खोजें",
+    "close": "बंद करें"
+  },
+  "icons": {
+    "search": "आइकन खोजें...",
+    "noResults": "कोई आइकन नहीं मिला",
+    "home": "घर गृह मुख्य",
+    "briefcase": "ब्रीफकेस काम कार्यालय",
+    "shopping-cart": "शॉपिंग कार्ट टोकरी",
+    "heart": "दिल प्यार पसंदीदा",
+    "star": "तारा पसंदीदा महत्वपूर्ण",
+    "book-open": "किताब पढ़ना अध्ययन",
+    "code": "कोड प्रोग्रामिंग डेव",
+    "coffee": "कॉफी ब्रेक",
+    "palette": "पैलेट कला रचनात्मक डिजाइन",
+    "music": "संगीत ऑडियो",
+    "camera": "कैमरा फोटो",
+    "plane": "विमान यात्रा उड़ान",
+    "gift": "उपहार तोहफा",
+    "target": "लक्ष्य उद्देश्य निशाना",
+    "zap": "बिजली ऊर्जा तेज",
+    "trophy": "ट्रॉफी जीत सफलता",
+    "rocket": "रॉकेट लॉन्च स्टार्टअप",
+    "sun": "सूरज दिन प्रकाश",
+    "moon": "चांद रात",
+    "cloud": "बादल मौसम",
+    "umbrella": "छाता बारिश"
+  }
+}

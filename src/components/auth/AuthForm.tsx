@@ -7,8 +7,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Loader2, AlertCircle } from 'lucide-react'
 import { useTodoStore } from '@/store/use-todo-store'
+import { useTranslation } from 'react-i18next'
 
 export function AuthForm() {
+  const { t } = useTranslation()
   const [activeTab, setActiveTab] = useState<'signin' | 'signup'>('signin')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -35,11 +37,11 @@ export function AuthForm() {
 
     try {
       await signIn(email, password)
-      setSuccess('Connexion réussie !')
+      setSuccess(t('auth.signinSuccess'))
       setEmail('')
       setPassword('')
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erreur de connexion')
+      setError(err instanceof Error ? err.message : t('auth.signinError'))
     } finally {
       setIsLoading(false)
     }
@@ -53,11 +55,11 @@ export function AuthForm() {
 
     try {
       await signUp(email, password)
-      setSuccess('Compte créé ! Vérifiez votre email pour confirmer votre compte.')
+      setSuccess(t('auth.signupSuccess'))
       setEmail('')
       setPassword('')
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Erreur lors de l'inscription")
+      setError(err instanceof Error ? err.message : t('auth.signupError'))
     } finally {
       setIsLoading(false)
     }
@@ -66,26 +68,26 @@ export function AuthForm() {
   return (
     <Card className="w-full max-w-md">
       <CardHeader>
-        <CardTitle>Synchronisation Cloud</CardTitle>
+        <CardTitle>{t('auth.cloudSyncTitle')}</CardTitle>
         <CardDescription>
-          Connectez-vous ou créez un compte pour synchroniser vos tâches
+          {t('auth.cloudSyncDesc')}
         </CardDescription>
       </CardHeader>
       <CardContent>
         <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
           <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="signin">Connexion</TabsTrigger>
-            <TabsTrigger value="signup">Inscription</TabsTrigger>
+            <TabsTrigger value="signin">{t('auth.signin')}</TabsTrigger>
+            <TabsTrigger value="signup">{t('auth.signup')}</TabsTrigger>
           </TabsList>
 
           <TabsContent value="signin">
             <form onSubmit={handleSignIn} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="signin-email">Email</Label>
+                <Label htmlFor="signin-email">{t('auth.email')}</Label>
                 <Input
                   id="signin-email"
                   type="email"
-                  placeholder="votre@email.com"
+                  placeholder={t('auth.emailPlaceholder')}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
@@ -93,11 +95,11 @@ export function AuthForm() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="signin-password">Mot de passe</Label>
+                <Label htmlFor="signin-password">{t('auth.password')}</Label>
                 <Input
                   id="signin-password"
                   type="password"
-                  placeholder="••••••••"
+                  placeholder={t('auth.passwordPlaceholder')}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
@@ -106,7 +108,7 @@ export function AuthForm() {
               </div>
               <Button type="submit" className="w-full" disabled={isLoading}>
                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Se connecter
+                {t('auth.signinButton')}
               </Button>
             </form>
           </TabsContent>
@@ -114,11 +116,11 @@ export function AuthForm() {
           <TabsContent value="signup">
             <form onSubmit={handleSignUp} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="signup-email">Email</Label>
+                <Label htmlFor="signup-email">{t('auth.email')}</Label>
                 <Input
                   id="signup-email"
                   type="email"
-                  placeholder="votre@email.com"
+                  placeholder={t('auth.emailPlaceholder')}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
@@ -126,11 +128,11 @@ export function AuthForm() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="signup-password">Mot de passe</Label>
+                <Label htmlFor="signup-password">{t('auth.password')}</Label>
                 <Input
                   id="signup-password"
                   type="password"
-                  placeholder="••••••••"
+                  placeholder={t('auth.passwordPlaceholder')}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
@@ -138,12 +140,12 @@ export function AuthForm() {
                   minLength={6}
                 />
                 <p className="text-xs text-muted-foreground">
-                  Minimum 6 caractères
+                  {t('auth.passwordHint')}
                 </p>
               </div>
               <Button type="submit" className="w-full" disabled={isLoading}>
                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Créer un compte
+                {t('auth.signupButton')}
               </Button>
             </form>
           </TabsContent>
@@ -164,7 +166,7 @@ export function AuthForm() {
       </CardContent>
       <CardFooter className="flex flex-col space-y-2 text-xs text-muted-foreground">
         <p>
-          Les données sont chiffrées et synchronisées via Supabase
+          {t('auth.dataEncrypted')}
         </p>
       </CardFooter>
     </Card>

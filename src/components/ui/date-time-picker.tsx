@@ -1,10 +1,8 @@
 'use client'
 
-import { useState } from 'react'
-import { Clock } from 'lucide-react'
+import { useState, useRef, useEffect } from 'react'
+import { Clock, ChevronDown } from 'lucide-react'
 import { Calendar } from '@/components/ui/calendar'
-import { Card, CardContent, CardHeader } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
@@ -15,11 +13,17 @@ type DateTimePickerProps = {
   onClose?: () => void
 }
 
-function getDateForOffset(daysOffset: number, hour: number = 9, minute: number = 0): Date {
-  const date = new Date()
-  date.setDate(date.getDate() + daysOffset)
-  date.setHours(hour, minute, 0, 0)
-  return date
+// Génère toutes les heures de la journée par tranches de 30 minutes
+function generateTimeSlots(): string[] {
+  const slots: string[] = []
+  for (let hour = 0; hour < 24; hour++) {
+    for (let minute = 0; minute < 60; minute += 30) {
+      const h = hour.toString().padStart(2, '0')
+      const m = minute.toString().padStart(2, '0')
+      slots.push(`${h}:${m}`)
+    }
+  }
+  return slots
 }
 
 export function DateTimePicker({ date, onDateTimeChange, onClose }: DateTimePickerProps) {
@@ -32,126 +36,132 @@ export function DateTimePicker({ date, onDateTimeChange, onClose }: DateTimePick
     }
     return '09:00'
   })
+  const [isTimeDropdownOpen, setIsTimeDropdownOpen] = useState(false)
+  const dropdownRef = useRef<HTMLDivElement>(null)
+
+  const timeSlots = generateTimeSlots()
+
+  // Fermer le dropdown si on clique en dehors
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsTimeDropdownOpen(false)
+      }
+    }
+
+    if (isTimeDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside)
+      return () => document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [isTimeDropdownOpen])
 
   const handleDateSelect = (newDate: Date | undefined) => {
     if (!newDate) return
-    
-    // Parse time from input
-    const [hours, minutes] = timeValue.split(':').map(Number)
-    
-    // Create new date with selected date and time
-    const dateTime = new Date(newDate)
-    dateTime.setHours(hours, minutes, 0, 0)
-    
-    setSelectedDate(dateTime)
-    onDateTimeChange(dateTime)
-    onClose?.()
+    setSelectedDate(newDate)
   }
 
   const handleTimeChange = (newTime: string) => {
     setTimeValue(newTime)
-    
-    if (selectedDate) {
-      const [hours, minutes] = newTime.split(':').map(Number)
-      const dateTime = new Date(selectedDate)
-      dateTime.setHours(hours, minutes, 0, 0)
-      
-      setSelectedDate(dateTime)
-      onDateTimeChange(dateTime)
-    }
+    setIsTimeDropdownOpen(false)
   }
 
-  const handleQuickSelect = (daysOffset: number) => {
+  const handleConfirm = () => {
+    if (!selectedDate) return
+    
     const [hours, minutes] = timeValue.split(':').map(Number)
-    const date = getDateForOffset(daysOffset, hours, minutes)
-    setSelectedDate(date)
-    onDateTimeChange(date)
+    const dateTime = new Date(selectedDate)
+    dateTime.setHours(hours, minutes, 0, 0)
+    
+    onDateTimeChange(dateTime)
     onClose?.()
   }
 
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
+  const handleCancel = () => {
+    onClose?.()
+  }
 
   return (
-    <Card className="border-0 shadow-none">
-      <CardHeader className="border-b px-3 pb-3 space-y-3">
-        <div className="space-y-2">
-          <Label htmlFor="time-input" className="text-xs font-medium">
-            Heure
-          </Label>
-          <div className="relative">
-            <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center justify-center pl-3 text-muted-foreground/80 peer-disabled:opacity-50">
-              <Clock size={16} aria-hidden="true" />
-            </div>
-            <Input
-              id="time-input"
-              type="time"
-              value={timeValue}
-              onChange={(e) => handleTimeChange(e.target.value)}
-              className="peer appearance-none pl-9 [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none"
-            />
-          </div>
-        </div>
-
-        {/* Raccourcis rapides pour les 7 prochains jours */}
-        <div className="space-y-1.5">
-          <Label className="text-xs font-medium">Raccourcis</Label>
-          <div className="grid grid-cols-4 gap-1">
-            {[0, 1, 2, 3, 4, 5, 6, 7].map((offset) => {
-              const date = getDateForOffset(offset)
-              const isToday = offset === 0
-              const isTomorrow = offset === 1
-              
-              let label = ''
-              if (isToday) {
-                label = "Auj."
-              } else if (isTomorrow) {
-                label = 'Demain'
-              } else {
-                label = date.toLocaleDateString('fr-FR', { weekday: 'short' }).slice(0, 3)
-              }
-              
-              const dayNumber = date.getDate()
-              const isSelected = selectedDate && 
-                selectedDate.getDate() === date.getDate() &&
-                selectedDate.getMonth() === date.getMonth() &&
-                selectedDate.getFullYear() === date.getFullYear()
-
-              return (
-                <Button
-                  key={offset}
-                  type="button"
-                  variant={isSelected ? "default" : "outline"}
-                  size="sm"
-                  className={cn(
-                    "h-12 flex flex-col items-center justify-center gap-0.5 text-xs px-1",
-                    isSelected && "ring-2 ring-ring"
-                  )}
-                  onClick={() => handleQuickSelect(offset)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      e.preventDefault()
-                      handleQuickSelect(offset)
-                    }
-                  }}
-                >
-                  <span className="text-[10px] font-medium opacity-80">{label}</span>
-                  <span className="text-base font-semibold">{dayNumber}</span>
-                </Button>
-              )
-            })}
-          </div>
-        </div>
-      </CardHeader>
-      <CardContent className="p-3">
+    <div className="flex flex-col bg-popover">
+      {/* Calendrier */}
+      <div className="p-3 bg-popover">
         <Calendar
           mode="single"
           selected={selectedDate}
           onSelect={handleDateSelect}
           initialFocus
-          className="bg-transparent p-0"
+          className="p-0"
         />
-      </CardContent>
-    </Card>
+      </div>
+
+      {/* Sélecteur d'heure */}
+      <div className="border-t px-3 py-3 space-y-2 bg-popover">
+        <div className="flex items-center gap-2">
+          <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+          <Label className="text-xs font-medium">Définir l'heure</Label>
+        </div>
+        
+        {/* Dropdown custom */}
+        <div className="relative" ref={dropdownRef}>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              setIsTimeDropdownOpen(!isTimeDropdownOpen)
+            }}
+            className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+          >
+            <span>{timeValue}</span>
+            <ChevronDown className={cn("h-4 w-4 opacity-50 transition-transform", isTimeDropdownOpen && "rotate-180")} />
+          </button>
+          
+          {isTimeDropdownOpen && (
+            <div className="absolute z-50 mt-1 w-full rounded-md border bg-popover shadow-md animate-in fade-in-0 zoom-in-95">
+              <div className="max-h-[200px] overflow-y-auto p-1">
+                {timeSlots.map((time) => (
+                  <button
+                    key={time}
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault()
+                      e.stopPropagation()
+                      handleTimeChange(time)
+                    }}
+                    className={cn(
+                      "w-full text-left px-2 py-1.5 text-sm rounded-sm hover:bg-accent hover:text-accent-foreground transition-colors cursor-pointer",
+                      timeValue === time && "bg-primary text-primary-foreground hover:bg-primary/90"
+                    )}
+                  >
+                    {time}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Boutons Annuler / Terminé */}
+      <div className="border-t px-3 py-2 flex gap-2 bg-popover">
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="flex-1"
+          onClick={handleCancel}
+        >
+          Annuler
+        </Button>
+        <Button
+          type="button"
+          size="sm"
+          className="flex-1"
+          onClick={handleConfirm}
+          disabled={!selectedDate}
+        >
+          Terminé
+        </Button>
+      </div>
+    </div>
   )
 }

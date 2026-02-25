@@ -12,6 +12,7 @@ export type TodoLabel = {
 export type TodoListMeta = {
   id: string
   name: string
+  icon?: string
   createdAt: number
 }
 
@@ -41,6 +42,7 @@ export type Settings = {
   labels: TodoLabel[]
   enableAutostart: boolean
   enableSoundEffects: boolean
+  language: string
 }
 
 export type AppData = {

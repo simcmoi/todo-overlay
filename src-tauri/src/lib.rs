@@ -97,6 +97,7 @@ pub fn run() {
             commands::set_todo_priority,
             commands::set_todo_label,
             commands::rename_list,
+            commands::set_list_icon,
             commands::set_active_list,
             commands::move_todo_to_list,
             commands::clear_completed_in_list,

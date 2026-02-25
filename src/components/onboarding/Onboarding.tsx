@@ -8,6 +8,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { useTodoStore } from '@/store/use-todo-store'
 import type { StorageMode } from '@/lib/storage/types'
 import { cn } from '@/lib/utils'
+import { useTranslation } from 'react-i18next'
 
 type OnboardingStep = 'welcome' | 'storage-choice' | 'cloud-setup'
 type CloudMode = 'signup' | 'signin'
@@ -17,11 +18,11 @@ interface OnboardingProps {
 }
 
 // Composant Stepper
-function Stepper({ currentStep }: { currentStep: number }) {
+function Stepper({ currentStep, t }: { currentStep: number; t: (key: string) => string }) {
   const steps = [
-    { number: 1, label: 'Bienvenue' },
-    { number: 2, label: 'Stockage' },
-    { number: 3, label: 'Configuration' }
+    { number: 1, label: t('onboarding.stepWelcome') },
+    { number: 2, label: t('onboarding.stepStorage') },
+    { number: 3, label: t('onboarding.stepConfiguration') }
   ]
 
   return (
@@ -62,6 +63,7 @@ function Stepper({ currentStep }: { currentStep: number }) {
 }
 
 export function Onboarding({ onComplete }: OnboardingProps) {
+  const { t } = useTranslation()
   const [step, setStep] = useState<OnboardingStep>('welcome')
   const [cloudMode, setCloudMode] = useState<CloudMode>('signup')
   const [email, setEmail] = useState('')
@@ -95,7 +97,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
       await setStorageMode('local')
       onComplete()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erreur lors de la configuration')
+      setError(err instanceof Error ? err.message : t('onboarding.errorConfig'))
     } finally {
       setIsLoading(false)
     }
@@ -107,19 +109,19 @@ export function Onboarding({ onComplete }: OnboardingProps) {
     
     // Validation email
     if (!email.includes('@')) {
-      setError('Veuillez entrer une adresse email valide')
+      setError(t('onboarding.errorInvalidEmail'))
       return
     }
 
     // Validation password
     if (password.length < 6) {
-      setError('Le mot de passe doit contenir au moins 6 caractères')
+      setError(t('onboarding.errorPasswordLength'))
       return
     }
 
     // Validation confirmPassword (uniquement pour signup)
     if (cloudMode === 'signup' && password !== confirmPassword) {
-      setError('Les mots de passe ne correspondent pas')
+      setError(t('onboarding.errorPasswordMismatch'))
       return
     }
 
@@ -139,7 +141,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
       // Succès !
       onComplete()
     } catch (err) {
-      setError(err instanceof Error ? err.message : `Erreur lors de la ${cloudMode === 'signup' ? 'création du compte' : 'connexion'}`)
+      setError(err instanceof Error ? err.message : t(cloudMode === 'signup' ? 'onboarding.errorSignup' : 'onboarding.errorSignin'))
     } finally {
       setIsLoading(false)
     }
@@ -157,35 +159,35 @@ export function Onboarding({ onComplete }: OnboardingProps) {
                 className="h-20 w-20 rounded-2xl shadow-lg"
               />
             </div>
-            <Stepper currentStep={getStepNumber()} />
-            <CardTitle className="text-3xl">Bienvenue sur Todo Overlay</CardTitle>
+            <Stepper currentStep={getStepNumber()} t={t} />
+            <CardTitle className="text-3xl">{t('onboarding.welcomeTitle')}</CardTitle>
             <CardDescription className="text-base">
-              Votre gestionnaire de tâches minimaliste et puissant
+              {t('onboarding.welcomeDescription')}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="flex flex-col items-center text-center p-4 rounded-lg bg-accent/50">
                 <Check className="h-8 w-8 text-green-500 mb-3" />
-                <p className="font-medium mb-1">Interface minimaliste</p>
+                <p className="font-medium mb-1">{t('onboarding.featureMinimalist')}</p>
                 <p className="text-sm text-muted-foreground">
-                  Concentrez-vous sur vos tâches sans distraction
+                  {t('onboarding.featureMinimalistDesc')}
                 </p>
               </div>
               
               <div className="flex flex-col items-center text-center p-4 rounded-lg bg-accent/50">
                 <Check className="h-8 w-8 text-green-500 mb-3" />
-                <p className="font-medium mb-1">Raccourci global</p>
+                <p className="font-medium mb-1">{t('onboarding.featureShortcut')}</p>
                 <p className="text-sm text-muted-foreground">
-                  Accédez à vos tâches depuis n'importe où
+                  {t('onboarding.featureShortcutDesc')}
                 </p>
               </div>
               
               <div className="flex flex-col items-center text-center p-4 rounded-lg bg-accent/50">
                 <Check className="h-8 w-8 text-green-500 mb-3" />
-                <p className="font-medium mb-1">Synchronisation cloud</p>
+                <p className="font-medium mb-1">{t('onboarding.featureCloud')}</p>
                 <p className="text-sm text-muted-foreground">
-                  Synchronisez vos tâches sur tous vos appareils
+                  {t('onboarding.featureCloudDesc')}
                 </p>
               </div>
             </div>
@@ -194,7 +196,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
               onClick={() => setStep('storage-choice')} 
               className="w-full"
             >
-              Commencer
+              {t('onboarding.getStarted')}
             </Button>
           </CardContent>
         </Card>
@@ -207,10 +209,10 @@ export function Onboarding({ onComplete }: OnboardingProps) {
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm p-4">
         <Card className="w-full max-w-2xl">
           <CardHeader className="text-center">
-            <Stepper currentStep={getStepNumber()} />
-            <CardTitle className="text-2xl">Choisissez votre mode de stockage</CardTitle>
+            <Stepper currentStep={getStepNumber()} t={t} />
+            <CardTitle className="text-2xl">{t('onboarding.storageChoiceTitle')}</CardTitle>
             <CardDescription>
-              Vous pourrez changer cette option plus tard dans les paramètres
+              {t('onboarding.storageChoiceDesc')}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -231,22 +233,22 @@ export function Onboarding({ onComplete }: OnboardingProps) {
                   <div className="p-3 rounded-lg bg-primary/10 w-fit mb-4">
                     <HardDrive className="h-8 w-8 text-primary" />
                   </div>
-                  <h3 className="font-semibold text-xl mb-2">Stockage Local</h3>
+                  <h3 className="font-semibold text-xl mb-2">{t('onboarding.localStorageTitle')}</h3>
                   <p className="text-sm text-muted-foreground mb-4">
-                    Vos données restent uniquement sur cet appareil
+                    {t('onboarding.localStorageDesc')}
                   </p>
                   <ul className="text-sm text-muted-foreground space-y-2 mt-auto">
                     <li className="flex items-center gap-2">
                       <Check className="h-4 w-4 text-green-500 flex-shrink-0" />
-                      Aucun compte requis
+                      {t('onboarding.localNoAccount')}
                     </li>
                     <li className="flex items-center gap-2">
                       <Check className="h-4 w-4 text-green-500 flex-shrink-0" />
-                      Données 100% privées
+                      {t('onboarding.localPrivate')}
                     </li>
                     <li className="flex items-center gap-2">
                       <Check className="h-4 w-4 text-green-500 flex-shrink-0" />
-                      Fonctionne hors ligne
+                      {t('onboarding.localOffline')}
                     </li>
                   </ul>
                 </div>
@@ -261,22 +263,22 @@ export function Onboarding({ onComplete }: OnboardingProps) {
                   <div className="p-3 rounded-lg bg-blue-500/10 w-fit mb-4">
                     <Cloud className="h-8 w-8 text-blue-500" />
                   </div>
-                  <h3 className="font-semibold text-xl mb-2">Stockage Cloud</h3>
+                  <h3 className="font-semibold text-xl mb-2">{t('onboarding.cloudStorageTitle')}</h3>
                   <p className="text-sm text-muted-foreground mb-4">
-                    Synchronisez vos tâches sur tous vos appareils
+                    {t('onboarding.cloudStorageDesc')}
                   </p>
                   <ul className="text-sm text-muted-foreground space-y-2 mt-auto">
                     <li className="flex items-center gap-2">
                       <Check className="h-4 w-4 text-blue-500 flex-shrink-0" />
-                      Synchronisation en temps réel
+                      {t('onboarding.cloudRealtime')}
                     </li>
                     <li className="flex items-center gap-2">
                       <Check className="h-4 w-4 text-blue-500 flex-shrink-0" />
-                      Accès depuis tous vos appareils
+                      {t('onboarding.cloudAllDevices')}
                     </li>
                     <li className="flex items-center gap-2">
                       <Check className="h-4 w-4 text-blue-500 flex-shrink-0" />
-                      Sauvegarde automatique
+                      {t('onboarding.cloudBackup')}
                     </li>
                   </ul>
                 </div>
@@ -289,7 +291,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
               className="w-full"
               disabled={isLoading}
             >
-              Retour
+              {t('onboarding.back')}
             </Button>
           </CardContent>
         </Card>
@@ -302,14 +304,14 @@ export function Onboarding({ onComplete }: OnboardingProps) {
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm p-4">
         <Card className="w-full max-w-2xl">
           <CardHeader className="text-center">
-            <Stepper currentStep={getStepNumber()} />
+            <Stepper currentStep={getStepNumber()} t={t} />
             <CardTitle className="text-2xl">
-              {cloudMode === 'signup' ? 'Créer votre compte cloud' : 'Connexion à votre compte'}
+              {cloudMode === 'signup' ? t('onboarding.cloudSetupTitle') : t('onboarding.cloudSigninTitle')}
             </CardTitle>
             <CardDescription>
               {cloudMode === 'signup' 
-                ? 'Créez un compte gratuit pour synchroniser vos tâches' 
-                : 'Connectez-vous pour accéder à vos tâches synchronisées'}
+                ? t('onboarding.cloudSetupDesc')
+                : t('onboarding.cloudSigninDesc')}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -322,11 +324,11 @@ export function Onboarding({ onComplete }: OnboardingProps) {
               )}
 
               <div className="space-y-2">
-                <Label htmlFor="email">Adresse email</Label>
+                <Label htmlFor="email">{t('onboarding.emailLabel')}</Label>
                 <Input
                   id="email"
                   type="email"
-                  placeholder="vous@exemple.com"
+                  placeholder={t('onboarding.emailPlaceholder')}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   disabled={isLoading}
@@ -336,11 +338,11 @@ export function Onboarding({ onComplete }: OnboardingProps) {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="password">Mot de passe</Label>
+                <Label htmlFor="password">{t('onboarding.passwordLabel')}</Label>
                 <Input
                   id="password"
                   type="password"
-                  placeholder="Minimum 6 caractères"
+                  placeholder={t('onboarding.passwordPlaceholder')}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   disabled={isLoading}
@@ -351,11 +353,11 @@ export function Onboarding({ onComplete }: OnboardingProps) {
 
               {cloudMode === 'signup' && (
                 <div className="space-y-2">
-                  <Label htmlFor="confirmPassword">Confirmer le mot de passe</Label>
+                  <Label htmlFor="confirmPassword">{t('onboarding.confirmPasswordLabel')}</Label>
                   <Input
                     id="confirmPassword"
                     type="password"
-                    placeholder="Retapez votre mot de passe"
+                    placeholder={t('onboarding.confirmPasswordPlaceholder')}
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     disabled={isLoading}
@@ -368,8 +370,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
               {cloudMode === 'signup' && (
                 <div className="bg-muted/50 p-4 rounded-lg text-sm">
                   <p className="text-muted-foreground">
-                    En créant un compte, vous acceptez que vos données soient stockées
-                    de manière sécurisée sur nos serveurs Supabase.
+                    {t('onboarding.termsInfo')}
                   </p>
                 </div>
               )}
@@ -383,10 +384,10 @@ export function Onboarding({ onComplete }: OnboardingProps) {
                   {isLoading ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      {cloudMode === 'signup' ? 'Création...' : 'Connexion...'}
+                      {cloudMode === 'signup' ? t('onboarding.creating') : t('onboarding.signingIn')}
                     </>
                   ) : (
-                    cloudMode === 'signup' ? 'Créer mon compte' : 'Se connecter'
+                    cloudMode === 'signup' ? t('onboarding.createAccount') : t('onboarding.signIn')
                   )}
                 </Button>
 
@@ -395,7 +396,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
                     <span className="w-full border-t" />
                   </div>
                   <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-background px-2 text-muted-foreground">ou</span>
+                    <span className="bg-background px-2 text-muted-foreground">{t('onboarding.or')}</span>
                   </div>
                 </div>
 
@@ -409,7 +410,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
                   disabled={isLoading}
                   className="w-full"
                 >
-                  {cloudMode === 'signup' ? 'J\'ai déjà un compte' : 'Créer un nouveau compte'}
+                  {cloudMode === 'signup' ? t('onboarding.hasAccount') : t('onboarding.createNewAccount')}
                 </Button>
 
                 <Button
@@ -425,7 +426,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
                   disabled={isLoading}
                   className="w-full"
                 >
-                  Retour
+                  {t('onboarding.back')}
                 </Button>
               </div>
             </form>

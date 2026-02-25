@@ -62,6 +62,8 @@ pub enum TodoPriority {
 pub struct TodoList {
     pub id: String,
     pub name: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub icon: Option<String>,
     pub created_at: i64,
 }
 
@@ -113,6 +115,8 @@ pub struct Settings {
     pub enable_autostart: bool,
     #[serde(default = "default_enable_sound_effects")]
     pub enable_sound_effects: bool,
+    #[serde(default = "default_language")]
+    pub language: String,
     #[serde(default, alias = "listName", alias = "list_name", skip_serializing)]
     pub legacy_list_name: Option<String>,
 }
@@ -130,6 +134,7 @@ impl Default for Settings {
             labels: default_labels(),
             enable_autostart: true,
             enable_sound_effects: true,
+            language: default_language(),
             legacy_list_name: None,
         }
     }
@@ -178,6 +183,7 @@ fn default_lists() -> Vec<TodoList> {
     vec![TodoList {
         id: default_active_list_id(),
         name: default_list_name(),
+        icon: None,
         created_at: 0,
     }]
 }
@@ -200,6 +206,10 @@ fn default_enable_autostart() -> bool {
 
 fn default_enable_sound_effects() -> bool {
     true
+}
+
+fn default_language() -> String {
+    "auto".to_string()
 }
 
 pub fn normalize_shortcut(value: &str) -> String {
@@ -242,6 +252,7 @@ fn normalize_data(mut data: AppData) -> AppData {
         lists.push(TodoList {
             id: default_active_list_id(),
             name: legacy_name,
+            icon: None,
             created_at: now_millis(),
         });
     } else {

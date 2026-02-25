@@ -1,0 +1,102 @@
+{
+  "app": {
+    "title": "待办事项叠加层",
+    "settings": "设置",
+    "changelog": "更新日志"
+  },
+  "todo": {
+    "placeholder": "添加任务...",
+    "details": "详情",
+    "priority": "优先级",
+    "label": "标签",
+    "reminder": "提醒",
+    "completed": "已完成",
+    "active": "进行中"
+  },
+  "list": {
+    "myTasks": "我的任务",
+    "newList": "新列表",
+    "renameList": "重命名列表",
+    "renameAndChangeIcon": "重命名并更改图标",
+    "deleteList": "删除列表",
+    "printList": "打印列表",
+    "clearCompleted": "清除已完成任务"
+  },
+  "sort": {
+    "recent": "最近",
+    "priority": "优先级",
+    "alphabetical": "字母顺序",
+    "ascending": "升序",
+    "descending": "降序"
+  },
+  "settings": {
+    "general": "常规",
+    "appearance": "外观",
+    "shortcuts": "快捷键",
+    "about": "关于",
+    "language": "语言",
+    "selectLanguage": "选择语言",
+    "theme": "主题",
+    "themeSystem": "系统",
+    "themeLight": "浅色",
+    "themeDark": "深色",
+    "autoCloseOnBlur": "点击外部自动关闭",
+    "globalShortcut": "全局快捷键",
+    "enableAutostart": "系统启动时自动启动",
+    "enableSoundEffects": "启用音效",
+    "storage": "存储",
+    "labels": "标签",
+    "deleteAllData": "删除所有数据",
+    "deleteAllDataConfirm": "你确定吗？",
+    "deleteAllDataDescription": "此操作不可逆，将删除所有任务和设置。"
+  },
+  "priority": {
+    "urgent": "紧急",
+    "high": "高",
+    "medium": "中",
+    "low": "低"
+  },
+  "time": {
+    "today": "今天",
+    "ago": "前",
+    "day": "天",
+    "days": "天",
+    "week": "周",
+    "weeks": "周",
+    "year": "年",
+    "years": "年"
+  },
+  "common": {
+    "cancel": "取消",
+    "confirm": "确认",
+    "delete": "删除",
+    "save": "保存",
+    "search": "搜索",
+    "close": "关闭"
+  },
+  "icons": {
+    "search": "搜索图标...",
+    "noResults": "未找到图标",
+    "home": "家 主页 首页",
+    "briefcase": "公文包 工作 办公室",
+    "shopping-cart": "购物车 篮子",
+    "heart": "心 爱 收藏",
+    "star": "星 收藏 重要",
+    "book-open": "书 阅读 学习",
+    "code": "代码 编程 开发",
+    "coffee": "咖啡 休息",
+    "palette": "调色板 艺术 创意 设计",
+    "music": "音乐 音频",
+    "camera": "相机 照片",
+    "plane": "飞机 旅行 航班",
+    "gift": "礼物 礼品",
+    "target": "目标 靶子",
+    "zap": "闪电 能量 快速",
+    "trophy": "奖杯 胜利 成功",
+    "rocket": "火箭 启动 创业",
+    "sun": "太阳 白天 光",
+    "moon": "月亮 夜晚",
+    "cloud": "云 天气",
+    "umbrella": "雨伞 雨"
+  }
+}

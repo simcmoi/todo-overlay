@@ -63,6 +63,7 @@ fn sanitize_settings(mut settings: Settings) -> Settings {
         settings.lists.push(TodoList {
             id: DEFAULT_LIST_ID.to_string(),
             name: "Mes tâches".to_string(),
+            icon: None,
             created_at: now_millis(),
         });
     }
@@ -541,6 +542,7 @@ pub fn create_list(
         guard.settings.lists.push(TodoList {
             id: list_id.clone(),
             name: list_name,
+            icon: None,
             created_at: now_millis(),
         });
         guard.settings.active_list_id = list_id;
@@ -565,6 +567,23 @@ pub fn rename_list(
         let mut guard = state.data.lock().map_err(|_| lock_error("todo"))?;
         if let Some(list) = guard.settings.lists.iter_mut().find(|list| list.id == id) {
             list.name = trimmed_name.to_string();
+        }
+    }
+
+    persist_state(&app, &state)
+}
+
+#[tauri::command]
+pub fn set_list_icon(
+    id: String,
+    icon: Option<String>,
+    app: AppHandle,
+    state: State<'_, AppState>,
+) -> Result<AppData, String> {
+    {
+        let mut guard = state.data.lock().map_err(|_| lock_error("todo"))?;
+        if let Some(list) = guard.settings.lists.iter_mut().find(|list| list.id == id) {
+            list.icon = icon;
         }
     }
 

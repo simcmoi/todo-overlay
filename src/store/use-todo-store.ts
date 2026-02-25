@@ -8,6 +8,7 @@ import {
   moveTodoToList as moveTodoToListCommand,
   reorderTodos as reorderTodosCommand,
   renameList as renameListCommand,
+  setListIcon as setListIconCommand,
   setActiveList as setActiveListCommand,
   setAutostartEnabled as setAutostartEnabledCommand,
   setTodoCompleted as setTodoCompletedCommand,
@@ -67,6 +68,7 @@ type TodoStore = {
   }) => Promise<void>
   createList: (name: string) => Promise<void>
   renameList: (id: string, name: string) => Promise<void>
+  setListIcon: (id: string, icon: string | undefined) => Promise<void>
   setActiveList: (id: string) => Promise<void>
   deleteTodo: (id: string) => Promise<void>
   clearHistory: () => Promise<void>
@@ -88,6 +90,7 @@ const defaultSettings: Settings = {
   labels: [{ id: 'general', name: 'Général', color: 'slate' }],
   enableAutostart: true,
   enableSoundEffects: true,
+  language: 'auto',
 }
 
 // Récupérer le mode de stockage depuis localStorage (par défaut: local)
@@ -526,6 +529,33 @@ export const useTodoStore = create<TodoStore>((set, get) => ({
       const updatedSettings = {
         ...currentSettings,
         lists: currentSettings.lists.map((list) => (list.id === id ? { ...list, name } : list)),
+      }
+
+      set({ settings: updatedSettings, error: null })
+
+      await provider.save({
+        todos: get().todos,
+        settings: updatedSettings,
+      })
+
+      set({ syncStatus: provider.getSyncStatus() })
+    }
+  },
+
+  setListIcon: async (id, icon) => {
+    const provider = get().storageProvider
+    const mode = get().storageMode
+
+    if (mode === 'local') {
+      const data = await setListIconCommand(id, icon)
+      set({ todos: data.todos, settings: data.settings, error: null })
+    } else {
+      if (!provider) throw new Error('Storage provider not initialized')
+
+      const currentSettings = get().settings
+      const updatedSettings = {
+        ...currentSettings,
+        lists: currentSettings.lists.map((list) => (list.id === id ? { ...list, icon } : list)),
       }
 
       set({ settings: updatedSettings, error: null })

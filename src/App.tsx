@@ -2,11 +2,14 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { Check, ChevronDown, Filter, Home, MoreHorizontal, Plus, Printer, Settings, Star, Trash2 } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { listen } from '@tauri-apps/api/event'
+import { useTranslation } from 'react-i18next'
 import { SettingsPage } from '@/components/settings-page'
 import { TodoList } from '@/components/todo-list'
 import { UpdateBanner } from '@/components/update-banner'
 import { Onboarding } from '@/components/onboarding/Onboarding'
+import { IconPicker, getIconComponent } from '@/components/icon-picker'
 import { Toaster } from '@/components/ui/toaster'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { useToast } from '@/hooks/use-toast'
 import { Button } from '@/components/ui/button'
 import {
@@ -47,23 +50,6 @@ function compareTodoOrder(
 
   return right.createdAt - left.createdAt
 }
-
-const PRIORITY_FILTERS: Array<{ id: TodoPriority | 'all'; label: string }> = [
-  { id: 'all', label: 'Toutes priorités' },
-  { id: 'urgent', label: 'Urgentes' },
-  { id: 'high', label: 'Hautes' },
-  { id: 'medium', label: 'Moyennes' },
-  { id: 'low', label: 'Faibles' },
-  { id: 'none', label: 'Sans priorité' },
-]
-
-const SORT_MODE_OPTIONS: Array<{ id: SortMode; label: string }> = [
-  { id: 'manual', label: 'Manuel (drag & drop)' },
-  { id: 'recent', label: 'Récemment ajoutées' },
-  { id: 'oldest', label: 'Anciennes d’abord' },
-  { id: 'title', label: 'Titre (A-Z)' },
-  { id: 'dueDate', label: 'Date limite' },
-]
 
 function sortTodos(todos: Todo[], sortMode: SortMode, sortOrder: 'asc' | 'desc'): Todo[] {
   return [...todos].sort((a, b) => {
@@ -115,6 +101,24 @@ export default function App() {
 
   const { toast } = useToast()
   const { playAdd, playDelete, playComplete } = useSoundEffects()
+  const { t, i18n } = useTranslation()
+
+  const PRIORITY_FILTERS: Array<{ id: TodoPriority | 'all'; label: string }> = [
+    { id: 'all', label: t('filter.allPriorities') },
+    { id: 'urgent', label: t('filter.urgent') },
+    { id: 'high', label: t('filter.high') },
+    { id: 'medium', label: t('filter.medium') },
+    { id: 'low', label: t('filter.low') },
+    { id: 'none', label: t('filter.none') },
+  ]
+
+  const SORT_MODE_OPTIONS: Array<{ id: SortMode; label: string }> = [
+    { id: 'manual', label: t('sort.manual') },
+    { id: 'recent', label: t('sort.recent') },
+    { id: 'oldest', label: t('sort.oldest') },
+    { id: 'title', label: t('sort.title') },
+    { id: 'dueDate', label: t('sort.dueDate') },
+  ]
 
   const {
     hydrated,
@@ -130,6 +134,7 @@ export default function App() {
     moveTodoToList,
     reorderTodos,
     renameList,
+    setListIcon,
     setActiveList,
     setTodoCompleted,
     setTodoLabel,
@@ -142,6 +147,28 @@ export default function App() {
   } = useTodoStore()
 
   const { checkForUpdate } = useUpdateStore()
+
+  // Sync language with i18n when settings change
+  useEffect(() => {
+    if (!settings.language) return
+
+    let targetLanguage = settings.language
+
+    // Si la langue est "auto", détecter la langue du système
+    if (targetLanguage === 'auto') {
+      // Récupérer la langue du navigateur/système
+      const browserLang = navigator.language.split('-')[0] // ex: "fr-FR" -> "fr"
+      const supportedLanguages = ['en', 'fr', 'es', 'zh', 'hi']
+      
+      // Utiliser la langue du navigateur si supportée, sinon anglais
+      targetLanguage = supportedLanguages.includes(browserLang) ? browserLang : 'en'
+    }
+
+    // Changer la langue seulement si elle est différente
+    if (i18n.language !== targetLanguage) {
+      void i18n.changeLanguage(targetLanguage)
+    }
+  }, [settings.language, i18n])
 
   useWindowBehavior(settings.autoCloseOnBlur, inputRef)
 
@@ -186,8 +213,8 @@ export default function App() {
       
       // Show success toast
       toast({
-        title: 'Données supprimées',
-        description: 'Toutes vos données ont été supprimées avec succès.',
+        title: t('toast.dataDeleted'),
+        description: t('toast.dataDeletedDesc'),
       })
       console.log('✅ Toast displayed')
       
@@ -395,68 +422,94 @@ export default function App() {
   }
 
   return (
-    <main className="h-screen w-screen bg-transparent p-1 text-foreground">
-      <motion.section
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.12 }}
-        className="mx-auto flex h-full w-full flex-col overflow-hidden rounded-2xl border border-border bg-card px-3 pb-3 pt-2"
-      >
+    <TooltipProvider delayDuration={300}>
+      <main className="h-screen w-screen bg-transparent p-1 text-foreground">
+        <motion.section
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.12 }}
+          className="mx-auto flex h-full w-full flex-col overflow-hidden rounded-2xl border border-border bg-card px-4 pb-4 pt-3"
+        >
         <UpdateBanner />
         <div className="mb-2 flex items-center justify-between gap-2">
           <div className="flex min-w-0 items-center gap-2">
             <img src="/app-icon.png" alt="ToDo Overlay" className="h-4 w-4 rounded-sm" />
             {activeList && renamingListId === activeList.id ? (
-              <Input
-                ref={listNameInputRef}
-                value={listNameDraft}
-                onChange={(event) => {
-                  setListNameDraft(event.currentTarget.value)
-                }}
-                onBlur={() => {
-                  void persistListRename()
-                }}
-                onKeyDown={(event) => {
-                  if (event.key === 'Enter') {
-                    event.preventDefault()
-                    event.currentTarget.blur()
-                  }
-                  if (event.key === 'Escape') {
-                    event.preventDefault()
-                    setRenamingListId(null)
-                  }
-                }}
-                className="h-7 max-w-[220px] border-none bg-transparent px-1 text-sm font-medium shadow-none focus-visible:ring-0"
-                aria-label="Renommer la liste"
-                placeholder="Nom de la liste"
-                autoFocus
-              />
+              <div className="flex items-center gap-1">
+                <IconPicker
+                  value={activeList.icon}
+                  onValueChange={(icon) => {
+                    void setListIcon(activeList.id, icon)
+                  }}
+                />
+                <Input
+                  ref={listNameInputRef}
+                  value={listNameDraft}
+                  onChange={(event) => {
+                    setListNameDraft(event.currentTarget.value)
+                  }}
+                  onBlur={() => {
+                    void persistListRename()
+                  }}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter') {
+                      event.preventDefault()
+                      event.currentTarget.blur()
+                    }
+                    if (event.key === 'Escape') {
+                      event.preventDefault()
+                      setRenamingListId(null)
+                    }
+                  }}
+                  className="h-7 max-w-[220px] border-none bg-transparent px-1 text-sm font-medium shadow-none focus-visible:ring-0"
+                  aria-label={t('list.renameList')}
+                  placeholder={t('list.listName')}
+                  autoFocus
+                />
+              </div>
             ) : (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button
                     type="button"
                     variant="ghost"
-                    className="h-7 max-w-[220px] justify-start gap-1 px-1 text-sm font-medium"
+                    className="h-7 max-w-[220px] justify-start gap-1.5 px-1 text-sm font-medium"
                   >
-                    <span className="truncate">{activeList?.name ?? 'Mes tâches'}</span>
-                    <ChevronDown className="h-3.5 w-3.5" />
+                    {activeList && (() => {
+                      const Icon = getIconComponent(activeList.icon)
+                      return <Icon className="h-3.5 w-3.5 shrink-0" />
+                    })()}
+                    <span className="truncate">{activeList?.name ?? t('list.myTasks')}</span>
+                    <ChevronDown className="h-3.5 w-3.5 shrink-0" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="start" className="w-56">
-                  <DropdownMenuLabel>Listes</DropdownMenuLabel>
+                <DropdownMenuContent align="start" className="w-64">
+                  <DropdownMenuLabel>{t('list.lists')}</DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  {settings.lists.map((list) => (
-                    <DropdownMenuItem
-                      key={list.id}
-                      onSelect={() => {
-                        void setActiveList(list.id)
-                      }}
-                      className={cn(list.id === activeList?.id ? 'font-medium' : undefined)}
-                    >
-                      {list.name}
-                    </DropdownMenuItem>
-                  ))}
+                  {settings.lists.map((list) => {
+                    const Icon = getIconComponent(list.icon)
+                    const listTodos = todos.filter((todo) => (todo.listId ?? settings.lists[0]?.id) === list.id)
+                    const activeTodosCount = listTodos.filter((todo) => !todo.completedAt).length
+                    const completedTodosCount = listTodos.filter((todo) => todo.completedAt).length
+                    return (
+                      <DropdownMenuItem
+                        key={list.id}
+                        onSelect={() => {
+                          void setActiveList(list.id)
+                        }}
+                        className={cn(
+                          'flex items-center gap-2',
+                          list.id === activeList?.id ? 'font-medium' : undefined
+                        )}
+                      >
+                        <Icon className="h-3.5 w-3.5 shrink-0" />
+                        <span className="flex-1 truncate">{list.name}</span>
+                        <span className="text-xs text-muted-foreground tabular-nums">
+                          {activeTodosCount} / {completedTodosCount}
+                        </span>
+                      </DropdownMenuItem>
+                    )
+                  })}
                   <DropdownMenuSeparator />
                   {activeList ? (
                     <DropdownMenuItem
@@ -465,48 +518,69 @@ export default function App() {
                         setListNameDraft(activeList.name)
                       }}
                     >
-                      Renommer la liste
+                      {t('list.renameList')}
                     </DropdownMenuItem>
                   ) : null}
                 </DropdownMenuContent>
               </DropdownMenu>
             )}
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              className="h-7 w-7 text-muted-foreground hover:text-foreground"
-              onClick={async () => {
-                await createList('Nouvelle liste')
-              }}
-              aria-label="Ajouter une liste"
-            >
-              <Plus className="h-3.5 w-3.5" />
-            </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              className="h-7 w-7 text-muted-foreground hover:text-foreground"
-              onClick={() => {
-                setFavoritesOnly((current) => !current)
-              }}
-              aria-label={favoritesOnly ? 'Afficher toutes les tâches' : 'Afficher uniquement les favoris'}
-            >
-              <Star className={cn('h-3.5 w-3.5', favoritesOnly ? 'fill-foreground text-foreground' : undefined)} />
-            </Button>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
+            <Tooltip>
+              <TooltipTrigger asChild>
                 <Button
                   type="button"
                   variant="ghost"
                   size="icon"
                   className="h-7 w-7 text-muted-foreground hover:text-foreground"
-                  aria-label="Paramètres de la liste"
+                  onClick={async () => {
+                    await createList(t('list.newList'))
+                  }}
+                  aria-label={t('list.addList')}
                 >
-                  <MoreHorizontal className="h-3.5 w-3.5" />
+                  <Plus className="h-3.5 w-3.5" />
                 </Button>
-              </DropdownMenuTrigger>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>{t('list.addList')}</p>
+              </TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                  onClick={() => {
+                    setFavoritesOnly((current) => !current)
+                  }}
+                  aria-label={favoritesOnly ? 'Afficher toutes les tâches' : 'Afficher uniquement les favoris'}
+                >
+                  <Star className={cn('h-3.5 w-3.5', favoritesOnly ? 'fill-foreground text-foreground' : undefined)} />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>{favoritesOnly ? 'Afficher toutes les tâches' : 'Afficher uniquement les favoris'}</p>
+              </TooltipContent>
+            </Tooltip>
+            <DropdownMenu>
+              <Tooltip>
+                <DropdownMenuTrigger asChild>
+                  <TooltipTrigger asChild>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                      aria-label="Paramètres de la liste"
+                    >
+                      <MoreHorizontal className="h-3.5 w-3.5" />
+                    </Button>
+                  </TooltipTrigger>
+                </DropdownMenuTrigger>
+                <TooltipContent>
+                  <p>Options de tri et d'affichage</p>
+                </TooltipContent>
+              </Tooltip>
               <DropdownMenuContent align="start" className="w-56">
                 <DropdownMenuLabel>Paramètres de la liste</DropdownMenuLabel>
                 <DropdownMenuSeparator />
@@ -524,14 +598,16 @@ export default function App() {
                 ))}
                 <DropdownMenuSeparator />
                 {activeList ? (
-                  <DropdownMenuItem
-                    onSelect={() => {
-                      setRenamingListId(activeList.id)
-                      setListNameDraft(activeList.name)
-                    }}
-                  >
-                    Renommer la liste
-                  </DropdownMenuItem>
+                  <>
+                    <DropdownMenuItem
+                      onSelect={() => {
+                        setRenamingListId(activeList.id)
+                        setListNameDraft(activeList.name)
+                      }}
+                    >
+                      Renommer et changer l'icône
+                    </DropdownMenuItem>
+                  </>
                 ) : null}
                 <DropdownMenuItem
                   onSelect={() => {
@@ -554,32 +630,46 @@ export default function App() {
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            onClick={() => {
-              setSettingsPageOpen(!settingsPageOpen)
-            }}
-            aria-label={settingsPageOpen ? "Retour à l'accueil" : "Ouvrir les paramètres"}
-          >
-            {settingsPageOpen ? (
-              <Home className="h-4 w-4" />
-            ) : (
-              <Settings className="h-4 w-4" />
-            )}
-          </Button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                onClick={() => {
+                  setSettingsPageOpen(!settingsPageOpen)
+                }}
+                aria-label={settingsPageOpen ? "Retour à l'accueil" : "Ouvrir les paramètres"}
+              >
+                {settingsPageOpen ? (
+                  <Home className="h-4 w-4" />
+                ) : (
+                  <Settings className="h-4 w-4" />
+                )}
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>{settingsPageOpen ? t('app.backToHome') : t('app.openSettings')}</p>
+          </TooltipContent>
+        </Tooltip>
         </div>
 
         {!settingsPageOpen ? (
           <div className="mb-2 flex items-center gap-2">
             <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button type="button" variant="outline" size="sm" className="h-7 gap-1 px-2 text-xs">
-                  <Filter className="h-3.5 w-3.5" />
-                  {selectedPriorityFilterLabel}
-                </Button>
-              </DropdownMenuTrigger>
+              <Tooltip>
+                <DropdownMenuTrigger asChild>
+                  <TooltipTrigger asChild>
+                    <Button type="button" variant="outline" size="sm" className="h-7 gap-1 px-2 text-xs">
+                      <Filter className="h-3.5 w-3.5" />
+                      {selectedPriorityFilterLabel}
+                    </Button>
+                  </TooltipTrigger>
+                </DropdownMenuTrigger>
+                <TooltipContent>
+                  <p>Filtrer par priorité</p>
+                </TooltipContent>
+              </Tooltip>
               <DropdownMenuContent align="start" className="w-44">
                 {PRIORITY_FILTERS.map((option) => (
                   <DropdownMenuItem
@@ -596,11 +686,18 @@ export default function App() {
             </DropdownMenu>
 
             <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button type="button" variant="outline" size="sm" className="h-7 gap-1 px-2 text-xs">
-                  {selectedLabelFilterName}
-                </Button>
-              </DropdownMenuTrigger>
+              <Tooltip>
+                <DropdownMenuTrigger asChild>
+                  <TooltipTrigger asChild>
+                    <Button type="button" variant="outline" size="sm" className="h-7 gap-1 px-2 text-xs">
+                      {selectedLabelFilterName}
+                    </Button>
+                  </TooltipTrigger>
+                </DropdownMenuTrigger>
+                <TooltipContent>
+                  <p>Filtrer par label</p>
+                </TooltipContent>
+              </Tooltip>
               <DropdownMenuContent align="start" className="w-44">
                 <DropdownMenuItem
                   className={cn(effectiveLabelFilterId === 'all' ? 'font-medium' : undefined)}
@@ -713,7 +810,7 @@ export default function App() {
                   await deleteTodo(id)
                   playDelete()
                 }}
-                emptyLabel="Aucune tâche active"
+                emptyLabel={t('app.noActiveTasks')}
               />
             )
           )}
@@ -725,5 +822,6 @@ export default function App() {
       </motion.section>
       <Toaster />
     </main>
+    </TooltipProvider>
   )
 }

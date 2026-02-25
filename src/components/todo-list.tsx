@@ -8,8 +8,10 @@ import {
   useRef,
   useState,
 } from 'react'
-import { AlertTriangle, CalendarClock, Check, ChevronDown, ChevronRight, Ellipsis, FileText, GripVertical, Plus, Star, Tags } from 'lucide-react'
+import { AlertTriangle, CalendarClock, Check, ChevronDown, ChevronRight, Ellipsis, FileText, GripVertical, Plus, Star, Tags, X } from 'lucide-react'
 import { AnimatePresence, LayoutGroup, motion } from 'framer-motion'
+import { useTranslation } from 'react-i18next'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import {
@@ -84,18 +86,18 @@ const INITIAL_COMPLETED_VISIBLE_COUNT = 5
 const COMPLETED_VISIBLE_STEP = 10
 const PRIORITY_ORDER: TodoPriority[] = ['none', 'low', 'medium', 'high', 'urgent']
 
-function priorityLabel(priority: TodoPriority): string {
+function priorityLabel(priority: TodoPriority, t: (key: string) => string): string {
   switch (priority) {
     case 'low':
-      return 'Faible'
+      return t('priority.low')
     case 'medium':
-      return 'Moyenne'
+      return t('priority.medium')
     case 'high':
-      return 'Haute'
+      return t('priority.high')
     case 'urgent':
-      return 'Urgente'
+      return t('priority.urgent')
     default:
-      return 'Aucune'
+      return t('filter.none')
   }
 }
 
@@ -143,6 +145,88 @@ function getTomorrowAtDefaultHour(): number {
   tomorrow.setHours(9, 0, 0, 0)
   return tomorrow.getTime()
 }
+
+function getReminderBadgeStyle(
+  timestamp: number, 
+  t: (key: string, options?: { count?: number; time?: string }) => string,
+  i18n: { language: string }
+): {
+  label: string
+  variant: 'destructive' | 'blue' | 'default'
+} {
+  const reminderDate = new Date(timestamp)
+  const now = new Date()
+  
+  // Comparer le timestamp complet (date + heure)
+  const isPast = timestamp < now.getTime()
+  
+  // Comparer juste les jours pour afficher le bon label
+  const reminderDay = new Date(reminderDate)
+  reminderDay.setHours(0, 0, 0, 0)
+  
+  const todayDay = new Date(now)
+  todayDay.setHours(0, 0, 0, 0)
+  
+  const dayMs = 24 * 60 * 60 * 1000
+  const dayDiff = Math.round((reminderDay.getTime() - todayDay.getTime()) / dayMs)
+  
+  // Get locale for date formatting
+  const locale = i18n.language === 'fr' ? 'fr-FR' : i18n.language === 'es' ? 'es-ES' : i18n.language === 'zh' ? 'zh-CN' : i18n.language === 'hi' ? 'hi-IN' : 'en-US'
+  
+  // Aujourd'hui
+  if (dayDiff === 0) {
+    const timeStr = reminderDate.toLocaleTimeString(locale, {
+      hour: '2-digit',
+      minute: '2-digit',
+    })
+    // Rouge si l'heure est passée, bleu sinon
+    return { 
+      label: `${t('time.today')} ${timeStr}`, 
+      variant: isPast ? 'destructive' : 'blue' 
+    }
+  }
+  
+  // Passé (hier ou avant)
+  if (dayDiff < 0) {
+    const absDays = Math.abs(dayDiff)
+    
+    if (absDays === 1) {
+      return { label: t('time.ago1Day'), variant: 'destructive' }
+    }
+    
+    if (absDays < 7) {
+      return { label: t('time.agoDays', { count: absDays }), variant: 'destructive' }
+    }
+    
+    const weeks = Math.floor(absDays / 7)
+    if (weeks < 52) {
+      return { 
+        label: weeks === 1 ? t('time.ago1Week') : t('time.agoWeeks', { count: weeks }), 
+        variant: 'destructive' 
+      }
+    }
+    
+    const years = Math.floor(absDays / 365)
+    return { 
+      label: years === 1 ? t('time.ago1Year') : t('time.agoYears', { count: years }), 
+      variant: 'destructive' 
+    }
+  }
+  
+  // Futur (demain ou après)
+  const dateStr = reminderDate.toLocaleDateString(locale, {
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short',
+  })
+  const timeStr = reminderDate.toLocaleTimeString(locale, {
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+  
+  return { label: `${dateStr} ${timeStr}`, variant: 'default' }
+}
+
 
 function buildTodoWithDepth(todos: Todo[]): TodoWithDepth[] {
   const todosById = new Map(todos.map((todo) => [todo.id, todo]))
@@ -209,6 +293,7 @@ export function TodoList({
   onDeleteCompleted,
   emptyLabel,
 }: TodoListProps) {
+  const { t, i18n } = useTranslation()
   const [editingId, setEditingId] = useState<string | 'new' | null>(null)
   const [newParentId, setNewParentId] = useState<string | null>(null)
   const [draft, setDraft] = useState<TodoDraft>({ title: '', details: '' })
@@ -237,33 +322,28 @@ export function TodoList({
   const editingIdRef = useRef<string | 'new' | null>(null)
   const lastPointerInsideEditorAtRef = useRef(0)
 
-  const reminderFormatter = useMemo(
-    () =>
-      new Intl.DateTimeFormat('fr-FR', {
-        dateStyle: 'short',
-        timeStyle: 'short',
-      }),
-    [],
-  )
-
   const compactDateFormatter = useMemo(
-    () =>
-      new Intl.DateTimeFormat('fr-FR', {
+    () => {
+      const locale = i18n.language === 'fr' ? 'fr-FR' : i18n.language === 'es' ? 'es-ES' : i18n.language === 'zh' ? 'zh-CN' : i18n.language === 'hi' ? 'hi-IN' : 'en-US'
+      return new Intl.DateTimeFormat(locale, {
         weekday: 'short',
         day: '2-digit',
         month: 'short',
-      }),
-    [],
+      })
+    },
+    [i18n.language],
   )
 
   const fullDateFormatter = useMemo(
-    () =>
-      new Intl.DateTimeFormat('fr-FR', {
+    () => {
+      const locale = i18n.language === 'fr' ? 'fr-FR' : i18n.language === 'es' ? 'es-ES' : i18n.language === 'zh' ? 'zh-CN' : i18n.language === 'hi' ? 'hi-IN' : 'en-US'
+      return new Intl.DateTimeFormat(locale, {
         day: '2-digit',
         month: 'long',
         year: 'numeric',
-      }),
-    [],
+      })
+    },
+    [i18n.language],
   )
 
   useEffect(() => {
@@ -502,39 +582,6 @@ export function TodoList({
     return normalizeDateLabel(fullDateFormatter.format(date))
   }
 
-  const reminderMeta = (reminderAt: number): { label: string; overdue: boolean } => {
-    const reminderDate = new Date(reminderAt)
-    const now = new Date()
-    const dayMs = 24 * 60 * 60 * 1000
-
-    const reminderDay = new Date(reminderDate)
-    reminderDay.setHours(0, 0, 0, 0)
-
-    const todayDay = new Date(now)
-    todayDay.setHours(0, 0, 0, 0)
-
-    const dayDiff = Math.round((reminderDay.getTime() - todayDay.getTime()) / dayMs)
-    const overdue = dayDiff < 0
-
-    if (dayDiff === 0) {
-      return { label: "Aujourd'hui", overdue: false }
-    }
-
-    if (dayDiff === 1) {
-      return { label: 'Demain', overdue: false }
-    }
-
-    if (dayDiff === -1) {
-      return { label: 'Il y a un jour', overdue: true }
-    }
-
-    if (dayDiff < -1) {
-      return { label: `Il y a ${Math.abs(dayDiff)} jours`, overdue: true }
-    }
-
-    return { label: formatDateLabel(reminderAt), overdue }
-  }
-
   const clearDragState = () => {
     setDraggingTodoId(null)
     setDropTargetTodoId(null)
@@ -689,6 +736,7 @@ export function TodoList({
     const isExistingTodo = targetId !== 'new'
     const detailsInputVisible = showDetails || draft.details.trim().length > 0
     const leftOffset = Math.min(depth, 6) * 16
+    const reminderBadgeStyle = draft.reminderAt ? getReminderBadgeStyle(draft.reminderAt, t, i18n) : null
 
     return (
       <li
@@ -698,7 +746,7 @@ export function TodoList({
       >
         <div
           ref={editorContainerRef}
-          className="flex items-start gap-1.5 px-1 py-1"
+          className="flex items-start gap-1.5 px-2 py-2 rounded-md bg-muted/70"
           onPointerDownCapture={() => {
             lastPointerInsideEditorAtRef.current = window.performance.now()
           }}
@@ -712,10 +760,10 @@ export function TodoList({
                 await onSetCompleted(targetId, true)
                 closeEditor()
               }}
-              aria-label="Marquer la tâche en cours d'édition comme terminée"
+              aria-label={t('todo.markAsCompleted')}
             />
           ) : (
-            <Checkbox className="mt-2" checked={false} disabled aria-label="Nouvelle tâche" />
+            <Checkbox className="mt-2" checked={false} disabled aria-label={t('todo.newTask')} />
           )}
 
           <div className="min-w-0 flex-1 space-y-1.5">
@@ -734,6 +782,11 @@ export function TodoList({
                     ...previous,
                     title: newValue,
                   }))
+                  
+                  // Auto-resize immediately during typing
+                  const target = event.target
+                  target.style.height = 'auto'
+                  target.style.height = `${Math.min(target.scrollHeight, 120)}px`
                 }
               }}
               onKeyDown={(event) => {
@@ -755,7 +808,7 @@ export function TodoList({
                   closeEditor()
                 }
               }}
-              placeholder="Titre de la tâche"
+              placeholder={t('todo.taskTitle')}
               maxLength={1000}
               rows={1}
               className="min-h-[32px] max-h-[120px] resize-none overflow-y-auto border-none bg-transparent px-0 py-1 text-sm shadow-none focus-visible:ring-0"
@@ -782,7 +835,7 @@ export function TodoList({
                       setShowDetails(false)
                     }
                   }}
-                  placeholder="Détail"
+                  placeholder={t('todo.detail')}
                   className="h-6 border-none bg-transparent px-0 text-xs shadow-none focus-visible:ring-0"
                 />
               ) : (
@@ -794,109 +847,80 @@ export function TodoList({
                   }}
                   className="text-xs text-muted-foreground hover:text-foreground transition-colors"
                 >
-                  Détail
+                  {t('todo.detail')}
                 </button>
               )}
             </div>
 
             {/* Ligne 3: Date rapide */}
             <div className="flex items-center gap-2">
-              <Button
-                type="button"
-                size="sm"
-                variant="ghost"
-                tabIndex={0}
-                className="h-6 px-2 text-xs text-muted-foreground hover:text-foreground focus-visible:ring-1 focus-visible:ring-ring"
-                onClick={() => {
-                  setSaveError(null)
-                  applyReminder(getTodayAtDefaultHour())
-                }}
-                onKeyDown={(event) => {
-                  if (event.key === 'Enter' || event.key === ' ') {
-                    event.preventDefault()
-                    setSaveError(null)
-                    applyReminder(getTodayAtDefaultHour())
-                  }
-                }}
-              >
-                Aujourd&apos;hui
-              </Button>
-              <span className="text-xs text-muted-foreground">|</span>
-              <Button
-                type="button"
-                size="sm"
-                variant="ghost"
-                tabIndex={0}
-                className="h-6 px-2 text-xs text-muted-foreground hover:text-foreground focus-visible:ring-1 focus-visible:ring-ring"
-                onClick={() => {
-                  setSaveError(null)
-                  applyReminder(getTomorrowAtDefaultHour())
-                }}
-                onKeyDown={(event) => {
-                  if (event.key === 'Enter' || event.key === ' ') {
-                    event.preventDefault()
-                    setSaveError(null)
-                    applyReminder(getTomorrowAtDefaultHour())
-                  }
-                }}
-              >
-                Demain
-              </Button>
-              <span className="text-xs text-muted-foreground">|</span>
-              <Popover open={showDate && dateMode === 'datetime'} onOpenChange={(open) => {
-                setShowDate(open)
-                if (!open) {
-                  setDateMode(null)
-                }
-              }}>
-                <PopoverTrigger asChild>
+              {draft.reminderAt ? (
+                <div className="inline-flex items-center gap-1">
+                  {/* Badge de date avec couleurs conditionnelles et bouton × intégré */}
+                  <Popover modal={false} open={showDate && dateMode === 'datetime'} onOpenChange={(open) => {
+                    setShowDate(open)
+                    if (!open) {
+                      setDateMode(null)
+                    }
+                  }}>
+                    <PopoverTrigger asChild>
+                      <Badge
+                        asChild
+                        variant="ghost"
+                        className={cn(
+                          "cursor-pointer rounded-md h-6 px-2 gap-1.5",
+                          reminderBadgeStyle?.variant === 'destructive' && 
+                            "border-destructive/50 bg-destructive/10 text-destructive hover:bg-destructive/15",
+                          reminderBadgeStyle?.variant === 'blue' && 
+                            "border-blue-500/50 bg-blue-500/10 text-blue-700 dark:border-blue-400/50 dark:bg-blue-400/10 dark:text-blue-400 hover:bg-blue-500/15 dark:hover:bg-blue-400/15",
+                          reminderBadgeStyle?.variant === 'default' && 
+                            "border-border bg-background text-foreground hover:bg-muted/60"
+                        )}
+                      >
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSaveError(null)
+                            setShowDate(true)
+                            setDateMode('datetime')
+                          }}
+                        >
+                          <CalendarClock className="h-3 w-3" />
+                          {reminderBadgeStyle?.label}
+                        </button>
+                      </Badge>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <DateTimePicker
+                        date={new Date(draft.reminderAt)}
+                        onDateTimeChange={(date) => {
+                          applyReminder(date.getTime())
+                        }}
+                        onClose={() => {
+                          setShowDate(false)
+                          setDateMode(null)
+                        }}
+                      />
+                    </PopoverContent>
+                  </Popover>
                   <Button
                     type="button"
                     size="sm"
                     variant="ghost"
-                    tabIndex={0}
-                    className="h-6 w-6 p-0 focus-visible:ring-1 focus-visible:ring-ring"
-                    onClick={() => {
+                    className="h-5 w-5 p-0 text-muted-foreground hover:text-foreground"
+                    onClick={(e) => {
+                      e.stopPropagation()
                       setSaveError(null)
-                      setShowDate(true)
-                      setDateMode('datetime')
+                      applyReminder(undefined)
                     }}
-                    onFocus={() => {
-                      setSaveError(null)
-                      setShowDate(true)
-                      setDateMode('datetime')
-                    }}
-                    onKeyDown={(event) => {
-                      if (event.key === 'Enter' || event.key === ' ') {
-                        event.preventDefault()
-                        setSaveError(null)
-                        setShowDate(true)
-                        setDateMode('datetime')
-                      }
-                    }}
+                    aria-label={t('todo.removeDate')}
                   >
-                    <CalendarClock className="h-3.5 w-3.5 text-muted-foreground" />
+                    <X className="h-3 w-3" />
                   </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <DateTimePicker
-                    date={draft.reminderAt ? new Date(draft.reminderAt) : undefined}
-                    onDateTimeChange={(date) => {
-                      applyReminder(date.getTime())
-                    }}
-                    onClose={() => {
-                      setShowDate(false)
-                      setDateMode(null)
-                    }}
-                  />
-                </PopoverContent>
-              </Popover>
-              {draft.reminderAt ? (
+                </div>
+              ) : (
                 <>
-                  <span className="text-xs text-muted-foreground">·</span>
-                  <span className="text-xs text-muted-foreground">
-                    {reminderFormatter.format(new Date(draft.reminderAt))}
-                  </span>
+                  {/* Boutons rapides: Aujourd'hui | Demain | Calendrier */}
                   <Button
                     type="button"
                     size="sm"
@@ -905,13 +929,85 @@ export function TodoList({
                     className="h-6 px-2 text-xs text-muted-foreground hover:text-foreground focus-visible:ring-1 focus-visible:ring-ring"
                     onClick={() => {
                       setSaveError(null)
-                      applyReminder(undefined)
+                      applyReminder(getTodayAtDefaultHour())
+                    }}
+                    onKeyDown={(event) => {
+                      if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault()
+                        setSaveError(null)
+                        applyReminder(getTodayAtDefaultHour())
+                      }
                     }}
                   >
-                    Supprimer
+                    {t('time.today')}
                   </Button>
+                  <span className="text-xs text-muted-foreground">|</span>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="ghost"
+                    tabIndex={0}
+                    className="h-6 px-2 text-xs text-muted-foreground hover:text-foreground focus-visible:ring-1 focus-visible:ring-ring"
+                    onClick={() => {
+                      setSaveError(null)
+                      applyReminder(getTomorrowAtDefaultHour())
+                    }}
+                    onKeyDown={(event) => {
+                      if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault()
+                        setSaveError(null)
+                        applyReminder(getTomorrowAtDefaultHour())
+                      }
+                    }}
+                  >
+                    {t('time.tomorrow')}
+                  </Button>
+                  <span className="text-xs text-muted-foreground">|</span>
+                  <Popover modal={false} open={showDate && dateMode === 'datetime'} onOpenChange={(open) => {
+                    setShowDate(open)
+                    if (!open) {
+                      setDateMode(null)
+                    }
+                  }}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="ghost"
+                        tabIndex={0}
+                        className="h-6 w-6 p-0 focus-visible:ring-1 focus-visible:ring-ring"
+                        onClick={() => {
+                          setSaveError(null)
+                          setShowDate(true)
+                          setDateMode('datetime')
+                        }}
+                        onKeyDown={(event) => {
+                          if (event.key === 'Enter' || event.key === ' ') {
+                            event.preventDefault()
+                            setSaveError(null)
+                            setShowDate(true)
+                            setDateMode('datetime')
+                          }
+                        }}
+                      >
+                        <CalendarClock className="h-3.5 w-3.5 text-muted-foreground" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <DateTimePicker
+                        date={draft.reminderAt ? new Date(draft.reminderAt) : undefined}
+                        onDateTimeChange={(date) => {
+                          applyReminder(date.getTime())
+                        }}
+                        onClose={() => {
+                          setShowDate(false)
+                          setDateMode(null)
+                        }}
+                      />
+                    </PopoverContent>
+                  </Popover>
                 </>
-              ) : null}
+              )}
             </div>
 
             {saveError ? <p className="text-xs text-muted-foreground">{`Échec de sauvegarde: ${saveError}`}</p> : null}
@@ -927,7 +1023,7 @@ export function TodoList({
   const hasMoreCompleted = completedExpanded && completedVisibleCount < completedItems.length
 
   return (
-    <ScrollArea className="h-full rounded-md border border-border">
+    <ScrollArea className="h-full rounded-md">
       <LayoutGroup id="todo-items">
         <ul className="py-1 pr-2">
           {editingId !== 'new' || newParentId !== null ? (
@@ -954,7 +1050,6 @@ export function TodoList({
             <AnimatePresence initial={false}>
               {activeItems.flatMap(({ todo, depth }) => {
                 const leftOffset = Math.min(depth, 6) * 16
-                const dueMeta = todo.reminderAt ? reminderMeta(todo.reminderAt) : null
                 const priority = todo.priority ?? 'none'
                 const label = todo.labelId ? labelById.get(todo.labelId) : undefined
                 const isDropBefore = dropTargetTodoId === todo.id && dropPosition === 'before'
@@ -1013,7 +1108,7 @@ export function TodoList({
                               ? 'cursor-grab active:cursor-grabbing hover:text-foreground'
                               : 'cursor-default opacity-40',
                           )}
-                          aria-label="Déplacer la tâche"
+                          aria-label={t('todo.moveTask')}
                         >
                           <GripVertical className="h-3.5 w-3.5" />
                         </button>
@@ -1026,57 +1121,71 @@ export function TodoList({
                               await onSetCompleted(todo.id, true)
                             }
                           }}
-                          aria-label={`Marquer "${todo.title}" comme terminée`}
+                          aria-label={t('todo.markCompleted', { title: todo.title })}
                         />
 
                         <button
                           type="button"
-                          className="min-w-0 flex-1 text-left"
+                          className="min-w-0 flex-1 text-left overflow-hidden"
                           onClick={() => {
                             void openTodoEditor(todo)
                           }}
                         >
-                          <p className="text-sm text-foreground line-clamp-3 break-words">{todo.title}</p>
+                          <p className="text-sm text-foreground line-clamp-3 break-all whitespace-normal max-w-[500px]">{todo.title}</p>
                           {(todo.details || todo.reminderAt || priority !== 'none' || label) && (
-                            <div className="mt-0.5 flex items-center gap-2 text-[11px] text-muted-foreground flex-wrap">
-                              {dueMeta ? (
-                                <span
-                                  className={cn(
-                                    'inline-flex items-center gap-1',
-                                    dueMeta.overdue ? 'text-destructive' : 'text-muted-foreground',
-                                  )}
-                                >
-                                  <CalendarClock className="h-3 w-3" />
-                                  {dueMeta.label}
-                                </span>
+                            <div className="mt-1 flex items-center gap-1.5 flex-wrap">
+                              {todo.reminderAt ? (
+                                (() => {
+                                  const badgeStyle = getReminderBadgeStyle(todo.reminderAt, t, i18n)
+                                  return (
+                                    <Badge
+                                      variant="ghost"
+                                      className={cn(
+                                        "h-5 px-1.5 py-0 rounded-md",
+                                        badgeStyle.variant === 'destructive' && 
+                                          "border-destructive/50 bg-destructive/10 text-destructive hover:bg-destructive/15",
+                                        badgeStyle.variant === 'blue' && 
+                                          "border-blue-500/50 bg-blue-500/10 text-blue-700 dark:border-blue-400/50 dark:bg-blue-400/10 dark:text-blue-400",
+                                        badgeStyle.variant === 'default' && 
+                                          "border-border bg-muted text-foreground"
+                                      )}
+                                    >
+                                      <CalendarClock className="h-3 w-3" />
+                                      {badgeStyle.label}
+                                    </Badge>
+                                  )
+                                })()
                               ) : null}
                               {priority !== 'none' ? (
-                                <span
+                                <Badge
                                   className={cn(
-                                    'inline-flex items-center gap-1 rounded-full border px-1.5 py-0.5',
+                                    'h-5 px-1.5 py-0 rounded-md',
                                     priorityClasses(priority),
                                   )}
                                 >
                                   {priority === 'urgent' ? <AlertTriangle className="h-3 w-3" /> : null}
-                                  {priorityLabel(priority)}
-                                </span>
+                                  {priorityLabel(priority, t)}
+                                </Badge>
                               ) : null}
                               {label ? (
-                                <span
+                                <Badge
                                   className={cn(
-                                    'inline-flex items-center gap-1 rounded-full border px-1.5 py-0.5',
+                                    'h-5 px-1.5 py-0 rounded-md',
                                     labelClasses(label.color),
                                   )}
                                 >
                                   <Tags className="h-3 w-3" />
                                   {label.name}
-                                </span>
+                                </Badge>
                               ) : null}
                               {todo.details ? (
-                                <span className="inline-flex items-center gap-1">
-                                  <FileText className="h-3 w-3" />
-                                  Détails
-                                </span>
+                                <Badge
+                                  variant="outline"
+                                  className="h-5 px-1.5 py-0 rounded-md text-muted-foreground max-w-[200px]"
+                                >
+                                  <FileText className="h-3 w-3 shrink-0" />
+                                  <span className="truncate">{todo.details}</span>
+                                </Badge>
                               ) : null}
                             </div>
                           )}
@@ -1090,7 +1199,7 @@ export function TodoList({
                           onClick={async () => {
                             await onSetStarred(todo.id, !todo.starred)
                           }}
-                          aria-label={todo.starred ? `Retirer ${todo.title} des favoris` : `Ajouter ${todo.title} aux favoris`}
+                          aria-label={todo.starred ? t('todo.removeFromFavorites', { title: todo.title }) : t('todo.addToFavorites', { title: todo.title })}
                         >
                           <Star
                             className={cn(
@@ -1107,14 +1216,14 @@ export function TodoList({
                               variant="ghost"
                               size="icon"
                               className="h-7 w-7 text-muted-foreground hover:text-foreground"
-                              aria-label={`Actions pour ${todo.title}`}
+                              aria-label={t('todo.actionsFor', { title: todo.title })}
                             >
                               <Ellipsis className="h-3.5 w-3.5" />
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end" className="w-52">
                             <DropdownMenuSub>
-                              <DropdownMenuSubTrigger>Priorité</DropdownMenuSubTrigger>
+                              <DropdownMenuSubTrigger>{t('todo.priority')}</DropdownMenuSubTrigger>
                               <DropdownMenuSubContent className="w-40">
                                 {PRIORITY_ORDER.map((option) => (
                                   <DropdownMenuItem
@@ -1124,13 +1233,13 @@ export function TodoList({
                                       void onSetPriority(todo.id, option)
                                     }}
                                   >
-                                    {priorityLabel(option)}
+                                    {priorityLabel(option, t)}
                                   </DropdownMenuItem>
                                 ))}
                               </DropdownMenuSubContent>
                             </DropdownMenuSub>
                             <DropdownMenuSub>
-                              <DropdownMenuSubTrigger>Label</DropdownMenuSubTrigger>
+                              <DropdownMenuSubTrigger>{t('todo.label')}</DropdownMenuSubTrigger>
                               <DropdownMenuSubContent className="w-44">
                                 <DropdownMenuItem
                                   className={cn(!label ? 'font-medium' : undefined)}
@@ -1138,7 +1247,7 @@ export function TodoList({
                                     void onSetLabel(todo.id, undefined)
                                   }}
                                 >
-                                  Aucun label
+                                  {t('todo.noLabel')}
                                 </DropdownMenuItem>
                                 {labels.map((item) => (
                                   <DropdownMenuItem
@@ -1159,25 +1268,25 @@ export function TodoList({
                                 void openTodoEditor(todo, { showDate: true })
                               }}
                             >
-                              Ajouter une date limite
+                              {t('todo.addDueDate')}
                             </DropdownMenuItem>
                             <DropdownMenuItem
                               onSelect={() => {
                                 void openCreateEditor(todo.id)
                               }}
                             >
-                              Ajouter une tâche secondaire
+                              {t('todo.addSubtask')}
                             </DropdownMenuItem>
                             <DropdownMenuItem
                               onSelect={() => {
                                 void onDelete(todo.id)
                               }}
                             >
-                              Supprimer
+                              {t('common.delete')}
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
                             <DropdownMenuLabel className="px-2 py-1 text-xs text-muted-foreground">
-                              Déplacer vers
+                              {t('todo.moveToList')}
                             </DropdownMenuLabel>
                             {lists.map((list) => {
                               const isCurrentList = (todo.listId ?? activeListId) === list.id
@@ -1258,19 +1367,19 @@ export function TodoList({
                                 await onSetCompleted(todo.id, false)
                               }
                             }}
-                            aria-label={`Rouvrir ${todo.title}`}
+                            aria-label={t('todo.reopen', { title: todo.title })}
                           />
 
-                          <div className="min-w-0 flex-1">
-                            <p className="text-sm text-muted-foreground line-through line-clamp-3 break-words">{todo.title}</p>
+                          <div className="min-w-0 flex-1 overflow-hidden">
+                            <p className="text-sm text-muted-foreground line-through line-clamp-3 break-all whitespace-normal max-w-[500px]">{todo.title}</p>
                             <p className="mt-0.5 text-[11px] text-muted-foreground">
                               {todo.completedAt
-                                ? `Terminée ${formatDateLabel(todo.completedAt)}`
-                                : 'Terminée'}
+                                ? t('todo.completedOn', { date: formatDateLabel(todo.completedAt) })
+                                : t('todo.completedLabel')}
                             </p>
                             {todo.priority && todo.priority !== 'none' ? (
                               <p className={cn('mt-0.5 text-[11px]', todo.priority === 'urgent' ? 'text-destructive' : 'text-muted-foreground')}>
-                                {`Priorité ${priorityLabel(todo.priority)}`}
+                                {t('todo.priorityLabel', { priority: priorityLabel(todo.priority, t) })}
                               </p>
                             ) : null}
                           </div>

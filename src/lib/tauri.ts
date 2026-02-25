@@ -109,6 +109,10 @@ export async function renameList(id: string, name: string): Promise<AppData> {
   return invoke<AppData>('rename_list', { id, name })
 }
 
+export async function setListIcon(id: string, icon: string | undefined): Promise<AppData> {
+  return invoke<AppData>('set_list_icon', { id, icon: icon ?? null })
+}
+
 export async function setActiveList(id: string): Promise<AppData> {
   return invoke<AppData>('set_active_list', { id })
 }

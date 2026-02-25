@@ -6,26 +6,31 @@ import { useToast } from '@/hooks/use-toast'
 import { useEffect, useState } from 'react'
 import { cn } from '@/lib/utils'
 import { ChangelogDialog } from '@/components/changelog-dialog'
+import { useTranslation } from 'react-i18next'
 
 export function UpdateBanner() {
   const { state, updateInfo, downloadProgress, installUpdate, dismissUpdate } = useUpdateStore()
   const { toast } = useToast()
+  const { t } = useTranslation()
   const [showChangelog, setShowChangelog] = useState(false)
 
   // Show toast notification for download/install progress
   useEffect(() => {
     if (state === 'downloading') {
       toast({
-        title: 'Téléchargement de la mise à jour',
-        description: `Version ${updateInfo?.latestVersion} - ${downloadProgress}%`,
+        title: t('update.downloading'),
+        description: t('update.downloadingDesc', { 
+          version: updateInfo?.latestVersion,
+          progress: downloadProgress 
+        }),
       })
     } else if (state === 'installing') {
       toast({
-        title: 'Installation en cours',
-        description: 'L\'application va redémarrer dans un instant...',
+        title: t('update.installing'),
+        description: t('update.installingDesc'),
       })
     }
-  }, [state, downloadProgress, toast, updateInfo?.latestVersion])
+  }, [state, downloadProgress, toast, updateInfo?.latestVersion, t])
 
   if (state !== 'available') {
     return null
@@ -56,7 +61,7 @@ export function UpdateBanner() {
               onClick={() => setShowChangelog(true)}
             >
               <FileText className="mr-1 h-2.5 w-2.5" />
-              Nouveautés
+              {t('update.whatsNew')}
             </Button>
             <Button
               type="button"
@@ -68,7 +73,7 @@ export function UpdateBanner() {
               }}
             >
               <Download className="mr-1 h-2.5 w-2.5" />
-              Installer
+              {t('update.install')}
             </Button>
             <Button
               type="button"

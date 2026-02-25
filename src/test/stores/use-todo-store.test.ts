@@ -35,6 +35,7 @@ describe('useTodoStore', () => {
         labels: [],
         enableAutostart: false,
         enableSoundEffects: true,
+        language: 'auto',
       },
     }
 
@@ -85,6 +86,7 @@ describe('useTodoStore', () => {
         labels: [],
         enableAutostart: false,
         enableSoundEffects: true,
+        language: 'auto',
       },
     }
 
@@ -118,6 +120,7 @@ describe('useTodoStore', () => {
         labels: [],
         enableAutostart: false,
         enableSoundEffects: true,
+        language: 'auto',
       },
     }
 
@@ -140,12 +143,13 @@ describe('useTodoStore', () => {
         sortOrder: 'asc' as const,
         autoCloseOnBlur: false,
         globalShortcut: '',
-        themeMode: 'light' as const,
+        themeMode: 'system' as const,
         activeListId: 'default',
         lists: [],
         labels: [],
-        enableAutostart: true,
+        enableAutostart: false,
         enableSoundEffects: true,
+        language: 'auto',
       },
     }
 
@@ -180,6 +184,7 @@ describe('useTodoStore', () => {
         labels: [],
         enableAutostart: false,
         enableSoundEffects: true,
+        language: 'auto',
       },
     }
 

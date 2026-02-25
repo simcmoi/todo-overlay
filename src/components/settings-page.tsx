@@ -1,5 +1,6 @@
-import { AlertTriangle, ArrowLeft, Cloud, ExternalLink, FileText, Info, Keyboard, Palette, Plus, RefreshCw, ScrollText, SlidersHorizontal, Tags, Trash2 } from 'lucide-react'
+import { AlertTriangle, ArrowLeft, Cloud, ExternalLink, FileText, Info, Keyboard, Languages, Palette, Plus, RefreshCw, ScrollText, SlidersHorizontal, Tags, Trash2 } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Switch } from '@/components/ui/switch'
@@ -42,13 +43,13 @@ type SettingsPageProps = {
   onSetAutostartEnabled: (enabled: boolean) => Promise<void>
 }
 
-const COLOR_OPTIONS: Array<{ value: TodoLabel['color']; label: string }> = [
-  { value: 'slate', label: 'Ardoise' },
-  { value: 'blue', label: 'Bleu' },
-  { value: 'green', label: 'Vert' },
-  { value: 'amber', label: 'Orange' },
-  { value: 'rose', label: 'Rose' },
-  { value: 'violet', label: 'Violet' },
+const LANGUAGE_OPTIONS: Array<{ value: string; label: string; flag: string }> = [
+  { value: 'auto', label: 'Auto (Système)', flag: '🌐' },
+  { value: 'en', label: 'English', flag: '🇺🇸' },
+  { value: 'fr', label: 'Français', flag: '🇫🇷' },
+  { value: 'es', label: 'Español', flag: '🇪🇸' },
+  { value: 'zh', label: '中文', flag: '🇨🇳' },
+  { value: 'hi', label: 'हिन्दी', flag: '🇮🇳' },
 ]
 
 function keyFromKeyboardEvent(event: KeyboardEvent): string | null {
@@ -112,6 +113,17 @@ export function SettingsPage({
   onSetGlobalShortcut,
   onSetAutostartEnabled,
 }: SettingsPageProps) {
+  const { t } = useTranslation()
+  
+  const COLOR_OPTIONS: Array<{ value: TodoLabel['color']; label: string }> = [
+    { value: 'slate', label: t('settings.colors.slate') },
+    { value: 'blue', label: t('settings.colors.blue') },
+    { value: 'green', label: t('settings.colors.green') },
+    { value: 'amber', label: t('settings.colors.amber') },
+    { value: 'rose', label: t('settings.colors.rose') },
+    { value: 'violet', label: t('settings.colors.violet') },
+  ]
+  
   const [shortcutDraft, setShortcutDraft] = useState(settings.globalShortcut)
   const [shortcutError, setShortcutError] = useState<string | null>(null)
   const [isCapturingShortcut, setIsCapturingShortcut] = useState(false)
@@ -155,7 +167,7 @@ export function SettingsPage({
 
       const key = keyFromKeyboardEvent(event)
       if (!key) {
-        setShortcutError('Touche non supportée pour un raccourci global')
+        setShortcutError(t('settings.unsupportedKey'))
         return
       }
 
@@ -196,7 +208,7 @@ export function SettingsPage({
     try {
       await onSetGlobalShortcut(shortcutDraft.trim())
     } catch (error) {
-      setShortcutError(error instanceof Error ? error.message : 'Raccourci invalide')
+      setShortcutError(error instanceof Error ? error.message : t('settings.invalidShortcut'))
     } finally {
       setIsSavingShortcut(false)
     }
@@ -217,7 +229,7 @@ export function SettingsPage({
   const addLabel = async () => {
     const newLabel: TodoLabel = {
       id: `label-${Date.now()}`,
-      name: 'Nouveau label',
+      name: t('settings.newLabel'),
       color: 'slate',
     }
     await onUpdateSettings({ labels: [...settings.labels, newLabel] })
@@ -229,9 +241,9 @@ export function SettingsPage({
         <div className="mb-4 flex items-center justify-between">
           <Button type="button" variant="ghost" className="h-7 gap-1 px-2" onClick={onBack}>
             <ArrowLeft className="h-3.5 w-3.5" />
-            Retour
+            {t('common.back')}
           </Button>
-          <p className="text-sm font-medium">Paramètres</p>
+          <p className="text-sm font-medium">{t('app.settings')}</p>
           <div className="w-7" /> {/* Spacer pour centrer le titre */}
         </div>
 
@@ -240,16 +252,16 @@ export function SettingsPage({
           <section>
             <div className="mb-3 flex items-center gap-2">
               <SlidersHorizontal className="h-4 w-4 text-muted-foreground" />
-              <p className="text-sm font-medium">Général</p>
+              <p className="text-sm font-medium">{t('settings.general')}</p>
             </div>
             <div className="space-y-3 pl-6">
               <div className="flex items-center justify-between gap-3">
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <span className="text-xs text-muted-foreground cursor-help">Fermer si perte de focus</span>
+                    <span className="text-xs text-muted-foreground cursor-help">{t('settings.autoCloseOnBlur')}</span>
                   </TooltipTrigger>
                   <TooltipContent side="left" className="max-w-xs">
-                    <p>Ferme automatiquement la fenêtre overlay lorsque vous cliquez en dehors. Pratique pour garder votre espace de travail dégagé.</p>
+                    <p>{t('settings.autoCloseOnBlurTooltip')}</p>
                   </TooltipContent>
                 </Tooltip>
                 <Switch
@@ -262,10 +274,10 @@ export function SettingsPage({
               <div className="flex items-center justify-between gap-3">
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <span className="text-xs text-muted-foreground cursor-help">Démarrer au lancement du système</span>
+                    <span className="text-xs text-muted-foreground cursor-help">{t('settings.enableAutostart')}</span>
                   </TooltipTrigger>
                   <TooltipContent side="left" className="max-w-xs">
-                    <p>Lance automatiquement l'application en arrière-plan au démarrage de votre ordinateur. L'overlay reste accessible via le raccourci clavier.</p>
+                    <p>{t('settings.enableAutostartTooltip')}</p>
                   </TooltipContent>
                 </Tooltip>
                 <Switch
@@ -278,10 +290,10 @@ export function SettingsPage({
               <div className="flex items-center justify-between gap-3">
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <span className="text-xs text-muted-foreground cursor-help">Activer les effets sonores</span>
+                    <span className="text-xs text-muted-foreground cursor-help">{t('settings.enableSoundEffects')}</span>
                   </TooltipTrigger>
                   <TooltipContent side="left" className="max-w-xs">
-                    <p>Joue des sons discrets lors de la création, complétion ou suppression de tâches pour un retour audio agréable.</p>
+                    <p>{t('settings.enableSoundEffectsTooltip')}</p>
                   </TooltipContent>
                 </Tooltip>
                 <Switch
@@ -294,10 +306,10 @@ export function SettingsPage({
               <div className="flex items-center justify-between gap-3">
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <span className="text-xs text-muted-foreground cursor-help">Tri par défaut</span>
+                    <span className="text-xs text-muted-foreground cursor-help">{t('settings.sortMode')}</span>
                   </TooltipTrigger>
                   <TooltipContent side="left" className="max-w-xs">
-                    <p>Ordre d'affichage des tâches : par date d'ajout, alphabétique, date limite, ou manuel (drag & drop).</p>
+                    <p>{t('settings.sortModeTooltip')}</p>
                   </TooltipContent>
                 </Tooltip>
                 <Select
@@ -310,11 +322,11 @@ export function SettingsPage({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="recent">Récentes</SelectItem>
-                  <SelectItem value="oldest">Anciennes</SelectItem>
-                  <SelectItem value="title">Titre</SelectItem>
-                  <SelectItem value="dueDate">Date limite</SelectItem>
-                  <SelectItem value="manual">Manuel</SelectItem>
+                  <SelectItem value="recent">{t('settings.sortRecent')}</SelectItem>
+                  <SelectItem value="oldest">{t('settings.sortOldest')}</SelectItem>
+                  <SelectItem value="title">{t('settings.sortTitle')}</SelectItem>
+                  <SelectItem value="dueDate">{t('settings.sortDueDate')}</SelectItem>
+                  <SelectItem value="manual">{t('settings.sortManual')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -327,15 +339,15 @@ export function SettingsPage({
         <section>
           <div className="mb-3 flex items-center gap-2">
             <Palette className="h-4 w-4 text-muted-foreground" />
-            <p className="text-sm font-medium">Apparence</p>
+            <p className="text-sm font-medium">{t('settings.appearance')}</p>
           </div>
           <div className="flex items-center justify-between gap-3 pl-6">
             <Tooltip>
               <TooltipTrigger asChild>
-                <span className="text-xs text-muted-foreground cursor-help">Thème</span>
+                <span className="text-xs text-muted-foreground cursor-help">{t('settings.theme')}</span>
               </TooltipTrigger>
               <TooltipContent side="left" className="max-w-xs">
-                <p>Choisissez le thème de l'application : Système (suit les préférences de votre OS), Clair ou Sombre.</p>
+                <p>{t('settings.themeTooltip')}</p>
               </TooltipContent>
             </Tooltip>
             <Select
@@ -348,9 +360,55 @@ export function SettingsPage({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="system">Système</SelectItem>
-                <SelectItem value="light">Clair</SelectItem>
-                <SelectItem value="dark">Sombre</SelectItem>
+                <SelectItem value="system">{t('settings.themeSystem')}</SelectItem>
+                <SelectItem value="light">{t('settings.themeLight')}</SelectItem>
+                <SelectItem value="dark">{t('settings.themeDark')}</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </section>
+
+        <div className="border-t border-border/50" />
+
+        {/* Langue */}
+        <section>
+          <div className="mb-3 flex items-center gap-2">
+            <Languages className="h-4 w-4 text-muted-foreground" />
+            <p className="text-sm font-medium">{t('settings.language')}</p>
+          </div>
+          <div className="flex items-center justify-between gap-3 pl-6">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span className="text-xs text-muted-foreground cursor-help">{t('settings.interface')}</span>
+              </TooltipTrigger>
+              <TooltipContent side="left" className="max-w-xs">
+                <p>{t('settings.languageTooltip')}</p>
+              </TooltipContent>
+            </Tooltip>
+            <Select
+              value={settings.language}
+              onValueChange={async (value) => {
+                await onUpdateSettings({ language: value })
+              }}
+            >
+              <SelectTrigger className="h-8 w-[160px] text-xs">
+                <SelectValue>
+                  {LANGUAGE_OPTIONS.find((lang) => lang.value === settings.language) ? (
+                    <span className="flex items-center gap-2">
+                      <span>{LANGUAGE_OPTIONS.find((lang) => lang.value === settings.language)?.flag}</span>
+                      <span>{LANGUAGE_OPTIONS.find((lang) => lang.value === settings.language)?.label}</span>
+                    </span>
+                  ) : (
+                    'Select language'
+                  )}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                {LANGUAGE_OPTIONS.map((lang) => (
+                  <SelectItem key={lang.value} value={lang.value}>
+                    {lang.label}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
@@ -364,16 +422,16 @@ export function SettingsPage({
             <Keyboard className="h-4 w-4 text-muted-foreground" />
             <Tooltip>
               <TooltipTrigger asChild>
-                <p className="text-sm font-medium cursor-help">Raccourci global</p>
+                <p className="text-sm font-medium cursor-help">{t('settings.globalShortcut')}</p>
               </TooltipTrigger>
               <TooltipContent side="right" className="max-w-xs">
-                <p>Définissez une combinaison de touches pour afficher/masquer l'overlay depuis n'importe où. Fonctionne même quand l'application est en arrière-plan.</p>
+                <p>{t('settings.globalShortcutTooltip')}</p>
               </TooltipContent>
             </Tooltip>
           </div>
           <div className="space-y-2 pl-6">
             <p className="text-xs text-muted-foreground">
-              Exemple: <code className="rounded bg-muted px-1 py-0.5 text-[10px]">Shift+Space</code> ou <code className="rounded bg-muted px-1 py-0.5 text-[10px]">CmdOrCtrl+Shift+T</code>
+              {t('settings.shortcutExample')}: <code className="rounded bg-muted px-1 py-0.5 text-[10px]">Shift+Space</code> {t('common.or')} <code className="rounded bg-muted px-1 py-0.5 text-[10px]">CmdOrCtrl+Shift+T</code>
             </p>
             <div className="flex gap-2">
               <Input
@@ -384,7 +442,7 @@ export function SettingsPage({
                 }}
                 className="h-8 text-xs"
                 placeholder="Shift+Space"
-                aria-label="Raccourci global"
+                aria-label={t('settings.globalShortcut')}
               />
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -395,27 +453,27 @@ export function SettingsPage({
                     className="h-8 px-2 text-xs"
                     onClick={() => {
                       setShortcutError(null)
-                      setIsCapturingShortcut((current) => !current)
-                    }}
-                  >
-                    {isCapturingShortcut ? 'Écoute…' : 'Capturer'}
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent side="top" className="max-w-xs">
-                  <p>Cliquez et appuyez sur votre combinaison de touches pour l'enregistrer automatiquement.</p>
-                </TooltipContent>
-              </Tooltip>
-              <Button
-                type="button"
-                size="sm"
-                className="h-8 px-2 text-xs"
-                onClick={() => {
-                  void applyShortcut()
-                }}
-                disabled={isSavingShortcut}
-              >
-                Appliquer
-              </Button>
+                    setIsCapturingShortcut((current) => !current)
+                  }}
+                >
+                  {isCapturingShortcut ? t('settings.listening') : t('settings.capture')}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="top" className="max-w-xs">
+                <p>{t('settings.captureTooltip')}</p>
+              </TooltipContent>
+            </Tooltip>
+            <Button
+              type="button"
+              size="sm"
+              className="h-8 px-2 text-xs"
+              onClick={() => {
+                void applyShortcut()
+              }}
+              disabled={isSavingShortcut}
+            >
+              {t('settings.apply')}
+            </Button>
             </div>
             {shortcutError ? <p className="text-xs text-destructive">{shortcutError}</p> : null}
           </div>
@@ -430,10 +488,10 @@ export function SettingsPage({
               <Tags className="h-4 w-4 text-muted-foreground" />
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <p className="text-sm font-medium cursor-help">Labels</p>
+                  <p className="text-sm font-medium cursor-help">{t('settings.labels')}</p>
                 </TooltipTrigger>
                 <TooltipContent side="right" className="max-w-xs">
-                  <p>Les labels vous permettent de catégoriser et filtrer vos tâches par couleur. Créez des labels pour organiser votre travail (ex: Urgent, Personnel, Travail).</p>
+                  <p>{t('settings.labelsTooltip')}</p>
                 </TooltipContent>
               </Tooltip>
             </div>
@@ -441,11 +499,11 @@ export function SettingsPage({
               <TooltipTrigger asChild>
                 <Button type="button" variant="ghost" size="sm" className="h-7 gap-1 px-2 text-xs" onClick={addLabel}>
                   <Plus className="h-3.5 w-3.5" />
-                  Ajouter
+                  {t('settings.addLabel')}
                 </Button>
               </TooltipTrigger>
               <TooltipContent side="left" className="max-w-xs">
-                <p>Crée un nouveau label personnalisé avec un nom et une couleur au choix.</p>
+                <p>{t('settings.addLabelTooltip')}</p>
               </TooltipContent>
             </Tooltip>
           </div>
@@ -519,10 +577,10 @@ export function SettingsPage({
             <Cloud className="h-4 w-4 text-muted-foreground" />
             <Tooltip>
               <TooltipTrigger asChild>
-                <p className="text-sm font-medium cursor-help">Synchronisation</p>
+                <p className="text-sm font-medium cursor-help">{t('settings.synchronization')}</p>
               </TooltipTrigger>
               <TooltipContent side="right" className="max-w-xs">
-                <p>Synchronisez vos tâches sur plusieurs appareils via le cloud. Vos données restent chiffrées et accessibles depuis n'importe où.</p>
+                <p>{t('settings.synchronizationTooltip')}</p>
               </TooltipContent>
             </Tooltip>
           </div>
@@ -539,10 +597,10 @@ export function SettingsPage({
             <FileText className="h-4 w-4 text-muted-foreground" />
             <Tooltip>
               <TooltipTrigger asChild>
-                <p className="text-sm font-medium cursor-help">Données locales</p>
+                <p className="text-sm font-medium cursor-help">{t('settings.localData')}</p>
               </TooltipTrigger>
               <TooltipContent side="right" className="max-w-xs">
-                <p>Emplacement du fichier JSON contenant toutes vos tâches et paramètres sur cet appareil. Utile pour les sauvegardes manuelles.</p>
+                <p>{t('settings.localDataTooltip')}</p>
               </TooltipContent>
             </Tooltip>
           </div>
@@ -561,12 +619,12 @@ export function SettingsPage({
                     }}
                   >
                     <ExternalLink className="h-3.5 w-3.5" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent side="left" className="max-w-xs">
-                  <p>Ouvre le fichier de données dans votre explorateur de fichiers ou éditeur par défaut.</p>
-                </TooltipContent>
-              </Tooltip>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="left" className="max-w-xs">
+                <p>{t('settings.openDataFileTooltip')}</p>
+              </TooltipContent>
+            </Tooltip>
             </div>
           </div>
         </section>
@@ -579,10 +637,10 @@ export function SettingsPage({
             <ScrollText className="h-4 w-4 text-muted-foreground" />
             <Tooltip>
               <TooltipTrigger asChild>
-                <p className="text-sm font-medium cursor-help">Logs</p>
+                <p className="text-sm font-medium cursor-help">{t('settings.logs')}</p>
               </TooltipTrigger>
               <TooltipContent side="right" className="max-w-xs">
-                <p>Fichier journal technique contenant les événements et erreurs de l'application. Utile pour le débogage et le support technique.</p>
+                <p>{t('settings.logsTooltip')}</p>
               </TooltipContent>
             </Tooltip>
           </div>
@@ -601,12 +659,12 @@ export function SettingsPage({
                     }}
                   >
                     <ExternalLink className="h-3.5 w-3.5" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent side="left" className="max-w-xs">
-                  <p>Ouvre le fichier de logs dans votre explorateur de fichiers ou éditeur par défaut.</p>
-                </TooltipContent>
-              </Tooltip>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="left" className="max-w-xs">
+                <p>{t('settings.openLogFileTooltip')}</p>
+              </TooltipContent>
+            </Tooltip>
             </div>
           </div>
         </section>
@@ -617,23 +675,23 @@ export function SettingsPage({
         <section>
           <div className="mb-3 flex items-center gap-2">
             <Info className="h-4 w-4 text-muted-foreground" />
-            <p className="text-sm font-medium">À propos</p>
+            <p className="text-sm font-medium">{t('settings.about')}</p>
           </div>
           <div className="space-y-3 pl-6">
             <div className="flex items-center justify-between gap-3">
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <span className="text-xs text-muted-foreground cursor-help">Version</span>
+                  <span className="text-xs text-muted-foreground cursor-help">{t('settings.version')}</span>
                 </TooltipTrigger>
                 <TooltipContent side="left" className="max-w-xs">
-                  <p>Numéro de version actuel de l'application. Format : majeur.mineur.patch (ex: 0.2.3).</p>
+                  <p>{t('settings.versionTooltip')}</p>
                 </TooltipContent>
               </Tooltip>
               <span className="text-xs font-mono font-medium">{appVersion}</span>
             </div>
             {lastChecked && (
               <div className="flex items-center justify-between gap-3">
-                <span className="text-xs text-muted-foreground">Dernière vérification</span>
+                <span className="text-xs text-muted-foreground">{t('settings.lastCheck')}</span>
                 <span className="text-xs text-muted-foreground">
                   {new Intl.DateTimeFormat('fr-FR', {
                     dateStyle: 'short',
@@ -655,30 +713,30 @@ export function SettingsPage({
                     // Show feedback toast based on result
                     if (updateState === 'available') {
                       toast({
-                        title: 'Mise à jour disponible',
-                        description: 'Une nouvelle version est disponible !',
+                        title: t('settings.updateAvailable'),
+                        description: t('settings.updateAvailableDesc'),
                       })
                     } else if (updateState === 'error') {
                       toast({
-                        title: 'Erreur',
-                        description: 'Impossible de vérifier les mises à jour.',
+                        title: t('common.error'),
+                        description: t('settings.updateError'),
                         variant: 'destructive',
                       })
                     } else {
                       toast({
-                        title: 'Aucune mise à jour',
-                        description: 'Vous utilisez la dernière version.',
+                        title: t('settings.noUpdate'),
+                        description: t('settings.noUpdateDesc'),
                       })
                     }
                   }}
                   disabled={updateState === 'checking'}
                 >
                   <RefreshCw className={cn('h-3.5 w-3.5', updateState === 'checking' && 'animate-spin')} />
-                  {updateState === 'checking' ? 'Vérification...' : 'Vérifier les mises à jour'}
+                  {updateState === 'checking' ? t('settings.checking') : t('settings.checkForUpdates')}
                 </Button>
               </TooltipTrigger>
               <TooltipContent side="left" className="max-w-xs">
-                <p>Vérifie si une nouvelle version de l'application est disponible sur GitHub. Vous serez notifié si une mise à jour existe.</p>
+                <p>{t('settings.checkForUpdatesTooltip')}</p>
               </TooltipContent>
             </Tooltip>
           </div>
@@ -690,11 +748,11 @@ export function SettingsPage({
         <section>
           <div className="mb-3 flex items-center gap-2">
             <AlertTriangle className="h-4 w-4 text-red-600" />
-            <p className="text-sm font-medium text-red-600">Zone dangereuse</p>
+            <p className="text-sm font-medium text-red-600">{t('settings.dangerZone')}</p>
           </div>
           <div className="space-y-2 pl-6">
             <p className="text-xs text-muted-foreground">
-              Cette action supprimera toutes vos données et réinitialisera l'application à son état initial. Cette action est irréversible.
+              {t('settings.dangerZoneWarning')}
             </p>
             <AlertDialog>
               <Tooltip>
@@ -707,23 +765,23 @@ export function SettingsPage({
                       className="h-7 gap-1 px-2 text-xs border-red-500/50 text-red-600 hover:bg-red-500/10 hover:text-red-700"
                     >
                       <Trash2 className="h-3.5 w-3.5" />
-                      Supprimer toutes les données
+                      {t('settings.deleteAllData')}
                     </Button>
                   </AlertDialogTrigger>
                 </TooltipTrigger>
                 <TooltipContent side="right" className="max-w-xs">
-                  <p>⚠️ ATTENTION : Supprime définitivement toutes vos tâches, listes, labels et paramètres. Aucune sauvegarde automatique n'est créée. Cette action est irréversible !</p>
+                  <p>{t('settings.deleteAllDataTooltip')}</p>
                 </TooltipContent>
               </Tooltip>
               <AlertDialogContent>
                 <AlertDialogHeader>
-                  <AlertDialogTitle>Êtes-vous absolument sûr ?</AlertDialogTitle>
+                  <AlertDialogTitle>{t('settings.confirmDeleteTitle')}</AlertDialogTitle>
                   <AlertDialogDescription>
-                    Cette action est irréversible. Toutes vos tâches, listes, labels et paramètres seront définitivement supprimés.
+                    {t('settings.confirmDeleteDesc')}
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
-                  <AlertDialogCancel>Annuler</AlertDialogCancel>
+                  <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
                   <AlertDialogAction
                     className="bg-red-600 text-white hover:bg-red-700"
                     onClick={async () => {
@@ -734,11 +792,11 @@ export function SettingsPage({
                         // Backend will emit 'data-reset' event, App.tsx will handle rehydration
                       } catch (error) {
                         console.error('❌ Failed to reset data:', error)
-                        alert(`Erreur lors de la réinitialisation: ${error}`)
+                        alert(`${t('common.error')}: ${error}`)
                       }
                     }}
                   >
-                    Oui, tout supprimer
+                    {t('settings.confirmDelete')}
                   </AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>

@@ -95,6 +95,7 @@ interface DbSettings {
   sort_mode: string
   sort_order: string
   active_list_id: string
+  language: string
   updated_at: number
   device_id: string | null
   version: number
@@ -446,6 +447,7 @@ export class CloudStorageProvider implements StorageProvider {
         sort_mode: data.settings.sortMode,
         sort_order: data.settings.sortOrder,
         active_list_id: data.settings.activeListId,
+        language: data.settings.language,
         updated_at: now,
         device_id: deviceId,
         version: 1
@@ -895,7 +897,8 @@ export class CloudStorageProvider implements StorageProvider {
         color: label.color as TodoLabel['color']
       })),
       enableAutostart: dbSettings.enable_autostart,
-      enableSoundEffects: dbSettings.enable_sound_effects
+      enableSoundEffects: dbSettings.enable_sound_effects,
+      language: dbSettings.language || 'auto'
     }
   }
   
@@ -918,7 +921,8 @@ export class CloudStorageProvider implements StorageProvider {
         color: label.color as TodoLabel['color']
       })),
       enableAutostart: true,
-      enableSoundEffects: true
+      enableSoundEffects: true,
+      language: 'auto'
     }
   }
   
