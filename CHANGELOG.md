@@ -7,6 +7,8 @@ et ce projet adhère au [Semantic Versioning](https://semver.org/lang/fr/).
 
 ## [Non publié]
 
+## [0.2.4] - 2026-02-25
+
 ### Ajouté
 - Tooltips détaillés sur tous les paramètres de l'application pour une meilleure compréhension
 - Système automatique de changelog lors des releases GitHub
