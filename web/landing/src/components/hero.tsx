@@ -11,7 +11,7 @@ export function Hero() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className="space-y-4"
+            className="space-y-6"
           >
             <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-2 text-sm font-medium">
               <Zap className="h-4 w-4" />
@@ -35,14 +35,14 @@ export function Hero() {
             transition={{ duration: 0.5, delay: 0.2 }}
             className="flex flex-col gap-4 sm:flex-row"
           >
-            <Button size="lg" className="gap-2">
-              <Download className="h-5 w-5" />
+            <Button size="lg">
+              <Download />
               Télécharger pour macOS
             </Button>
             
-            <Button size="lg" variant="outline" className="gap-2" asChild>
+            <Button size="lg" variant="outline" asChild>
               <a href="https://github.com/simonfessy/todo-overlay" target="_blank" rel="noopener noreferrer">
-                <Github className="h-5 w-5" />
+                <Github />
                 Voir sur GitHub
               </a>
             </Button>
@@ -64,7 +64,7 @@ export function Hero() {
       </div>
 
       {/* Animated background elements */}
-      <div className="absolute inset-0 -z-10 overflow-hidden">
+      <div className="absolute inset-0 -z-10 overflow-hidden pointer-events-none">
         <motion.div
           animate={{
             scale: [1, 1.2, 1],

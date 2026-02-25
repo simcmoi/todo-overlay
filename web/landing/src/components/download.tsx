@@ -80,9 +80,9 @@ export function Download() {
           </div>
 
           <div className="flex flex-col items-center gap-4">
-            <Button size="lg" className="gap-2 text-lg px-8 py-6 h-auto" asChild>
+            <Button size="lg" asChild>
               <a href={primary.href}>
-                <PrimaryIcon className="h-6 w-6" />
+                <PrimaryIcon />
                 {primary.label}
               </a>
             </Button>
@@ -96,20 +96,20 @@ export function Download() {
             <p className="text-sm text-muted-foreground mb-4">Disponible sur :</p>
             <div className="flex flex-wrap justify-center gap-4">
               <Button variant="outline" size="sm" asChild>
-                <a href="#download-macos" className="gap-2">
-                  <Apple className="h-4 w-4" />
+                <a href="#download-macos">
+                  <Apple />
                   macOS
                 </a>
               </Button>
               <Button variant="outline" size="sm" asChild>
-                <a href="#download-windows" className="gap-2">
-                  <MonitorSmartphone className="h-4 w-4" />
+                <a href="#download-windows">
+                  <MonitorSmartphone />
                   Windows
                 </a>
               </Button>
               <Button variant="outline" size="sm" asChild>
-                <a href="#download-linux" className="gap-2">
-                  <MonitorSmartphone className="h-4 w-4" />
+                <a href="#download-linux">
+                  <MonitorSmartphone />
                   Linux
                 </a>
               </Button>
