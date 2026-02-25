@@ -1,5 +1,5 @@
-mod commands;
 mod changelog;
+mod commands;
 mod reminder;
 mod shortcuts;
 mod storage;
@@ -7,8 +7,8 @@ mod tray;
 mod updater;
 mod window;
 
-use tauri_plugin_autostart::ManagerExt;
 use tauri::Manager;
+use tauri_plugin_autostart::ManagerExt;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -19,7 +19,7 @@ pub fn run() {
                 .target(tauri_plugin_log::Target::new(
                     tauri_plugin_log::TargetKind::LogDir {
                         file_name: Some("todo-overlay.log".to_string()),
-                    }
+                    },
                 ))
                 .rotation_strategy(tauri_plugin_log::RotationStrategy::KeepAll)
                 .max_file_size(5_000_000) // 5MB max
@@ -35,11 +35,10 @@ pub fn run() {
         .setup(|app| {
             // Hide app from Dock on macOS only when no main window is visible
             // This will be managed dynamically based on window state
-            
+
             let app_handle = app.handle().clone();
 
-            let data = storage::load_or_create(&app_handle)
-                .map_err(std::io::Error::other)?;
+            let data = storage::load_or_create(&app_handle).map_err(std::io::Error::other)?;
             app.manage(storage::AppState::new(data));
 
             tray::create_tray(&app_handle)?;
@@ -63,7 +62,7 @@ pub fn run() {
                     }
                 }
             }
-            
+
             // Don't hide main window on startup - let it show normally
             // window::hide_main_window(&app_handle)?;
 

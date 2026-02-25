@@ -4,8 +4,10 @@ use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent}
 use crate::window;
 
 pub fn create_tray(app: &tauri::AppHandle) -> tauri::Result<()> {
-    let show_main_item = MenuItemBuilder::with_id("show_main", "Afficher fenêtre principale").build(app)?;
-    let toggle_overlay_item = MenuItemBuilder::with_id("toggle_overlay", "Afficher / Masquer overlay").build(app)?;
+    let show_main_item =
+        MenuItemBuilder::with_id("show_main", "Afficher fenêtre principale").build(app)?;
+    let toggle_overlay_item =
+        MenuItemBuilder::with_id("toggle_overlay", "Afficher / Masquer overlay").build(app)?;
     let quit_item = MenuItemBuilder::with_id("quit", "Quitter").build(app)?;
 
     let menu = MenuBuilder::new(app)

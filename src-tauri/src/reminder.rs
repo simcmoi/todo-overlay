@@ -40,7 +40,8 @@ fn check_due_reminders(app: &AppHandle) -> Result<(), String> {
             .todos
             .iter()
             .filter(|todo| {
-                todo.completed_at.is_none() && todo.reminder_at.is_some_and(|reminder| reminder <= now)
+                todo.completed_at.is_none()
+                    && todo.reminder_at.is_some_and(|reminder| reminder <= now)
             })
             .cloned()
             .collect::<Vec<_>>();
@@ -67,7 +68,10 @@ fn check_due_reminders(app: &AppHandle) -> Result<(), String> {
             .body(todo.title.clone())
             .show()
         {
-            log::error!("failed to display reminder notification for {}: {error}", todo.id);
+            log::error!(
+                "failed to display reminder notification for {}: {error}",
+                todo.id
+            );
             continue;
         }
 

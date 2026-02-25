@@ -1,4 +1,4 @@
-use tauri::{AppHandle, Manager, WebviewWindow, WebviewUrl, WebviewWindowBuilder};
+use tauri::{AppHandle, Manager, WebviewUrl, WebviewWindow, WebviewWindowBuilder};
 
 const MAIN_WINDOW_LABEL: &str = "main";
 const OVERLAY_WINDOW_LABEL: &str = "overlay";
@@ -13,27 +13,23 @@ fn get_overlay_window(app: &AppHandle) -> Option<WebviewWindow> {
 }
 
 fn create_overlay_window(app: &AppHandle) -> tauri::Result<WebviewWindow> {
-    let window = WebviewWindowBuilder::new(
-        app,
-        OVERLAY_WINDOW_LABEL,
-        WebviewUrl::default()
-    )
-    .title("ToDo Overlay")
-    .inner_size(500.0, 700.0)
-    .min_inner_size(500.0, 700.0)
-    .max_inner_size(500.0, 700.0)
-    .resizable(false)
-    .maximizable(false)
-    .minimizable(false)
-    .decorations(false)
-    .transparent(true)
-    .shadow(false)
-    .always_on_top(true)
-    .skip_taskbar(true)
-    .visible(false)
-    .center()
-    .focused(false)
-    .build()?;
+    let window = WebviewWindowBuilder::new(app, OVERLAY_WINDOW_LABEL, WebviewUrl::default())
+        .title("ToDo Overlay")
+        .inner_size(500.0, 700.0)
+        .min_inner_size(500.0, 700.0)
+        .max_inner_size(500.0, 700.0)
+        .resizable(false)
+        .maximizable(false)
+        .minimizable(false)
+        .decorations(false)
+        .transparent(true)
+        .shadow(false)
+        .always_on_top(true)
+        .skip_taskbar(true)
+        .visible(false)
+        .center()
+        .focused(false)
+        .build()?;
 
     Ok(window)
 }
@@ -87,7 +83,7 @@ pub fn show_overlay_window(app: &AppHandle) -> tauri::Result<()> {
     {
         use cocoa::appkit::{NSMainMenuWindowLevel, NSWindow};
         use cocoa::base::id;
-        
+
         match overlay.ns_window() {
             Ok(handle) => {
                 let ns_window = handle as id;
@@ -102,7 +98,7 @@ pub fn show_overlay_window(app: &AppHandle) -> tauri::Result<()> {
             }
         }
     }
-    
+
     overlay.set_always_on_top(true)?;
     overlay.set_skip_taskbar(true)?;
     overlay.center()?;
@@ -134,5 +130,3 @@ pub fn toggle_overlay(app: &AppHandle) -> tauri::Result<()> {
 
     Ok(())
 }
-
-

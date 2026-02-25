@@ -18,7 +18,7 @@ async fn fetch_changelog_from_github(version: &str) -> Result<String, String> {
         "https://api.github.com/repos/simonfessy/todo-overlay/releases/tags/v{}",
         version
     );
-    
+
     let client = reqwest::Client::new();
     let response = client
         .get(&url)
@@ -27,16 +27,16 @@ async fn fetch_changelog_from_github(version: &str) -> Result<String, String> {
         .send()
         .await
         .map_err(|e| format!("Failed to fetch changelog: {}", e))?;
-    
+
     if !response.status().is_success() {
         return Err(format!("GitHub API returned status: {}", response.status()));
     }
-    
+
     let release: serde_json::Value = response
         .json()
         .await
         .map_err(|e| format!("Failed to parse JSON: {}", e))?;
-    
+
     release
         .get("body")
         .and_then(|b| b.as_str())
@@ -48,10 +48,10 @@ async fn fetch_changelog_from_github(version: &str) -> Result<String, String> {
 fn extract_local_changelog(version: &str) -> Result<String, String> {
     // Lire CHANGELOG.md depuis les ressources de l'app
     let changelog_content = include_str!("../../CHANGELOG.md");
-    
+
     let mut found = false;
     let mut result = Vec::new();
-    
+
     for line in changelog_content.lines() {
         // Détecte le début de la section de version
         if line.starts_with("## [") {
@@ -64,24 +64,24 @@ fn extract_local_changelog(version: &str) -> Result<String, String> {
                 continue;
             }
         }
-        
+
         // Si on est dans la bonne section, collecter les lignes
         if found {
             result.push(line);
         }
     }
-    
+
     if result.is_empty() {
         return Err(format!("No changelog found for version {}", version));
     }
-    
+
     Ok(result.join("\n").trim().to_string())
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[test]
     fn test_extract_local_changelog() {
         // Ce test ne fonctionnera qu'après avoir construit l'app

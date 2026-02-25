@@ -2,11 +2,11 @@ use std::collections::{HashMap, HashSet};
 use tauri::{AppHandle, Emitter, Manager, State};
 use uuid::Uuid;
 
+use crate::shortcuts;
 use crate::storage::{
     normalize_shortcut, now_millis, persist, AppData, AppState, Settings, Todo, TodoLabel,
     TodoList, TodoPriority, DEFAULT_LIST_ID,
 };
-use crate::shortcuts;
 use crate::window;
 
 fn lock_error(name: &str) -> String {
@@ -70,7 +70,11 @@ fn sanitize_settings(mut settings: Settings) -> Settings {
     for (index, list) in settings.lists.iter_mut().enumerate() {
         list.name = normalize_list_name(
             &list.name,
-            if index == 0 { "Mes tâches" } else { "Nouvelle liste" },
+            if index == 0 {
+                "Mes tâches"
+            } else {
+                "Nouvelle liste"
+            },
         );
     }
 
@@ -162,7 +166,13 @@ fn push_todo(
 
     let mut guard = state.data.lock().map_err(|_| lock_error("todo"))?;
     let target_list_id = normalized_list_id
-        .filter(|candidate| guard.settings.lists.iter().any(|list| list.id == *candidate))
+        .filter(|candidate| {
+            guard
+                .settings
+                .lists
+                .iter()
+                .any(|list| list.id == *candidate)
+        })
         .unwrap_or_else(|| guard.settings.active_list_id.clone());
 
     let validated_parent_id = normalized_parent_id.and_then(|candidate_parent| {
@@ -170,7 +180,8 @@ fn push_todo(
             .todos
             .iter()
             .find(|todo| {
-                todo.id == candidate_parent && todo.list_id.as_deref() == Some(target_list_id.as_str())
+                todo.id == candidate_parent
+                    && todo.list_id.as_deref() == Some(target_list_id.as_str())
             })
             .map(|todo| todo.id.clone())
     });
@@ -208,14 +219,14 @@ fn push_todo(
 #[tauri::command]
 pub fn get_log_file_path(app: AppHandle) -> Result<String, String> {
     log::info!("Getting log file path");
-    
+
     let log_dir = app
         .path()
         .app_log_dir()
         .map_err(|error| format!("failed to resolve log directory: {error}"))?;
-    
+
     let path = log_dir.join("todo-overlay.log");
-    
+
     path.to_str()
         .ok_or_else(|| "invalid path".to_string())
         .map(|s| s.to_string())
@@ -224,19 +235,19 @@ pub fn get_log_file_path(app: AppHandle) -> Result<String, String> {
 #[tauri::command]
 pub fn open_log_file(app: AppHandle) -> Result<(), String> {
     log::info!("Opening log file");
-    
+
     let log_dir = app
         .path()
         .app_log_dir()
         .map_err(|error| format!("failed to resolve log directory: {error}"))?;
-    
+
     let path = log_dir.join("todo-overlay.log");
-    
+
     // Vérifier si le fichier existe
     if !path.exists() {
         return Err("Log file does not exist yet".to_string());
     }
-    
+
     // Utiliser la commande 'open' sur macOS pour ouvrir le fichier avec l'éditeur par défaut
     #[cfg(target_os = "macos")]
     {
@@ -245,7 +256,7 @@ pub fn open_log_file(app: AppHandle) -> Result<(), String> {
             .spawn()
             .map_err(|error| format!("failed to open log file: {error}"))?;
     }
-    
+
     // Utiliser 'xdg-open' sur Linux
     #[cfg(target_os = "linux")]
     {
@@ -254,7 +265,7 @@ pub fn open_log_file(app: AppHandle) -> Result<(), String> {
             .spawn()
             .map_err(|error| format!("failed to open log file: {error}"))?;
     }
-    
+
     // Utiliser 'start' sur Windows
     #[cfg(target_os = "windows")]
     {
@@ -263,52 +274,56 @@ pub fn open_log_file(app: AppHandle) -> Result<(), String> {
             .spawn()
             .map_err(|error| format!("failed to open log file: {error}"))?;
     }
-    
+
     Ok(())
 }
 
 #[tauri::command]
 pub fn reset_all_data(app: AppHandle, state: State<'_, AppState>) -> Result<(), String> {
     log::info!("Resetting all data");
-    
+
     // Clear in-memory state
     {
         let mut guard = state.data.lock().map_err(|_| lock_error("todo"))?;
         *guard = AppData::default();
     }
-    
+
     // Clear notified todos
     {
-        let mut notified_guard = state.notified_todos.lock().map_err(|_| lock_error("reminder"))?;
+        let mut notified_guard = state
+            .notified_todos
+            .lock()
+            .map_err(|_| lock_error("reminder"))?;
         notified_guard.clear();
     }
-    
+
     // Re-register the default shortcut after reset
-    if let Err(error) = crate::shortcuts::replace_registered_shortcut(&app, crate::storage::DEFAULT_GLOBAL_SHORTCUT) {
+    if let Err(error) =
+        crate::shortcuts::replace_registered_shortcut(&app, crate::storage::DEFAULT_GLOBAL_SHORTCUT)
+    {
         log::error!("failed to re-register shortcut after reset: {error}");
         // Don't fail the reset if shortcut registration fails
     }
-    
+
     // Delete the data file
     let app_dir = app
         .path()
         .app_data_dir()
         .map_err(|error| format!("failed to resolve appDataDir: {error}"))?;
-    
+
     let path = app_dir.join(crate::storage::STORAGE_FILE_NAME);
-    
+
     if path.exists() {
         std::fs::remove_file(&path)
             .map_err(|error| format!("failed to delete data file: {error}"))?;
     }
-    
+
     // Emit event to notify frontend that data has been reset
     app.emit("data-reset", ()).ok();
-    
+
     log::info!("All data has been reset");
     Ok(())
 }
-
 
 #[tauri::command]
 pub fn load_state(state: State<'_, AppState>) -> AppData {
@@ -316,7 +331,11 @@ pub fn load_state(state: State<'_, AppState>) -> AppData {
 }
 
 #[tauri::command]
-pub fn add_todo(text: String, app: AppHandle, state: State<'_, AppState>) -> Result<AppData, String> {
+pub fn add_todo(
+    text: String,
+    app: AppHandle,
+    state: State<'_, AppState>,
+) -> Result<AppData, String> {
     log::info!("Adding todo: {}", text);
     push_todo(&state, text, None, None, None, None)?;
     persist_state(&app, &state)
@@ -332,8 +351,14 @@ pub fn create_todo(
     app: AppHandle,
     state: State<'_, AppState>,
 ) -> Result<AppData, String> {
-    log::info!("Creating todo: title='{}', has_details={}, has_reminder={}, parent_id={:?}, list_id={:?}", 
-        title, details.is_some(), reminder_at.is_some(), parent_id, list_id);
+    log::info!(
+        "Creating todo: title='{}', has_details={}, has_reminder={}, parent_id={:?}, list_id={:?}",
+        title,
+        details.is_some(),
+        reminder_at.is_some(),
+        parent_id,
+        list_id
+    );
     push_todo(&state, title, details, reminder_at, parent_id, list_id)?;
     persist_state(&app, &state)
 }
@@ -353,8 +378,12 @@ pub fn update_todo(
     app: AppHandle,
     state: State<'_, AppState>,
 ) -> Result<AppData, String> {
-    log::info!("Updating todo: id='{}', title='{}'", payload.id, payload.title);
-    
+    log::info!(
+        "Updating todo: id='{}', title='{}'",
+        payload.id,
+        payload.title
+    );
+
     let trimmed_title = payload.title.trim();
     if trimmed_title.is_empty() {
         return persist_state(&app, &state);
@@ -386,7 +415,11 @@ pub fn update_todo(
 }
 
 #[tauri::command]
-pub fn complete_todo(id: String, app: AppHandle, state: State<'_, AppState>) -> Result<AppData, String> {
+pub fn complete_todo(
+    id: String,
+    app: AppHandle,
+    state: State<'_, AppState>,
+) -> Result<AppData, String> {
     set_todo_completed(id, true, app, state)
 }
 
@@ -397,8 +430,12 @@ pub fn set_todo_completed(
     app: AppHandle,
     state: State<'_, AppState>,
 ) -> Result<AppData, String> {
-    log::info!("Setting todo completed: id='{}', completed={}", id, completed);
-    
+    log::info!(
+        "Setting todo completed: id='{}', completed={}",
+        id,
+        completed
+    );
+
     let next_completed_at = completed.then_some(now_millis());
 
     let affected_ids = {
@@ -491,7 +528,11 @@ pub fn set_todo_label(
 }
 
 #[tauri::command]
-pub fn create_list(name: String, app: AppHandle, state: State<'_, AppState>) -> Result<AppData, String> {
+pub fn create_list(
+    name: String,
+    app: AppHandle,
+    state: State<'_, AppState>,
+) -> Result<AppData, String> {
     let list_name = normalize_list_name(&name, "Nouvelle liste");
     let list_id = Uuid::new_v4().to_string();
 
@@ -531,7 +572,11 @@ pub fn rename_list(
 }
 
 #[tauri::command]
-pub fn set_active_list(id: String, app: AppHandle, state: State<'_, AppState>) -> Result<AppData, String> {
+pub fn set_active_list(
+    id: String,
+    app: AppHandle,
+    state: State<'_, AppState>,
+) -> Result<AppData, String> {
     {
         let mut guard = state.data.lock().map_err(|_| lock_error("todo"))?;
         if guard.settings.lists.iter().any(|list| list.id == id) {
@@ -719,9 +764,13 @@ pub fn reorder_todos(
 }
 
 #[tauri::command]
-pub fn delete_todo(id: String, app: AppHandle, state: State<'_, AppState>) -> Result<AppData, String> {
+pub fn delete_todo(
+    id: String,
+    app: AppHandle,
+    state: State<'_, AppState>,
+) -> Result<AppData, String> {
     log::info!("Deleting todo: id='{}'", id);
-    
+
     let deleted_ids = {
         let mut guard = state.data.lock().map_err(|_| lock_error("todo"))?;
         let mut ids = collect_subtree_ids(&guard.todos, &id);
@@ -800,10 +849,18 @@ pub fn update_settings(
         let mut guard = state.data.lock().map_err(|_| lock_error("todo"))?;
         guard.settings = sanitized_settings;
 
-        let valid_list_ids: HashSet<String> =
-            guard.settings.lists.iter().map(|list| list.id.clone()).collect();
-        let valid_label_ids: HashSet<String> =
-            guard.settings.labels.iter().map(|label| label.id.clone()).collect();
+        let valid_list_ids: HashSet<String> = guard
+            .settings
+            .lists
+            .iter()
+            .map(|list| list.id.clone())
+            .collect();
+        let valid_label_ids: HashSet<String> = guard
+            .settings
+            .labels
+            .iter()
+            .map(|label| label.id.clone())
+            .collect();
         let fallback_list_id = guard.settings.active_list_id.clone();
         for todo in &mut guard.todos {
             match todo.list_id.as_deref() {
@@ -914,9 +971,9 @@ pub fn get_data_file_path(app: AppHandle) -> Result<String, String> {
         .path()
         .app_data_dir()
         .map_err(|error| format!("failed to resolve appDataDir: {error}"))?;
-    
+
     let path = app_dir.join(crate::storage::STORAGE_FILE_NAME);
-    
+
     path.to_str()
         .ok_or_else(|| "invalid path".to_string())
         .map(|s| s.to_string())
@@ -928,9 +985,9 @@ pub fn open_data_file(app: AppHandle) -> Result<(), String> {
         .path()
         .app_data_dir()
         .map_err(|error| format!("failed to resolve appDataDir: {error}"))?;
-    
+
     let path = app_dir.join(crate::storage::STORAGE_FILE_NAME);
-    
+
     // Utiliser la commande 'open' sur macOS pour ouvrir le fichier avec l'éditeur par défaut
     #[cfg(target_os = "macos")]
     {
@@ -939,7 +996,7 @@ pub fn open_data_file(app: AppHandle) -> Result<(), String> {
             .spawn()
             .map_err(|error| format!("failed to open file: {error}"))?;
     }
-    
+
     // Utiliser 'xdg-open' sur Linux
     #[cfg(target_os = "linux")]
     {
@@ -948,7 +1005,7 @@ pub fn open_data_file(app: AppHandle) -> Result<(), String> {
             .spawn()
             .map_err(|error| format!("failed to open file: {error}"))?;
     }
-    
+
     // Utiliser 'start' sur Windows
     #[cfg(target_os = "windows")]
     {
@@ -957,6 +1014,6 @@ pub fn open_data_file(app: AppHandle) -> Result<(), String> {
             .spawn()
             .map_err(|error| format!("failed to open file: {error}"))?;
     }
-    
+
     Ok(())
 }

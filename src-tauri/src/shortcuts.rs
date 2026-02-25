@@ -8,15 +8,16 @@ fn attach_shortcut(
     app: &AppHandle,
     shortcut: &str,
 ) -> Result<(), tauri_plugin_global_shortcut::Error> {
-    app.global_shortcut().on_shortcut(shortcut, |app, _shortcut: &Shortcut, event| {
-        if event.state != ShortcutState::Pressed {
-            return;
-        }
+    app.global_shortcut()
+        .on_shortcut(shortcut, |app, _shortcut: &Shortcut, event| {
+            if event.state != ShortcutState::Pressed {
+                return;
+            }
 
-        if let Err(error) = window::toggle_overlay(app) {
-            log::error!("failed to toggle overlay from global shortcut: {error}");
-        }
-    })
+            if let Err(error) = window::toggle_overlay(app) {
+                log::error!("failed to toggle overlay from global shortcut: {error}");
+            }
+        })
 }
 
 pub fn register(

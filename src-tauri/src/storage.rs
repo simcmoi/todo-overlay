@@ -158,10 +158,7 @@ impl AppState {
     }
 
     pub fn snapshot(&self) -> AppData {
-        self.data
-            .lock()
-            .expect("todo state lock poisoned")
-            .clone()
+        self.data.lock().expect("todo state lock poisoned").clone()
     }
 }
 

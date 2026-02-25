@@ -36,7 +36,10 @@ pub async fn check_for_update(app: AppHandle) -> Result<UpdateInfo, String> {
                 })
             }
             Ok(None) => {
-                log::info!("Aucune mise à jour disponible (version actuelle : {})", current_version);
+                log::info!(
+                    "Aucune mise à jour disponible (version actuelle : {})",
+                    current_version
+                );
                 Ok(UpdateInfo {
                     available: false,
                     current_version,
@@ -47,7 +50,9 @@ pub async fn check_for_update(app: AppHandle) -> Result<UpdateInfo, String> {
             }
             Err(error) => {
                 log::error!("Erreur lors de la vérification des mises à jour : {error}");
-                Err(format!("Échec de la vérification des mises à jour : {error}"))
+                Err(format!(
+                    "Échec de la vérification des mises à jour : {error}"
+                ))
             }
         },
         Err(error) => {
@@ -69,20 +74,21 @@ pub async fn install_update(app: AppHandle) -> Result<(), String> {
                 // Émettre des événements de progression
                 let _ = app.emit("update-progress", "downloading");
 
-                match update.download_and_install(
-                    |chunk_length, content_length| {
-                        if let Some(total) = content_length {
-                            let progress = (chunk_length as f64 / total as f64) * 100.0;
-                            log::debug!("Progression du téléchargement : {:.1}%", progress);
-                            let _ = app.emit("update-download-progress", progress);
-                        }
-                    },
-                    || {
-                        log::info!("Téléchargement terminé, installation en cours...");
-                        let _ = app.emit("update-progress", "installing");
-                    },
-                )
-                .await
+                match update
+                    .download_and_install(
+                        |chunk_length, content_length| {
+                            if let Some(total) = content_length {
+                                let progress = (chunk_length as f64 / total as f64) * 100.0;
+                                log::debug!("Progression du téléchargement : {:.1}%", progress);
+                                let _ = app.emit("update-download-progress", progress);
+                            }
+                        },
+                        || {
+                            log::info!("Téléchargement terminé, installation en cours...");
+                            let _ = app.emit("update-progress", "installing");
+                        },
+                    )
+                    .await
                 {
                     Ok(()) => {
                         log::info!("Mise à jour installée avec succès, redémarrage...");
