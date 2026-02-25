@@ -89,22 +89,7 @@ function keyFromKeyboardEvent(event: KeyboardEvent): string | null {
   }
 }
 
-function colorClasses(color: TodoLabel['color']): string {
-  switch (color) {
-    case 'blue':
-      return 'bg-blue-500/15 text-blue-600 border-blue-600/30'
-    case 'green':
-      return 'bg-green-500/15 text-green-600 border-green-600/30'
-    case 'amber':
-      return 'bg-amber-500/15 text-amber-700 border-amber-700/30'
-    case 'rose':
-      return 'bg-rose-500/15 text-rose-700 border-rose-700/30'
-    case 'violet':
-      return 'bg-violet-500/15 text-violet-700 border-violet-700/30'
-    default:
-      return 'bg-muted text-muted-foreground border-border'
-  }
-}
+// Removed colorClasses function - colors now applied directly with cn() to avoid Tailwind purging
 
 export function SettingsPage({
   settings,
@@ -513,7 +498,15 @@ export function SettingsPage({
           <div className="space-y-2 pl-6">
             {sortedLabels.map((label) => (
               <div key={label.id} className="flex items-center gap-2">
-                <span className={cn('inline-flex h-2.5 w-2.5 rounded-full border', colorClasses(label.color))} />
+                <span className={cn(
+                  'inline-flex h-2.5 w-2.5 rounded-full border',
+                  label.color === 'slate' && 'bg-slate-500/15 text-slate-700 border-slate-700/30 dark:text-slate-300 dark:border-slate-500/30',
+                  label.color === 'blue' && 'bg-blue-500/15 text-blue-600 border-blue-600/30 dark:text-blue-300 dark:border-blue-400/30',
+                  label.color === 'green' && 'bg-green-500/15 text-green-600 border-green-600/30 dark:text-green-300 dark:border-green-500/30',
+                  label.color === 'amber' && 'bg-amber-500/15 text-amber-700 border-amber-700/30 dark:text-amber-300 dark:border-amber-500/30',
+                  label.color === 'rose' && 'bg-rose-500/15 text-rose-700 border-rose-700/30 dark:text-rose-300 dark:border-rose-500/30',
+                  label.color === 'violet' && 'bg-violet-500/15 text-violet-700 border-violet-700/30 dark:text-violet-300 dark:border-violet-500/30',
+                )} />
                 <Input
                   value={labelDrafts[label.id] ?? label.name}
                   onChange={(event) => {
