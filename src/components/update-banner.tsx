@@ -42,7 +42,7 @@ export function UpdateBanner() {
           {state === 'error' ? (
             <Badge 
               variant="destructive" 
-              className="flex items-center gap-2 px-3 py-2 text-xs shadow-lg"
+              className="flex items-center gap-2 px-3 py-2 shadow-lg"
             >
               <AlertCircle className="h-3.5 w-3.5" />
               <span>Update failed</span>
@@ -50,7 +50,7 @@ export function UpdateBanner() {
                 type="button"
                 variant="ghost"
                 size="icon"
-                className="h-4 w-4 ml-1 hover:bg-destructive-foreground/10"
+                className="h-4 w-4 ml-1 hover:bg-destructive-foreground/20"
                 onClick={dismissUpdate}
               >
                 <X className="h-3 w-3" />
@@ -58,14 +58,16 @@ export function UpdateBanner() {
             </Badge>
           ) : (
             <Badge 
-              className="flex items-center gap-2 px-3 py-2 text-xs shadow-lg bg-blue-500 hover:bg-blue-600 text-white border-blue-600"
+              variant="default"
+              className="flex items-center gap-2 px-3 py-2 shadow-lg"
             >
               <CheckCircle className="h-3.5 w-3.5" />
               <span>v{updateInfo?.latestVersion} available</span>
               <Button
                 type="button"
                 size="sm"
-                className="h-5 px-2 text-[10px] ml-1 bg-white text-blue-500 hover:bg-white/90"
+                variant="outline"
+                className="h-5 px-2 text-[10px] ml-1"
                 onClick={() => {
                   void installUpdate()
                 }}
@@ -77,7 +79,7 @@ export function UpdateBanner() {
                 type="button"
                 variant="ghost"
                 size="icon"
-                className="h-4 w-4 ml-1 hover:bg-white/10"
+                className="h-4 w-4 ml-1 hover:bg-primary-foreground/20"
                 onClick={dismissUpdate}
               >
                 <X className="h-3 w-3" />

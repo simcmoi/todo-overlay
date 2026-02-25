@@ -1,4 +1,4 @@
-import { MoreHorizontal } from 'lucide-react'
+import { Settings } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -9,10 +9,10 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Switch } from '@/components/ui/switch'
-import type { Settings } from '@/types/todo'
+import type { Settings as SettingsType } from '@/types/todo'
 
 type SettingsMenuProps = {
-  settings: Settings
+  settings: SettingsType
   onAutoCloseChange: (enabled: boolean) => Promise<void>
   onOpenSettingsPage: () => void
 }
@@ -26,7 +26,7 @@ export function SettingsMenu({
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size="icon" aria-label="Menu paramètres">
-          <MoreHorizontal className="h-4 w-4" />
+          <Settings className="h-4 w-4" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-64">
