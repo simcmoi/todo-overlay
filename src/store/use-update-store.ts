@@ -8,6 +8,7 @@ type UpdateStore = {
   updateInfo: UpdateInfo | null
   error: string | null
   downloadProgress: number
+  lastChecked: Date | null
   checkForUpdate: () => Promise<void>
   installUpdate: () => Promise<void>
   dismissUpdate: () => void
@@ -18,21 +19,23 @@ export const useUpdateStore = create<UpdateStore>((set, get) => ({
   updateInfo: null,
   error: null,
   downloadProgress: 0,
+  lastChecked: null,
 
   checkForUpdate: async () => {
     set({ state: 'checking', error: null })
 
     try {
       const info = await checkForUpdate()
+      const now = new Date()
       
       if (info.available) {
-        set({ state: 'available', updateInfo: info })
+        set({ state: 'available', updateInfo: info, lastChecked: now })
       } else {
-        set({ state: 'idle', updateInfo: info })
+        set({ state: 'idle', updateInfo: info, lastChecked: now })
       }
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Échec de la vérification des mises à jour'
-      set({ state: 'error', error: message })
+      set({ state: 'error', error: message, lastChecked: new Date() })
     }
   },
 

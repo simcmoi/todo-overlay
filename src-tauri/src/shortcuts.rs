@@ -13,8 +13,8 @@ fn attach_shortcut(
             return;
         }
 
-        if let Err(error) = window::toggle_main_window(app) {
-            log::error!("failed to toggle window from global shortcut: {error}");
+        if let Err(error) = window::toggle_overlay(app) {
+            log::error!("failed to toggle overlay from global shortcut: {error}");
         }
     })
 }

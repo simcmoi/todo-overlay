@@ -1,10 +1,29 @@
-import { ArrowLeft, Cloud, FileText, FolderOpen, Info, Keyboard, Palette, Plus, RefreshCw, ScrollText, SlidersHorizontal, Tags, Trash2 } from 'lucide-react'
+import { AlertTriangle, ArrowLeft, Cloud, FileText, FolderOpen, Info, Keyboard, Palette, Plus, RefreshCw, ScrollText, SlidersHorizontal, Tags, Trash2 } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Switch } from '@/components/ui/switch'
+import { useToast } from '@/hooks/use-toast'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog'
 import { useUpdateStore } from '@/store/use-update-store'
-import { getAppVersion, getDataFilePath, openDataFile, getLogFilePath, openLogFile } from '@/lib/tauri'
+import { getAppVersion, getDataFilePath, openDataFile, getLogFilePath, openLogFile, resetAllData } from '@/lib/tauri'
 import { cn } from '@/lib/utils'
 import type { Settings, ThemeMode, TodoLabel } from '@/types/todo'
 import { StorageSettings } from '@/components/storage'
@@ -95,7 +114,8 @@ export function SettingsPage({
   const [appVersion, setAppVersion] = useState<string>('')
   const [dataFilePath, setDataFilePath] = useState<string>('')
   const [logFilePath, setLogFilePath] = useState<string>('')
-  const { checkForUpdate, state: updateState } = useUpdateStore()
+  const { checkForUpdate, state: updateState, lastChecked } = useUpdateStore()
+  const { toast } = useToast()
 
   useEffect(() => {
     void getAppVersion().then(setAppVersion)
@@ -242,65 +262,25 @@ export function SettingsPage({
                 }}
               />
             </div>
-            <div className="space-y-2 pt-1">
-              <p className="text-xs text-muted-foreground">Tri par défaut</p>
-              <div className="flex flex-wrap gap-1.5">
-                <Button
-                  type="button"
-                  size="sm"
-                  variant={settings.sortMode === 'recent' ? 'default' : 'outline'}
-                  className="h-7 px-2 text-xs"
-                  onClick={async () => {
-                    await onUpdateSettings({ sortMode: 'recent' })
-                  }}
-                >
-                  Récentes
-                </Button>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant={settings.sortMode === 'oldest' ? 'default' : 'outline'}
-                  className="h-7 px-2 text-xs"
-                  onClick={async () => {
-                    await onUpdateSettings({ sortMode: 'oldest' })
-                  }}
-                >
-                  Anciennes
-                </Button>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant={settings.sortMode === 'title' ? 'default' : 'outline'}
-                  className="h-7 px-2 text-xs"
-                  onClick={async () => {
-                    await onUpdateSettings({ sortMode: 'title' })
-                  }}
-                >
-                  Titre
-                </Button>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant={settings.sortMode === 'dueDate' ? 'default' : 'outline'}
-                  className="h-7 px-2 text-xs"
-                  onClick={async () => {
-                    await onUpdateSettings({ sortMode: 'dueDate' })
-                  }}
-                >
-                  Date limite
-                </Button>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant={settings.sortMode === 'manual' ? 'default' : 'outline'}
-                  className="h-7 px-2 text-xs"
-                  onClick={async () => {
-                    await onUpdateSettings({ sortMode: 'manual' })
-                  }}
-                >
-                  Manuel
-                </Button>
-              </div>
+            <div className="flex items-center justify-between gap-3">
+              <span className="text-xs text-muted-foreground">Tri par défaut</span>
+              <Select
+                value={settings.sortMode}
+                onValueChange={async (value) => {
+                  await onUpdateSettings({ sortMode: value as typeof settings.sortMode })
+                }}
+              >
+                <SelectTrigger className="h-8 w-[140px] text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="recent">Récentes</SelectItem>
+                  <SelectItem value="oldest">Anciennes</SelectItem>
+                  <SelectItem value="title">Titre</SelectItem>
+                  <SelectItem value="dueDate">Date limite</SelectItem>
+                  <SelectItem value="manual">Manuel</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
         </section>
@@ -313,28 +293,23 @@ export function SettingsPage({
             <Palette className="h-4 w-4 text-muted-foreground" />
             <p className="text-sm font-medium">Apparence</p>
           </div>
-          <div className="space-y-2 pl-6">
-            <p className="text-xs text-muted-foreground">Thème</p>
-            <div className="flex gap-1.5">
-              {([
-                ['system', 'Système'],
-                ['light', 'Clair'],
-                ['dark', 'Sombre'],
-              ] as const).map(([mode, label]) => (
-                <Button
-                  key={mode}
-                  type="button"
-                  size="sm"
-                  variant={settings.themeMode === mode ? 'default' : 'outline'}
-                  className="h-7 px-2 text-xs"
-                  onClick={async () => {
-                    await onUpdateSettings({ themeMode: mode as ThemeMode })
-                  }}
-                >
-                  {label}
-                </Button>
-              ))}
-            </div>
+          <div className="flex items-center justify-between gap-3 pl-6">
+            <span className="text-xs text-muted-foreground">Thème</span>
+            <Select
+              value={settings.themeMode}
+              onValueChange={async (value) => {
+                await onUpdateSettings({ themeMode: value as ThemeMode })
+              }}
+            >
+              <SelectTrigger className="h-8 w-[120px] text-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="system">Système</SelectItem>
+                <SelectItem value="light">Clair</SelectItem>
+                <SelectItem value="dark">Sombre</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </section>
 
@@ -428,28 +403,31 @@ export function SettingsPage({
                       event.currentTarget.blur()
                     }
                   }}
-                  className="h-7 text-xs"
+                  className="h-7 flex-1 text-xs"
                   aria-label={`Nom du label ${label.name}`}
                 />
-                <select
+                <Select
                   value={label.color}
-                  onChange={(event) => {
-                    void updateLabel(label.id, { color: event.currentTarget.value as TodoLabel['color'] })
+                  onValueChange={(value) => {
+                    void updateLabel(label.id, { color: value as TodoLabel['color'] })
                   }}
-                  className="h-7 rounded-md border border-input bg-background px-2 text-xs text-foreground outline-none"
-                  aria-label={`Couleur du label ${label.name}`}
                 >
-                  {COLOR_OPTIONS.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
+                  <SelectTrigger className="h-7 w-[100px] text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {COLOR_OPTIONS.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 <Button
                   type="button"
                   variant="ghost"
                   size="icon"
-                  className="h-7 w-7"
+                  className="h-7 w-7 shrink-0"
                   onClick={() => {
                     void removeLabel(label.id)
                   }}
@@ -538,19 +516,104 @@ export function SettingsPage({
               <span className="text-xs text-muted-foreground">Version</span>
               <span className="text-xs font-mono font-medium">{appVersion}</span>
             </div>
+            {lastChecked && (
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-xs text-muted-foreground">Dernière vérification</span>
+                <span className="text-xs text-muted-foreground">
+                  {new Intl.DateTimeFormat('fr-FR', {
+                    dateStyle: 'short',
+                    timeStyle: 'short',
+                  }).format(lastChecked)}
+                </span>
+              </div>
+            )}
             <Button
               type="button"
               size="sm"
               variant="ghost"
               className="h-7 gap-1 px-2 text-xs"
-              onClick={() => {
-                void checkForUpdate()
+              onClick={async () => {
+                await checkForUpdate()
+                
+                // Show feedback toast based on result
+                if (updateState === 'available') {
+                  toast({
+                    title: 'Mise à jour disponible',
+                    description: 'Une nouvelle version est disponible !',
+                  })
+                } else if (updateState === 'error') {
+                  toast({
+                    title: 'Erreur',
+                    description: 'Impossible de vérifier les mises à jour.',
+                    variant: 'destructive',
+                  })
+                } else {
+                  toast({
+                    title: 'Aucune mise à jour',
+                    description: 'Vous utilisez la dernière version.',
+                  })
+                }
               }}
               disabled={updateState === 'checking'}
             >
               <RefreshCw className={cn('h-3.5 w-3.5', updateState === 'checking' && 'animate-spin')} />
               {updateState === 'checking' ? 'Vérification...' : 'Vérifier les mises à jour'}
             </Button>
+          </div>
+        </section>
+
+        <div className="border-t border-red-500/30" />
+
+        {/* Danger Zone */}
+        <section>
+          <div className="mb-3 flex items-center gap-2">
+            <AlertTriangle className="h-4 w-4 text-red-600" />
+            <p className="text-sm font-medium text-red-600">Zone dangereuse</p>
+          </div>
+          <div className="space-y-2 pl-6">
+            <p className="text-xs text-muted-foreground">
+              Cette action supprimera toutes vos données et réinitialisera l'application à son état initial. Cette action est irréversible.
+            </p>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  className="h-7 gap-1 px-2 text-xs border-red-500/50 text-red-600 hover:bg-red-500/10 hover:text-red-700"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                  Supprimer toutes les données
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Êtes-vous absolument sûr ?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Cette action est irréversible. Toutes vos tâches, listes, labels et paramètres seront définitivement supprimés.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Annuler</AlertDialogCancel>
+                  <AlertDialogAction
+                    className="bg-red-600 text-white hover:bg-red-700"
+                    onClick={async () => {
+                      try {
+                        console.log('🔴 Starting reset all data...')
+                        const result = await resetAllData()
+                        console.log('✅ Reset all data result:', result)
+                        // Backend will emit 'data-reset' event, App.tsx will handle rehydration
+                      } catch (error) {
+                        console.error('❌ Failed to reset data:', error)
+                        alert(`Erreur lors de la réinitialisation: ${error}`)
+                      }
+                    }}
+                  >
+                    Oui, tout supprimer
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </div>
         </section>
       </div>

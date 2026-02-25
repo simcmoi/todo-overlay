@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Check, ChevronDown, Filter, MoreHorizontal, Plus, Printer, Settings, Star, Trash2 } from 'lucide-react'
 import { motion } from 'framer-motion'
+import { listen } from '@tauri-apps/api/event'
 import { SettingsPage } from '@/components/settings-page'
 import { TodoList } from '@/components/todo-list'
 import { UpdateBanner } from '@/components/update-banner'
 import { Onboarding } from '@/components/onboarding/Onboarding'
 import { Toaster } from '@/components/ui/toaster'
+import { useToast } from '@/hooks/use-toast'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -111,6 +113,7 @@ export default function App() {
   const [labelFilterId, setLabelFilterId] = useState<string | 'all'>('all')
   const [settingsPageOpen, setSettingsPageOpen] = useState(false)
 
+  const { toast } = useToast()
   const { playAdd, playDelete, playComplete } = useSoundEffects()
 
   const {
@@ -145,6 +148,42 @@ export default function App() {
   useEffect(() => {
     void hydrate()
   }, [hydrate])
+
+  // Listen for data-reset event from backend
+  useEffect(() => {
+    const unlisten = listen('data-reset', () => {
+      console.log('🔄 Data reset event received!')
+      
+      // Clear onboarding flag to show it again
+      try {
+        localStorage.removeItem('todo-overlay-onboarding-completed')
+        console.log('✅ Onboarding flag cleared from localStorage')
+        setShowOnboarding(true)
+        console.log('✅ showOnboarding set to true')
+      } catch (error) {
+        console.error('❌ Failed to clear onboarding flag:', error)
+      }
+      
+      // Show success toast
+      toast({
+        title: 'Données supprimées',
+        description: 'Toutes vos données ont été supprimées avec succès.',
+      })
+      console.log('✅ Toast displayed')
+      
+      // Rehydrate state
+      void hydrate()
+      console.log('✅ State rehydrated')
+      
+      // Close settings page if open
+      setSettingsPageOpen(false)
+      console.log('✅ Settings page closed')
+    })
+
+    return () => {
+      void unlisten.then(fn => fn())
+    }
+  }, [hydrate, toast])
 
   // Vérifier les mises à jour au démarrage
   useEffect(() => {

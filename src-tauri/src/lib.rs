@@ -32,16 +32,9 @@ pub fn run() {
             Some(vec!["--autostart"]),
         ))
         .setup(|app| {
-            // Hide app from Dock on macOS (menu bar only)
-            #[cfg(target_os = "macos")]
-            {
-                use cocoa::appkit::{NSApp, NSApplication, NSApplicationActivationPolicy::NSApplicationActivationPolicyAccessory};
-                unsafe {
-                    let app = NSApp();
-                    app.setActivationPolicy_(NSApplicationActivationPolicyAccessory);
-                }
-            }
-
+            // Hide app from Dock on macOS only when no main window is visible
+            // This will be managed dynamically based on window state
+            
             let app_handle = app.handle().clone();
 
             let data = storage::load_or_create(&app_handle)
@@ -69,7 +62,12 @@ pub fn run() {
                     }
                 }
             }
-            window::hide_main_window(&app_handle)?;
+            
+            // Don't hide main window on startup - let it show normally
+            // window::hide_main_window(&app_handle)?;
+
+            // Setup window close handlers
+            window::setup_window_close_handlers(&app_handle)?;
 
             reminder::start_scheduler(app_handle.clone());
 
@@ -115,6 +113,7 @@ pub fn run() {
             commands::open_data_file,
             commands::get_log_file_path,
             commands::open_log_file,
+            commands::reset_all_data,
             updater::check_for_update,
             updater::install_update
         ])
