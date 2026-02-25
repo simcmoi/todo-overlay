@@ -323,16 +323,24 @@ export class CloudStorageProvider implements StorageProvider {
       }))
       
       if (dbTodos.length > 0) {
+        console.log('[CloudStorage] Upserting todos:', JSON.stringify(dbTodos, null, 2))
         const { error: todosError } = await this.client
           .from('todos')
-          .upsert(dbTodos)
+          .upsert(dbTodos, { onConflict: 'id' })
         
         if (todosError) {
+          console.error('[CloudStorage] Todos upsert error:', {
+            message: todosError.message,
+            details: todosError.details,
+            hint: todosError.hint,
+            code: todosError.code
+          })
           if (todosError.message.includes('JWT') || todosError.message.includes('expired')) {
             throw new Error('Votre session a expiré. Veuillez vous reconnecter.')
           }
           throw todosError
         }
+        console.log('[CloudStorage] Todos upserted successfully')
       }
       
       // Upsert lists
@@ -348,16 +356,24 @@ export class CloudStorageProvider implements StorageProvider {
       }))
       
       if (dbLists.length > 0) {
+        console.log('[CloudStorage] Upserting lists:', JSON.stringify(dbLists, null, 2))
         const { error: listsError } = await this.client
           .from('lists')
-          .upsert(dbLists)
+          .upsert(dbLists, { onConflict: 'id' })
         
         if (listsError) {
+          console.error('[CloudStorage] Lists upsert error:', {
+            message: listsError.message,
+            details: listsError.details,
+            hint: listsError.hint,
+            code: listsError.code
+          })
           if (listsError.message.includes('JWT') || listsError.message.includes('expired')) {
             throw new Error('Votre session a expiré. Veuillez vous reconnecter.')
           }
           throw listsError
         }
+        console.log('[CloudStorage] Lists upserted successfully')
       }
       
       // Upsert labels
@@ -374,16 +390,24 @@ export class CloudStorageProvider implements StorageProvider {
       }))
       
       if (dbLabels.length > 0) {
+        console.log('[CloudStorage] Upserting labels:', JSON.stringify(dbLabels, null, 2))
         const { error: labelsError } = await this.client
           .from('labels')
-          .upsert(dbLabels)
+          .upsert(dbLabels, { onConflict: 'id' })
         
         if (labelsError) {
+          console.error('[CloudStorage] Labels upsert error:', {
+            message: labelsError.message,
+            details: labelsError.details,
+            hint: labelsError.hint,
+            code: labelsError.code
+          })
           if (labelsError.message.includes('JWT') || labelsError.message.includes('expired')) {
             throw new Error('Votre session a expiré. Veuillez vous reconnecter.')
           }
           throw labelsError
         }
+        console.log('[CloudStorage] Labels upserted successfully')
       }
       
       // Upsert settings
@@ -401,16 +425,24 @@ export class CloudStorageProvider implements StorageProvider {
         version: 1
       }
       
+      console.log('[CloudStorage] Upserting settings:', JSON.stringify(dbSettings, null, 2))
       const { error: settingsError } = await this.client
         .from('user_settings')
         .upsert(dbSettings)
       
       if (settingsError) {
+        console.error('[CloudStorage] Settings upsert error:', {
+          message: settingsError.message,
+          details: settingsError.details,
+          hint: settingsError.hint,
+          code: settingsError.code
+        })
         if (settingsError.message.includes('JWT') || settingsError.message.includes('expired')) {
           throw new Error('Votre session a expiré. Veuillez vous reconnecter.')
         }
         throw settingsError
       }
+      console.log('[CloudStorage] Settings upserted successfully')
       
       // Mettre à jour les données actuelles
       this.currentData = data
@@ -418,7 +450,9 @@ export class CloudStorageProvider implements StorageProvider {
       this.syncStatus = 'synced'
     } catch (error) {
       this.syncStatus = 'error'
-      console.error('Failed to save cloud data:', error)
+      console.error('[CloudStorage] Failed to save cloud data:', error)
+      console.error('[CloudStorage] Error type:', typeof error)
+      console.error('[CloudStorage] Error details:', JSON.stringify(error, null, 2))
       
       // Rethrow with formatted message if it's already an Error
       if (error instanceof Error) {
