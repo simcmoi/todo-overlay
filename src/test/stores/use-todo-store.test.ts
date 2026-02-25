@@ -62,7 +62,7 @@ describe('useTodoStore', () => {
     })
 
     expect(result.current.hydrated).toBe(true)
-    expect(result.current.error).toBe('Failed to load')
+    expect(result.current.error).toBe('Impossible de charger les données locales')
   })
 
   it('should create a todo', async () => {

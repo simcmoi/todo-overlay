@@ -32,6 +32,7 @@ export class LocalStorageProvider implements StorageProvider {
     }
   }
   
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async save(_data: AppData): Promise<void> {
     // IMPORTANT: En mode local, la persistence est gérée automatiquement
     // par les commandes Tauri individuelles (createTodo, updateTodo, deleteTodo, etc.)
@@ -40,10 +41,12 @@ export class LocalStorageProvider implements StorageProvider {
     // Ne pas implémenter de logique ici pour éviter les doubles écritures.
   }
   
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async signIn(_email: string, _password: string): Promise<void> {
     throw new Error('Authentication not available in local mode')
   }
   
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async signUp(_email: string, _password: string): Promise<void> {
     throw new Error('Authentication not available in local mode')
   }
@@ -52,6 +55,7 @@ export class LocalStorageProvider implements StorageProvider {
     throw new Error('Authentication not available in local mode')
   }
   
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   subscribe(_callback: (data: AppData) => void): () => void {
     // Pas de sync en mode local
     return () => {}

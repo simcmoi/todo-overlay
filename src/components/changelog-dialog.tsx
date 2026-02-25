@@ -24,6 +24,7 @@ export function ChangelogDialog({ version, open, onOpenChange }: ChangelogDialog
   useEffect(() => {
     if (!open) return
 
+    // Reset state when dialog opens
     setLoading(true)
     setError(null)
 

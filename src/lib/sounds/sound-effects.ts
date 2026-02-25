@@ -12,6 +12,7 @@ class SoundEffects {
     // Initialiser AudioContext de manière lazy
     if (typeof window !== 'undefined') {
       try {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         this.audioContext = new (window.AudioContext || (window as any).webkitAudioContext)()
       } catch (error) {
         console.warn('AudioContext not supported:', error)

@@ -145,6 +145,26 @@ export default function App() {
 
   useWindowBehavior(settings.autoCloseOnBlur, inputRef)
 
+  // Détection du premier lancement
+  const [showOnboarding, setShowOnboarding] = useState(() => {
+    try {
+      const hasCompletedOnboarding = localStorage.getItem('todo-overlay-onboarding-completed')
+      return hasCompletedOnboarding !== 'true'
+    } catch {
+      return false
+    }
+  })
+
+  const handleOnboardingComplete = () => {
+    try {
+      localStorage.setItem('todo-overlay-onboarding-completed', 'true')
+      setShowOnboarding(false)
+    } catch (error) {
+      console.error('Failed to save onboarding completion:', error)
+      setShowOnboarding(false)
+    }
+  }
+
   useEffect(() => {
     void hydrate()
   }, [hydrate])
@@ -233,26 +253,6 @@ export default function App() {
     () => sortTodos(listScopedTodos, settings.sortMode, settings.sortOrder),
     [listScopedTodos, settings.sortMode, settings.sortOrder],
   )
-
-  // Détection du premier lancement
-  const [showOnboarding, setShowOnboarding] = useState(() => {
-    try {
-      const hasCompletedOnboarding = localStorage.getItem('todo-overlay-onboarding-completed')
-      return hasCompletedOnboarding !== 'true'
-    } catch {
-      return false
-    }
-  })
-
-  const handleOnboardingComplete = () => {
-    try {
-      localStorage.setItem('todo-overlay-onboarding-completed', 'true')
-      setShowOnboarding(false)
-    } catch (error) {
-      console.error('Failed to save onboarding completion:', error)
-      setShowOnboarding(false)
-    }
-  }
 
   const effectiveLabelFilterId = useMemo(
     () =>
