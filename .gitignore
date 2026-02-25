@@ -31,17 +31,6 @@ dist-ssr
 # Docker
 .env
 
-# Web landing page
-web/landing/dist
-web/landing/node_modules
-
-# Update server builds
-web/updates/darwin-aarch64/*.tar.gz
-web/updates/darwin-aarch64/*.zip
-web/updates/darwin-x86_64/*.tar.gz
-web/updates/darwin-x86_64/*.zip
-web/updates/windows-x86_64/*.msi
-web/updates/windows-x86_64/*.zip
-web/updates/linux-x86_64/*.AppImage
-web/updates/linux-x86_64/*.tar.gz
+# Temporary reference projects
+.temp-references/
 
