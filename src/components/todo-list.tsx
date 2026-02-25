@@ -1157,12 +1157,12 @@ export function TodoList({
                                   variant="ghost"
                                   className={cn(
                                     'h-5 px-1.5 py-0 rounded-md',
-                                    label.color === 'slate' && 'bg-slate-500/15 text-slate-700 border-slate-700/30 dark:text-slate-300 dark:border-slate-500/30',
-                                    label.color === 'blue' && 'bg-blue-500/15 text-blue-700 border-blue-700/30 dark:text-blue-300 dark:border-blue-500/30',
-                                    label.color === 'green' && 'bg-green-500/15 text-green-700 border-green-700/30 dark:text-green-300 dark:border-green-500/30',
-                                    label.color === 'amber' && 'bg-amber-500/15 text-amber-700 border-amber-700/30 dark:text-amber-300 dark:border-amber-500/30',
-                                    label.color === 'rose' && 'bg-rose-500/15 text-rose-700 border-rose-700/30 dark:text-rose-300 dark:border-rose-500/30',
-                                    label.color === 'violet' && 'bg-violet-500/15 text-violet-700 border-violet-700/30 dark:text-violet-300 dark:border-violet-500/30',
+                                    label.color === 'slate' && '!bg-slate-500/15 !text-slate-700 !border-slate-700/30 dark:!text-slate-300 dark:!border-slate-500/30',
+                                    label.color === 'blue' && '!bg-blue-500/15 !text-blue-700 !border-blue-700/30 dark:!text-blue-300 dark:!border-blue-500/30',
+                                    label.color === 'green' && '!bg-green-500/15 !text-green-700 !border-green-700/30 dark:!text-green-300 dark:!border-green-500/30',
+                                    label.color === 'amber' && '!bg-amber-500/15 !text-amber-700 !border-amber-700/30 dark:!text-amber-300 dark:!border-amber-500/30',
+                                    label.color === 'rose' && '!bg-rose-500/15 !text-rose-700 !border-rose-700/30 dark:!text-rose-300 dark:!border-rose-500/30',
+                                    label.color === 'violet' && '!bg-violet-500/15 !text-violet-700 !border-violet-700/30 dark:!text-violet-300 dark:!border-violet-500/30',
                                   )}
                                 >
                                   <Tags className="h-3 w-3" />
