@@ -56,7 +56,10 @@
       "endpoints": [
         "https://github.com/simonfessy/todo-overlay/releases/latest/download/latest.json"
       ],
-      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDBEQUE4NjAwMTFGMDcyMjUKUldRbGN2QVJBSWFxRGVqelNHYVJuRnFZalNZSDkzaHlPNWZHclF6Rkd1NU9nZWNXeXlLbG9jRzYK"
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDBEQUE4NjAwMTFGMDcyMjUKUldRbGN2QVJBSWFxRGVqelNHYVJuRnFZalNZSDkzaHlPNWZHclF6Rkd1NU9nZWNXeXlLbG9jRzYK",
+      "windows": {
+        "installMode": "passive"
+      }
     }
   }
 }

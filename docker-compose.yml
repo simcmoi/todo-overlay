@@ -1,0 +1,18 @@
+services:
+  web:
+    build:
+      context: ./web/landing
+      dockerfile: Dockerfile
+    container_name: todo-overlay-web
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./web/updates:/usr/share/nginx/html/updates:ro
+    restart: unless-stopped
+    networks:
+      - todo-overlay
+
+networks:
+  todo-overlay:
+    driver: bridge
