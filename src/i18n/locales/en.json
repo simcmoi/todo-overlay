@@ -9,6 +9,7 @@
   },
   "todo": {
     "placeholder": "Add a task...",
+    "addTask": "Add a task",
     "taskTitle": "Task title",
     "detail": "Detail",
     "details": "Details",
@@ -36,7 +37,11 @@
     "addSubtask": "Add subtask",
     "moveToList": "Move to list",
     "completedOn": "Completed {{date}}",
-    "completedLabel": "Completed"
+    "completedLabel": "Completed",
+    "reopenTask": "Reopen task",
+    "deleteTask": "Delete task",
+    "moveTo": "Move to",
+    "showMore": "Show more"
   },
   "list": {
     "myTasks": "My tasks",
@@ -48,7 +53,10 @@
     "renameAndChangeIcon": "Rename and change icon",
     "deleteList": "Delete list",
     "printList": "Print list",
-    "clearCompleted": "Clear completed tasks"
+    "clearCompleted": "Clear completed tasks",
+    "listSettings": "List settings",
+    "sortAndDisplayOptions": "Sort and display options",
+    "deleteCompletedTasks": "Delete completed tasks"
   },
   "toast": {
     "dataDeleted": "Data deleted",
@@ -56,6 +64,12 @@
   },
   "filter": {
     "allPriorities": "All priorities",
+    "allLabels": "All labels",
+    "showAllTasks": "Show all tasks",
+    "showFavoritesOnly": "Show favorites only",
+    "filterByPriority": "Filter by priority",
+    "filterByLabel": "Filter by label",
+    "reset": "Reset",
     "urgent": "Urgent",
     "high": "High",
     "medium": "Medium",
@@ -270,10 +284,12 @@
     "close": "Close",
     "back": "Back",
     "or": "or",
-    "error": "Error"
+    "error": "Error",
+    "done": "Done"
   },
   "icons": {
     "search": "Search for an icon...",
+    "noIconsFound": "No icon found",
     "noResults": "No icon found",
     "home": "home house",
     "briefcase": "briefcase work office",
@@ -296,5 +312,17 @@
     "moon": "moon night",
     "cloud": "cloud weather",
     "umbrella": "umbrella rain"
+  },
+  "changelog": {
+    "title": "What's new in version {{version}}",
+    "description": "Discover what's changed in this version."
+  },
+  "history": {
+    "deleteAllTitle": "Delete all history?",
+    "deleteAllDescription": "This action is irreversible and will delete all completed tasks.",
+    "clearHistory": "Clear history"
+  },
+  "labels": {
+    "deleteLabel": "Delete label {{name}}"
   }
 }

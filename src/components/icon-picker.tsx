@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   Home,
   Briefcase,
@@ -67,6 +68,7 @@ type IconPickerProps = {
 }
 
 export function IconPicker({ value, onValueChange }: IconPickerProps) {
+  const { t } = useTranslation()
   const [open, setOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const SelectedIcon = getIconComponent(value)
@@ -122,7 +124,7 @@ export function IconPicker({ value, onValueChange }: IconPickerProps) {
         <div className="space-y-2">
           <Input
             type="text"
-            placeholder="Rechercher une icône..."
+            placeholder={t('icons.search')}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="h-8 text-xs"
@@ -150,7 +152,7 @@ export function IconPicker({ value, onValueChange }: IconPickerProps) {
               ))
             ) : (
               <div className="col-span-6 py-6 text-center text-xs text-muted-foreground">
-                Aucune icône trouvée
+                {t('icons.noIconsFound')}
               </div>
             )}
           </div>

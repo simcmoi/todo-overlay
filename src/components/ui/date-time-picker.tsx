@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Clock, ChevronDown } from 'lucide-react'
 import { Calendar } from '@/components/ui/calendar'
 import { Label } from '@/components/ui/label'
@@ -27,6 +28,7 @@ function generateTimeSlots(): string[] {
 }
 
 export function DateTimePicker({ date, onDateTimeChange, onClose }: DateTimePickerProps) {
+  const { t } = useTranslation()
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(date)
   const [timeValue, setTimeValue] = useState(() => {
     if (date) {
@@ -150,7 +152,7 @@ export function DateTimePicker({ date, onDateTimeChange, onClose }: DateTimePick
           className="flex-1"
           onClick={handleCancel}
         >
-          Annuler
+          {t('common.cancel')}
         </Button>
         <Button
           type="button"
@@ -159,7 +161,7 @@ export function DateTimePicker({ date, onDateTimeChange, onClose }: DateTimePick
           onClick={handleConfirm}
           disabled={!selectedDate}
         >
-          Terminé
+          {t('common.done')}
         </Button>
       </div>
     </div>

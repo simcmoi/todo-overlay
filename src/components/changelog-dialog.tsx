@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { FileText, Loader2 } from 'lucide-react'
 import ReactMarkdown from 'react-markdown'
 import {
@@ -17,6 +18,7 @@ type ChangelogDialogProps = {
 }
 
 export function ChangelogDialog({ version, open, onOpenChange }: ChangelogDialogProps) {
+  const { t } = useTranslation()
   const [changelog, setChangelog] = useState<string>('')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -46,10 +48,10 @@ export function ChangelogDialog({ version, open, onOpenChange }: ChangelogDialog
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <FileText className="h-5 w-5" />
-            Nouveautés de la version {version}
+            {t('changelog.title', { version })}
           </DialogTitle>
           <DialogDescription>
-            Découvrez ce qui a changé dans cette version.
+            {t('changelog.description')}
           </DialogDescription>
         </DialogHeader>
 

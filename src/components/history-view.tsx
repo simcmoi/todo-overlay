@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -19,30 +20,31 @@ type HistoryViewProps = {
 }
 
 export function HistoryView({ todos, onClearHistory }: HistoryViewProps) {
+  const { t } = useTranslation()
   return (
     <div className="flex h-full flex-col gap-2">
       <div className="flex items-center justify-end">
         <AlertDialog>
           <AlertDialogTrigger asChild>
             <Button variant="outline" size="sm" disabled={todos.length === 0}>
-              Vider historique
+              {t('history.clearHistory')}
             </Button>
           </AlertDialogTrigger>
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>Supprimer tout l&apos;historique ?</AlertDialogTitle>
+              <AlertDialogTitle>{t('history.deleteAllTitle')}</AlertDialogTitle>
               <AlertDialogDescription>
-                Cette action est irréversible et supprime toutes les tâches terminées.
+                {t('history.deleteAllDescription')}
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel>Annuler</AlertDialogCancel>
+              <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
               <AlertDialogAction
                 onClick={async () => {
                   await onClearHistory()
                 }}
               >
-                Confirmer
+                {t('common.confirm')}
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>

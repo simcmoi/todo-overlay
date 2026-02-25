@@ -393,16 +393,16 @@ export default function App() {
   }
 
   const selectedPriorityFilterLabel = useMemo(
-    () => PRIORITY_FILTERS.find((option) => option.id === priorityFilter)?.label ?? 'Toutes priorités',
-    [priorityFilter],
+    () => PRIORITY_FILTERS.find((option) => option.id === priorityFilter)?.label ?? t('filter.allPriorities'),
+    [priorityFilter, t],
   )
 
   const selectedLabelFilterName = useMemo(() => {
     if (effectiveLabelFilterId === 'all') {
-      return 'Tous les labels'
+      return t('filter.allLabels')
     }
-    return settings.labels.find((label) => label.id === effectiveLabelFilterId)?.name ?? 'Tous les labels'
-  }, [effectiveLabelFilterId, settings.labels])
+    return settings.labels.find((label) => label.id === effectiveLabelFilterId)?.name ?? t('filter.allLabels')
+  }, [effectiveLabelFilterId, settings.labels, t])
 
   const canReorder =
     !settingsPageOpen &&
@@ -553,13 +553,13 @@ export default function App() {
                   onClick={() => {
                     setFavoritesOnly((current) => !current)
                   }}
-                  aria-label={favoritesOnly ? 'Afficher toutes les tâches' : 'Afficher uniquement les favoris'}
+                  aria-label={favoritesOnly ? t('filter.showAllTasks') : t('filter.showFavoritesOnly')}
                 >
                   <Star className={cn('h-3.5 w-3.5', favoritesOnly ? 'fill-foreground text-foreground' : undefined)} />
                 </Button>
               </TooltipTrigger>
               <TooltipContent>
-                <p>{favoritesOnly ? 'Afficher toutes les tâches' : 'Afficher uniquement les favoris'}</p>
+                <p>{favoritesOnly ? t('filter.showAllTasks') : t('filter.showFavoritesOnly')}</p>
               </TooltipContent>
             </Tooltip>
             <DropdownMenu>
@@ -571,18 +571,18 @@ export default function App() {
                       variant="ghost"
                       size="icon"
                       className="h-7 w-7 text-muted-foreground hover:text-foreground"
-                      aria-label="Paramètres de la liste"
+                      aria-label={t('list.listSettings')}
                     >
                       <MoreHorizontal className="h-3.5 w-3.5" />
                     </Button>
                   </TooltipTrigger>
                 </DropdownMenuTrigger>
                 <TooltipContent>
-                  <p>Options de tri et d'affichage</p>
+                  <p>{t('list.sortAndDisplayOptions')}</p>
                 </TooltipContent>
               </Tooltip>
               <DropdownMenuContent align="start" className="w-56">
-                <DropdownMenuLabel>Paramètres de la liste</DropdownMenuLabel>
+                <DropdownMenuLabel>{t('list.listSettings')}</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 {SORT_MODE_OPTIONS.map((option) => (
                   <DropdownMenuItem
@@ -605,7 +605,7 @@ export default function App() {
                         setListNameDraft(activeList.name)
                       }}
                     >
-                      Renommer et changer l'icône
+                      {t('list.renameAndChangeIcon')}
                     </DropdownMenuItem>
                   </>
                 ) : null}
@@ -615,7 +615,7 @@ export default function App() {
                   }}
                 >
                   <Printer className="mr-2 h-3.5 w-3.5" />
-                  Imprimer la liste
+                  {t('list.printList')}
                 </DropdownMenuItem>
                 {activeList ? (
                   <DropdownMenuItem
@@ -624,7 +624,7 @@ export default function App() {
                     }}
                   >
                     <Trash2 className="mr-2 h-3.5 w-3.5" />
-                    Supprimer les tâches terminées
+                    {t('list.deleteCompletedTasks')}
                   </DropdownMenuItem>
                 ) : null}
               </DropdownMenuContent>
@@ -639,7 +639,7 @@ export default function App() {
                 onClick={() => {
                   setSettingsPageOpen(!settingsPageOpen)
                 }}
-                aria-label={settingsPageOpen ? "Retour à l'accueil" : "Ouvrir les paramètres"}
+                aria-label={settingsPageOpen ? t('app.backToHome') : t('app.openSettings')}
               >
                 {settingsPageOpen ? (
                   <Home className="h-4 w-4" />
@@ -667,7 +667,7 @@ export default function App() {
                   </TooltipTrigger>
                 </DropdownMenuTrigger>
                 <TooltipContent>
-                  <p>Filtrer par priorité</p>
+                  <p>{t('filter.filterByPriority')}</p>
                 </TooltipContent>
               </Tooltip>
               <DropdownMenuContent align="start" className="w-44">
@@ -695,7 +695,7 @@ export default function App() {
                   </TooltipTrigger>
                 </DropdownMenuTrigger>
                 <TooltipContent>
-                  <p>Filtrer par label</p>
+                  <p>{t('filter.filterByLabel')}</p>
                 </TooltipContent>
               </Tooltip>
               <DropdownMenuContent align="start" className="w-44">
@@ -705,7 +705,7 @@ export default function App() {
                     setLabelFilterId('all')
                   }}
                 >
-                  Tous les labels
+                  {t('filter.allLabels')}
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 {settings.labels.map((label) => (
@@ -734,7 +734,7 @@ export default function App() {
                   setLabelFilterId('all')
                 }}
               >
-                Réinitialiser
+                {t('filter.reset')}
               </Button>
             ) : null}
           </div>

@@ -1,4 +1,5 @@
 import { type FormEvent, type RefObject, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Input } from '@/components/ui/input'
 
 type TodoInputProps = {
@@ -7,6 +8,7 @@ type TodoInputProps = {
 }
 
 export function TodoInput({ inputRef, onCreate }: TodoInputProps) {
+  const { t } = useTranslation()
   const [text, setText] = useState('')
 
   const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -28,7 +30,7 @@ export function TodoInput({ inputRef, onCreate }: TodoInputProps) {
         ref={inputRef}
         value={text}
         onChange={(event) => setText(event.target.value)}
-        placeholder="Ajouter une tâche"
+        placeholder={t('todo.addTask')}
         className="h-10 rounded-md border-border bg-card text-sm"
       />
     </form>

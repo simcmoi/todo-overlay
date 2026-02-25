@@ -1037,7 +1037,7 @@ export function TodoList({
                 }}
               >
                 <Plus className="mr-1 h-4 w-4" />
-                Ajouter une tâche
+                {t('todo.addTask')}
               </Button>
             </li>
           ) : null}
@@ -1392,7 +1392,7 @@ export function TodoList({
                             onClick={async () => {
                               await onSetStarred(todo.id, !todo.starred)
                             }}
-                            aria-label={todo.starred ? `Retirer ${todo.title} des favoris` : `Ajouter ${todo.title} aux favoris`}
+                            aria-label={todo.starred ? t('todo.removeFromFavorites', { title: todo.title }) : t('todo.addToFavorites', { title: todo.title })}
                           >
                             <Star
                               className={cn(
@@ -1420,18 +1420,18 @@ export function TodoList({
                                   void onSetCompleted(todo.id, false)
                                 }}
                               >
-                                Rouvrir la tâche
+                                {t('todo.reopenTask')}
                               </DropdownMenuItem>
                               <DropdownMenuItem
                                 onSelect={() => {
                                   void onDeleteCompleted(todo.id)
                                 }}
                               >
-                                Supprimer la tâche
+                                {t('todo.deleteTask')}
                               </DropdownMenuItem>
                               <DropdownMenuSeparator />
                               <DropdownMenuLabel className="px-2 py-1 text-xs text-muted-foreground">
-                                Déplacer vers
+                                {t('todo.moveTo')}
                               </DropdownMenuLabel>
                               {lists.map((list) => {
                                 const isCurrentList = (todo.listId ?? activeListId) === list.id
@@ -1467,7 +1467,7 @@ export function TodoList({
                         setCompletedVisibleCount((current) => current + COMPLETED_VISIBLE_STEP)
                       }}
                     >
-                      Afficher plus
+                      {t('todo.showMore')}
                     </button>
                   </li>
                 ) : null}

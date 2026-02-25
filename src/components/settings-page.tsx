@@ -563,7 +563,7 @@ export function SettingsPage({
                   onClick={() => {
                     void removeLabel(label.id)
                   }}
-                  aria-label={`Supprimer le label ${label.name}`}
+                  aria-label={t('labels.deleteLabel', { name: label.name })}
                 >
                   <Trash2 className="h-3.5 w-3.5" />
                 </Button>
