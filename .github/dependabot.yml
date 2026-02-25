@@ -22,6 +22,16 @@ updates:
         update-types: ["version-update:semver-major"]
       - dependency-name: "react-dom"
         update-types: ["version-update:semver-major"]
+      # Ignore ESLint v10 until eslint-plugin-react-hooks supports it
+      - dependency-name: "eslint"
+        versions: [">=10.0.0"]
+      - dependency-name: "@eslint/js"
+        versions: [">=10.0.0"]
+      - dependency-name: "eslint-plugin-react-refresh"
+        versions: [">=0.5.0"]
+      # Ignore Tailwind v4 (breaking changes requiring migration)
+      - dependency-name: "tailwindcss"
+        update-types: ["version-update:semver-major"]
 
   # Backend dependencies (Cargo)
   - package-ecosystem: "cargo"
@@ -39,6 +49,10 @@ updates:
       include: "scope"
     reviewers:
       - "simcmoi"
+    ignore:
+      # Ignore cocoa v0.26+ (deprecated APIs, requires migration to objc2-app-kit)
+      - dependency-name: "cocoa"
+        versions: [">=0.26.0"]
 
   # Landing page dependencies
   - package-ecosystem: "npm"
@@ -54,6 +68,14 @@ updates:
     commit-message:
       prefix: "chore(deps)"
       include: "scope"
+    ignore:
+      # Ignore ESLint v10 until eslint-plugin-react-hooks supports it
+      - dependency-name: "eslint"
+        versions: [">=10.0.0"]
+      - dependency-name: "@eslint/js"
+        versions: [">=10.0.0"]
+      - dependency-name: "eslint-plugin-react-refresh"
+        versions: [">=0.5.0"]
 
   # GitHub Actions
   - package-ecosystem: "github-actions"
