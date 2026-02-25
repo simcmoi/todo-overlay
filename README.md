@@ -212,6 +212,12 @@ Les contributions sont les bienvenues ! N'hésitez pas à :
 
 Voir [CHANGELOG.md](CHANGELOG.md) pour l'historique complet des versions.
 
+## 📚 Documentation Complète
+
+➡️ **[DOCUMENTATION.md](DOCUMENTATION.md)** - Guides complets, workflow, troubleshooting
+
+➡️ **[docs/GENERER_CLES.md](docs/GENERER_CLES.md)** ⭐ - Guide pour configurer l'auto-update
+
 ## 📄 License
 
 MIT © Simon Fessy

@@ -85,6 +85,9 @@ jobs:
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Les clés de signature sont optionnelles. Si elles ne sont pas configurées,
+          # les binaires seront créés sans signature (updater désactivé).
+          # Pour activer la signature, voir AUTO_UPDATE_SETUP.md
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
