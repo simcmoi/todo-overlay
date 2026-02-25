@@ -41,6 +41,7 @@ npm run tauri build
 
 #### Déploiement
 
+- **[CI/CD Pipeline](deployment/ci-cd.md)** ⭐ **NOUVEAU** - Tests automatisés, code coverage, Dependabot
 - **[Workflow de Release](deployment/RELEASE_WORKFLOW.md)** - Comment créer une release (une seule commande !)
 - **[Signature de Code](deployment/code-signing.md)** - Générer et configurer les clés de signature
 - **[GitHub Actions](deployment/github-actions.md)** - Configuration CI/CD

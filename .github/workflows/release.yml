@@ -7,7 +7,46 @@ on:
   workflow_dispatch:
 
 jobs:
+  # Run tests before creating release
+  pre-release-tests:
+    name: Pre-Release Quality Checks
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+      
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Run frontend tests
+        run: npm run test:run
+      
+      - name: Run linter
+        run: npm run lint
+      
+      - name: Type check
+        run: npx tsc --noEmit
+      
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.0-dev libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+      
+      - name: Run Rust tests
+        working-directory: src-tauri
+        run: cargo test --verbose
+
   create-release:
+    needs: pre-release-tests
     permissions:
       contents: write
     runs-on: ubuntu-22.04
@@ -77,11 +116,23 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
+          cache: 'npm'
 
       - name: Install Rust stable
         uses: dtolnay/rust-toolchain@stable
         with:
           targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
+      
+      - name: Cache Cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            src-tauri/target
+          key: ${{ runner.os }}-cargo-release-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-release-
 
       - name: Install dependencies (Ubuntu only)
         if: matrix.platform == 'ubuntu-22.04'

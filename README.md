@@ -6,8 +6,10 @@
 
 *Press `Shift+Space` anywhere to capture tasks. Built with Rust + Tauri + React.*
 
+[![CI](https://github.com/simcmoi/todo-overlay/actions/workflows/ci.yml/badge.svg)](https://github.com/simcmoi/todo-overlay/actions/workflows/ci.yml)
 [![GitHub release](https://img.shields.io/github/v/release/simcmoi/todo-overlay?color=blue&label=version)](https://github.com/simcmoi/todo-overlay/releases/latest)
 [![GitHub downloads](https://img.shields.io/github/downloads/simcmoi/todo-overlay/total?color=success)](https://github.com/simcmoi/todo-overlay/releases)
+[![codecov](https://codecov.io/gh/simcmoi/todo-overlay/branch/main/graph/badge.svg)](https://codecov.io/gh/simcmoi/todo-overlay)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![GitHub stars](https://img.shields.io/github/stars/simcmoi/todo-overlay?style=social)](https://github.com/simcmoi/todo-overlay/stargazers)
 
