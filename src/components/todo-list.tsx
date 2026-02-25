@@ -1142,7 +1142,6 @@ export function TodoList({
                                   const badgeStyle = getReminderBadgeStyle(todo.reminderAt, t, i18n)
                                   return (
                                     <Badge
-                                      variant="ghost"
                                       className={cn(
                                         "h-5 px-1.5 py-0 rounded-md",
                                         badgeStyle.variant === 'destructive' && 
