@@ -1,9 +1,40 @@
 {
-  "name": "todo",
+  "name": "todo-overlay",
   "private": true,
   "version": "0.2.1",
   "type": "module",
+  "description": "Fast, privacy-first todo app with global hotkey overlay. Built with Rust + Tauri + React. Cross-platform desktop task manager.",
   "author": "Simon Fessy",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/simcmoi/todo-overlay.git"
+  },
+  "homepage": "https://simcmoi.github.io/todo-overlay",
+  "bugs": {
+    "url": "https://github.com/simcmoi/todo-overlay/issues"
+  },
+  "keywords": [
+    "todo",
+    "todo-app",
+    "task-manager",
+    "productivity",
+    "overlay",
+    "tauri",
+    "rust",
+    "react",
+    "desktop-app",
+    "cross-platform",
+    "hotkey",
+    "keyboard-shortcuts",
+    "privacy-first",
+    "offline",
+    "open-source",
+    "macos",
+    "windows",
+    "linux",
+    "electron-alternative"
+  ],
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",

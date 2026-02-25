@@ -2,151 +2,287 @@
 
 # 📝 Todo Overlay
 
-**L'application de to-do la plus rapide pour macOS, Windows et Linux**
+### The Fastest Todo App for macOS, Windows & Linux
+### L'Application de Tâches la Plus Rapide pour macOS, Windows et Linux
 
-Une application desktop minimaliste qui s'affiche instantanément avec `Shift+Space` pour capturer vos pensées sans interrompre votre workflow.
+**Instant overlay todo list • Global hotkey • Privacy-first • Lightning fast**
 
-[![Version](https://img.shields.io/badge/version-0.2.0-blue.svg)](https://github.com/simcmoi/todo-overlay/releases)
-[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![Tauri](https://img.shields.io/badge/Tauri-2.10-orange.svg)](https://tauri.app)
-[![React](https://img.shields.io/badge/React-19-61dafb.svg)](https://react.dev)
+*Une application desktop minimaliste qui s'affiche instantanément avec un raccourci global pour capturer vos pensées sans interrompre votre workflow.*
 
-[🌐 Site Web](https://simcmoi.github.io/todo-overlay) • [📥 Télécharger](https://github.com/simcmoi/todo-overlay/releases) • [🐛 Reporter un Bug](https://github.com/simcmoi/todo-overlay/issues)
+[![GitHub release](https://img.shields.io/github/v/release/simcmoi/todo-overlay?color=blue&label=version)](https://github.com/simcmoi/todo-overlay/releases/latest)
+[![GitHub downloads](https://img.shields.io/github/downloads/simcmoi/todo-overlay/total?color=success)](https://github.com/simcmoi/todo-overlay/releases)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Tauri](https://img.shields.io/badge/Tauri-2.10-FFC131?logo=tauri)](https://tauri.app)
+[![React](https://img.shields.io/badge/React-19-61DAFB?logo=react)](https://react.dev)
+[![Rust](https://img.shields.io/badge/Rust-1.70+-orange?logo=rust)](https://www.rust-lang.org)
+[![GitHub stars](https://img.shields.io/github/stars/simcmoi/todo-overlay?style=social)](https://github.com/simcmoi/todo-overlay/stargazers)
+
+[🌐 Website](https://simcmoi.github.io/todo-overlay) • [📥 Download](https://github.com/simcmoi/todo-overlay/releases) • [📖 Documentation](DOCUMENTATION.md) • [🐛 Report Bug](https://github.com/simcmoi/todo-overlay/issues) • [💡 Request Feature](https://github.com/simcmoi/todo-overlay/issues/new)
 
 </div>
 
 ---
 
-## ✨ Pourquoi Todo Overlay ?
+## 🎯 What is Todo Overlay? | Qu'est-ce que Todo Overlay ?
 
-- **⚡ Instantané** : Appuyez sur `Shift+Space` n'importe où, n'importe quand
-- **🎯 Zéro friction** : Créez une tâche, ajoutez des détails, définissez une date - tout au clavier
-- **🪶 Ultra-léger** : ~10MB, utilise moins de 50MB de RAM
-- **🔒 Privé** : Vos données restent sur votre machine (JSON local)
-- **🎨 Élégant** : Interface moderne avec mode sombre/clair
-- **🚀 Rapide** : Bâti avec Rust + React pour des performances optimales
+**Todo Overlay** is a **cross-platform desktop todo application** that appears instantly over any application with a single keyboard shortcut (`Shift+Space`). Built with **Rust** and **React**, it's designed for developers, designers, and power users who need to capture tasks without breaking their flow.
 
-## 🎬 Démarrage Rapide
+**Key Features:**
+- ⚡ **Instant Access**: Global hotkey brings up the app over any window
+- 🔒 **Privacy-First**: All data stored locally in JSON (no cloud, no tracking)
+- 🪶 **Lightweight**: Only ~10MB download, <50MB RAM usage
+- 🚀 **Blazing Fast**: Native performance with Rust + Tauri
+- 🌍 **Cross-Platform**: Works on macOS (Intel + Apple Silicon), Windows, and Linux
+- 🎨 **Modern UI**: Beautiful interface with dark/light mode
+- 🔄 **Auto-Updates**: Seamless background updates with code signing
 
-### Installation
+> **Perfect for:** Developers, designers, writers, students, project managers, and anyone who needs quick task capture during work.
 
-**macOS / Windows / Linux**
+## 📸 Screenshots
 
-Téléchargez la dernière version depuis la [page des releases](https://github.com/simcmoi/todo-overlay/releases) :
+> *Screenshots coming soon! The app features a minimal, modern design with support for dark and light themes.*
 
-- **macOS** : `.dmg` (Apple Silicon & Intel)
-- **Windows** : `.msi` ou `.exe` 
-- **Linux** : `.AppImage` ou `.deb`
+## ⚡ Why Choose Todo Overlay?
 
-### Premier lancement
+### 🎯 **Zero Friction Workflow**
+Press `Shift+Space` anywhere, anytime - even during fullscreen presentations or while gaming. No need to switch apps or break your concentration.
 
-1. Lancez l'application (elle se place automatiquement dans la barre système)
-2. Appuyez sur `Shift+Space` pour ouvrir l'overlay
-3. Commencez à taper votre première tâche !
+### 🔒 **100% Private & Offline**
+- All data stored locally in JSON format
+- No cloud sync, no tracking, no analytics
+- Your tasks never leave your machine
+- Open source - audit the code yourself
 
-## 🚀 Fonctionnalités
+### 🪶 **Ultra-Lightweight**
+- **Download size**: ~10MB (smaller than a photo)
+- **Memory usage**: <50MB RAM (less than a browser tab)
+- **Startup time**: Instant (starts with system tray)
+- **No bloat**: Only essential features
 
-### Multi-listes & Organisation
+### 🚀 **Native Performance**
+Built with **Rust** (backend) and **React** (UI) using **Tauri**, delivering:
+- Sub-100ms response time
+- Smooth 60fps animations
+- No Electron overhead
+- True native performance
 
-- **Listes multiples** : Organisez vos tâches en catégories (Personnel, Travail, Projets...)
-- **Labels colorés** : Catégorisez et filtrez vos tâches avec des labels personnalisables
-- **Sous-tâches illimitées** : Décomposez vos projets en sous-tâches imbriquées
-- **Drag & Drop** : Réorganisez vos tâches et listes par glisser-déposer
+### 🌍 **Truly Cross-Platform**
+- **macOS**: Apple Silicon (M1/M2/M3) + Intel support
+- **Windows**: 10/11 (64-bit)
+- **Linux**: AppImage + .deb packages (Ubuntu/Debian)
 
-### Productivité
+---
 
-- **Raccourcis clavier** : `Shift+Space` (toggle), `Escape` (fermer), `Enter` (sauvegarder)
-- **Auto-focus** : L'éditeur s'ouvre automatiquement à chaque ouverture
-- **Dates & Rappels** : Boutons rapides (Aujourd'hui, Demain) + sélecteur date/heure
-- **Notifications natives** : Rappels système pour ne rien oublier
-- **Historique complet** : Consultez et restaurez vos tâches terminées
+## 🎬 Quick Start | Démarrage Rapide
 
-### Interface
+### 📥 Installation
 
-- **Overlay intelligent** : S'affiche au-dessus de toutes les fenêtres (même fullscreen sur macOS)
-- **Mode sombre/clair** : Suit automatiquement vos préférences système
-- **Animations fluides** : Transitions douces avec Framer Motion
-- **Responsive** : Interface adaptative et intuitive
+**Download for your platform:**
 
-### Technique
+| Platform | Download | Installer Type |
+|----------|----------|----------------|
+| 🍎 **macOS** (Apple Silicon) | [Download .dmg](https://github.com/simcmoi/todo-overlay/releases/latest) | Universal (M1/M2/M3) |
+| 🍎 **macOS** (Intel) | [Download .dmg](https://github.com/simcmoi/todo-overlay/releases/latest) | x64 |
+| 🪟 **Windows** | [Download .msi](https://github.com/simcmoi/todo-overlay/releases/latest) | Installer (recommended) |
+| 🪟 **Windows** | [Download .exe](https://github.com/simcmoi/todo-overlay/releases/latest) | Portable |
+| 🐧 **Linux** | [Download .AppImage](https://github.com/simcmoi/todo-overlay/releases/latest) | Universal (all distros) |
+| 🐧 **Linux** (Debian/Ubuntu) | [Download .deb](https://github.com/simcmoi/todo-overlay/releases/latest) | Native package |
 
-- **Sauvegarde automatique** : Chaque modification est sauvegardée instantanément
-- **Mises à jour auto** : L'app se met à jour automatiquement en arrière-plan
-- **Système de logs** : Debug facilité avec logs détaillés (accès depuis les Paramètres)
-- **Cross-platform** : Fonctionne sur macOS, Windows et Linux
-- **Démarrage système** : Lance automatiquement au démarrage de votre machine
+Or visit the [Releases Page](https://github.com/simcmoi/todo-overlay/releases) for all versions.
 
-## 🛠️ Stack Technique
+### 🚀 First Launch
+
+1. **Install & Launch** - The app will appear in your system tray (macOS menu bar / Windows system tray)
+2. **Press `Shift+Space`** - Opens the overlay instantly
+3. **Start Typing** - Your first todo is automatically focused
+4. **Press `Enter`** - Saves your task
+
+That's it! The app runs in the background and can be summoned anytime with `Shift+Space`.
+
+## ✨ Features | Fonctionnalités
+
+### 📋 Task Management | Gestion des Tâches
+
+- ✅ **Multiple Lists** - Organize tasks by project (Personal, Work, Ideas...)
+- 🏷️ **Color Labels** - Categorize and filter with custom colored tags
+- 📝 **Rich Text Editor** - Format tasks with details and descriptions
+- 🔗 **Unlimited Subtasks** - Break down projects into nested subtasks
+- 🎯 **Drag & Drop** - Reorder tasks and lists effortlessly
+- 📊 **Progress Tracking** - Visualize completion with progress indicators
+- 🗑️ **Archive & History** - View and restore completed tasks
+
+### ⚡ Productivity | Productivité
+
+- ⌨️ **Global Hotkey** - `Shift+Space` to toggle anywhere (customizable)
+- 🎯 **Quick Actions** - Keyboard shortcuts for all operations
+- 📅 **Date & Time Picker** - Quick buttons (Today, Tomorrow) + custom dates
+- 🔔 **Native Notifications** - System reminders for due tasks
+- 🔍 **Search & Filter** - Find tasks instantly across all lists
+- 🌓 **Auto Dark Mode** - Follows your system theme preferences
+- 💾 **Auto-Save** - Every change saved instantly (no manual save)
+
+### 🖥️ Desktop Features | Fonctionnalités Desktop
+
+- 🪟 **Always on Top** - Overlay appears above fullscreen apps
+- 🚀 **Launch at Startup** - Starts with your system automatically
+- 💾 **Persistent State** - Remembers your position and settings
+- 🔄 **Auto-Update** - Downloads and installs updates in background
+- 📊 **Debug Logs** - Built-in logging for troubleshooting
+- 🎨 **Modern UI** - Smooth animations with Framer Motion
+- 🔐 **Code Signed** - Verified binaries for security (macOS/Windows)
+
+### 🛠️ Developer-Friendly | Développeur-Friendly
+
+- 📂 **Local JSON Storage** - Human-readable data format
+- 🔓 **Open Source** - Full source code available
+- 🧪 **Well Tested** - Unit tests with Vitest
+- 📖 **Comprehensive Docs** - Setup, API, and contribution guides
+- 🐳 **Docker Support** - Containerized deployment for landing page
+- 🔧 **Hot Reload** - Fast development with Vite
+- 📦 **Easy Build** - One-command build for all platforms
+
+## 🛠️ Tech Stack | Stack Technique
+
+Built with modern, performant technologies for the best user experience.
 
 ### Frontend
-- **React 19** + TypeScript
-- **Vite** - Build ultra-rapide
-- **TailwindCSS** - Styling utility-first
-- **shadcn/ui** - Composants UI accessibles
-- **Zustand** - State management minimal
-- **Framer Motion** - Animations fluides
+| Technology | Purpose | Version |
+|------------|---------|---------|
+| ⚛️ **React** | UI Framework | 19.x |
+| 📘 **TypeScript** | Type Safety | 5.x |
+| ⚡ **Vite** | Build Tool | 7.x |
+| 🎨 **TailwindCSS** | Styling | 3.x |
+| 🧩 **shadcn/ui** | UI Components | Latest |
+| 🐻 **Zustand** | State Management | 5.x |
+| 🎭 **Framer Motion** | Animations | 12.x |
 
 ### Backend
-- **Rust** - Performance et sécurité
-- **Tauri 2.10** - Framework desktop moderne
-- **JSON local** - Stockage simple dans `appDataDir()`
+| Technology | Purpose | Version |
+|------------|---------|---------|
+| 🦀 **Rust** | Core Backend | 1.70+ |
+| 🖼️ **Tauri** | Desktop Framework | 2.10 |
+| 📄 **JSON** | Data Storage | - |
+| 🔔 **Native APIs** | System Integration | - |
 
 ### Infrastructure
-- **Docker** - Déploiement de la landing page
-- **GitHub Actions** - CI/CD automatisé
-- **Nginx** - Serveur web + API updates
+- 🐳 **Docker** - Containerized deployment
+- ⚙️ **GitHub Actions** - Automated CI/CD
+- 🌐 **Nginx** - Web server for landing page
+- 📦 **NPM** - Package management
 
-## 📦 Développement
+### Why This Stack?
 
-### Prérequis
+- **Rust + Tauri** = Native performance without Electron bloat
+- **React + TypeScript** = Type-safe, maintainable UI
+- **TailwindCSS** = Rapid, consistent styling
+- **Zustand** = Minimal, fast state management
+- **Vite** = Lightning-fast development experience
 
-- **Node.js** 20+
-- **Rust** 1.70+
-- **pnpm** (recommandé) ou npm
+---
 
-### Installation
+## 👨‍💻 Development | Développement
+
+### Prerequisites | Prérequis
+
+- **Node.js** 20+ ([Download](https://nodejs.org))
+- **Rust** 1.70+ ([Install](https://rustup.rs))
+- **npm** or **pnpm** (package manager)
+
+**Platform-specific dependencies:**
+
+<details>
+<summary><b>macOS</b></summary>
 
 ```bash
-# Cloner le repo
+# Install Xcode Command Line Tools
+xcode-select --install
+```
+
+</details>
+
+<details>
+<summary><b>Linux (Ubuntu/Debian)</b></summary>
+
+```bash
+sudo apt update
+sudo apt install libwebkit2gtk-4.0-dev \
+    build-essential \
+    curl \
+    wget \
+    file \
+    libssl-dev \
+    libgtk-3-dev \
+    libayatana-appindicator3-dev \
+    librsvg2-dev
+```
+
+</details>
+
+<details>
+<summary><b>Windows</b></summary>
+
+- Install [Microsoft Visual Studio C++ Build Tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/)
+- Install [WebView2](https://developer.microsoft.com/en-us/microsoft-edge/webview2/) (usually pre-installed on Windows 11)
+
+</details>
+
+### Getting Started | Commencer
+
+```bash
+# Clone the repository
 git clone https://github.com/simcmoi/todo-overlay.git
 cd todo-overlay
 
-# Installer les dépendances
+# Install dependencies
 npm install
 
-# Lancer en dev
+# Start development server (with hot reload)
 npm run tauri dev
 ```
 
-### Scripts disponibles
+The app will launch with hot-reload enabled. Any changes to the code will automatically refresh the app.
+
+### Available Commands | Commandes Disponibles
 
 ```bash
-npm run tauri dev          # Mode développement avec hot reload
-npm run tauri build        # Build production
-npm test                   # Tests unitaires avec Vitest
-npm run test:coverage      # Coverage des tests
-npm run lint              # Linter ESLint
+# Development
+npm run dev              # Start Vite dev server
+npm run tauri dev        # Launch Tauri app in dev mode
+
+# Building
+npm run build            # Build frontend only
+npm run tauri build      # Build production app for your platform
+
+# Testing
+npm test                 # Run tests in watch mode
+npm run test:run         # Run tests once
+npm run test:ui          # Open Vitest UI
+npm run test:coverage    # Generate coverage report
+
+# Code Quality
+npm run lint             # Run ESLint
+
+# Release (automated)
+npm run release          # Create patch release (0.2.1 → 0.2.2)
+npm run release:minor    # Create minor release (0.2.1 → 0.3.0)
+npm run release:major    # Create major release (0.2.1 → 1.0.0)
 ```
 
-### Build production
+### Building for Production | Build Production
 
-**macOS :**
+**Build for your current platform:**
 ```bash
 npm run tauri build
-# Output: src-tauri/target/release/bundle/dmg/
 ```
 
-**Windows :**
-```powershell
-npm run tauri build
-# Output: src-tauri\target\release\bundle\nsis\
-```
+**Output locations:**
+- **macOS**: `src-tauri/target/release/bundle/dmg/`
+- **Windows**: `src-tauri\target\release\bundle\nsis\`
+- **Linux**: `src-tauri/target/release/bundle/appimage/`
 
-**Linux :**
-```bash
-npm run tauri build
-# Output: src-tauri/target/release/bundle/appimage/
-```
+### Cross-Compilation
+
+Tauri supports building for multiple platforms from a single machine. See the [Tauri documentation](https://tauri.app/v2/guides/building/cross-platform) for details.
 
 ## 📁 Structure du Projet
 
@@ -176,58 +312,197 @@ todo-overlay/
 └── .github/workflows/           # CI/CD
 ```
 
-## 🔄 Mises à Jour Automatiques
+## 🔄 Auto-Updates | Mises à Jour Automatiques
 
-L'application vérifie automatiquement les nouvelles versions et se met à jour en arrière-plan. Un banner apparaît quand une nouvelle version est prête à être installée.
+Todo Overlay includes a **seamless auto-update system**:
 
-Pour les développeurs : voir [UPDATER.md](UPDATER.md) pour configurer le système d'auto-update.
+- ✅ Checks for updates automatically on startup
+- ✅ Downloads updates in the background
+- ✅ Notifies when update is ready to install
+- ✅ Installs with one click (no manual download)
+- ✅ Code-signed for security (macOS/Windows)
 
-## 🐳 Déploiement Docker
+**For developers**: See [docs/AUTO_UPDATE_SETUP.md](docs/AUTO_UPDATE_SETUP.md) to configure the update system.
 
-Le projet inclut une stack Docker pour héberger la landing page et le serveur de mises à jour :
+---
+
+## 🐳 Docker Deployment | Déploiement Docker
+
+The project includes a complete Docker stack for hosting the landing page and update server:
 
 ```bash
+# Clone the repo
+git clone https://github.com/simcmoi/todo-overlay.git
+cd todo-overlay/web
+
+# Start all services
 docker-compose up -d
 ```
 
-Voir [web/README.md](web/README.md) pour plus de détails.
+**Services included:**
+- 🌐 Landing page (React + Nginx)
+- 📦 Update server (latest.json endpoint)
+- 🔄 Auto-reload on code changes
 
-## 🤝 Contribution
+See [web/README.md](web/README.md) for detailed deployment instructions.
 
-Les contributions sont les bienvenues ! N'hésitez pas à :
+---
 
-1. Fork le projet
-2. Créer une branche feature (`git checkout -b feature/amazing-feature`)
-3. Commit vos changements (`git commit -m 'feat: add amazing feature'`)
-4. Push vers la branche (`git push origin feature/amazing-feature`)
-5. Ouvrir une Pull Request
+## 🤝 Contributing | Contribuer
 
-### Guidelines
+Contributions are welcome! Whether you're fixing bugs, improving docs, or adding new features.
 
-- Utiliser [Conventional Commits](https://www.conventionalcommits.org/)
-- Ajouter des tests pour les nouvelles fonctionnalités
-- Mettre à jour le CHANGELOG.md
+### How to Contribute
 
-## 📝 Changelog
+1. **Fork** the repository
+2. **Create** a feature branch: `git checkout -b feature/amazing-feature`
+3. **Commit** your changes: `git commit -m 'feat: add amazing feature'`
+4. **Push** to the branch: `git push origin feature/amazing-feature`
+5. **Open** a Pull Request
 
-Voir [CHANGELOG.md](CHANGELOG.md) pour l'historique complet des versions.
+### Contribution Guidelines
 
-## 📚 Documentation Complète
+- ✅ Use [Conventional Commits](https://www.conventionalcommits.org/) format
+- ✅ Add tests for new features
+- ✅ Update documentation when needed
+- ✅ Follow existing code style
+- ✅ Keep PRs focused and atomic
 
-➡️ **[DOCUMENTATION.md](DOCUMENTATION.md)** - Guides complets, workflow, troubleshooting
+### Development Workflow
 
-➡️ **[docs/GENERER_CLES.md](docs/GENERER_CLES.md)** ⭐ - Guide pour configurer l'auto-update
+```bash
+# Create a new branch
+git checkout -b feature/my-feature
+
+# Make your changes
+# ... code, code, code ...
+
+# Run tests
+npm test
+
+# Lint your code
+npm run lint
+
+# Build to verify
+npm run tauri build
+
+# Commit and push
+git add .
+git commit -m "feat: describe your feature"
+git push origin feature/my-feature
+```
+
+### Code Style
+
+- **TypeScript/React**: Follow existing patterns, use functional components
+- **Rust**: Follow [Rust API Guidelines](https://rust-lang.github.io/api-guidelines/)
+- **Commits**: `feat:`, `fix:`, `docs:`, `chore:`, `test:`, `refactor:`
+
+### Report Bugs | Signaler des Bugs
+
+Found a bug? [Open an issue](https://github.com/simcmoi/todo-overlay/issues/new) with:
+- 🐛 Description of the problem
+- 📸 Screenshots (if applicable)
+- 💻 Your OS and version
+- 🔄 Steps to reproduce
+
+### Request Features | Demander des Fonctionnalités
+
+Have an idea? [Open a feature request](https://github.com/simcmoi/todo-overlay/issues/new) with:
+- 💡 Description of the feature
+- 🎯 Use case and benefits
+- 📋 Optional: Implementation suggestions
+
+---
+
+## 📖 Documentation
+
+### For Users | Pour les Utilisateurs
+- 📥 **[Installation Guide](https://simcmoi.github.io/todo-overlay)** - Download and setup
+- ❓ **[FAQ](https://github.com/simcmoi/todo-overlay/issues)** - Common questions
+
+### For Developers | Pour les Développeurs
+- 📚 **[Complete Documentation](DOCUMENTATION.md)** - Full project documentation
+- 🚀 **[Release Workflow](docs/RELEASE_WORKFLOW.md)** - Automated release process
+- 🔑 **[Key Generation Guide](docs/GENERER_CLES.md)** - Setup code signing
+- 🔄 **[Auto-Update Setup](docs/AUTO_UPDATE_SETUP.md)** - Configure updates
+- 📝 **[Changelog](CHANGELOG.md)** - Version history
+
+### Architecture
+- 🏗️ **[Project Structure](#-structure-du-projet)** - Codebase organization
+- 🛠️ **[Tech Stack](#️-tech-stack--stack-technique)** - Technologies used
+- 🐳 **[Docker Setup](web/README.md)** - Deployment guide
+
+---
+
+## 🙏 Acknowledgments | Remerciements
+
+Built with these amazing open-source projects:
+
+- [Tauri](https://tauri.app) - Desktop application framework
+- [React](https://react.dev) - UI library
+- [Rust](https://www.rust-lang.org) - Systems programming language
+- [shadcn/ui](https://ui.shadcn.com) - Beautiful UI components
+- [Vite](https://vitejs.dev) - Frontend build tool
+- [TailwindCSS](https://tailwindcss.com) - Utility-first CSS
+
+Special thanks to all [contributors](https://github.com/simcmoi/todo-overlay/graphs/contributors)!
+
+---
+
+## 📊 Stats & Community
+
+<div align="center">
+
+[![GitHub stars](https://img.shields.io/github/stars/simcmoi/todo-overlay?style=social)](https://github.com/simcmoi/todo-overlay/stargazers)
+[![GitHub forks](https://img.shields.io/github/forks/simcmoi/todo-overlay?style=social)](https://github.com/simcmoi/todo-overlay/network/members)
+[![GitHub watchers](https://img.shields.io/github/watchers/simcmoi/todo-overlay?style=social)](https://github.com/simcmoi/todo-overlay/watchers)
+[![GitHub issues](https://img.shields.io/github/issues/simcmoi/todo-overlay)](https://github.com/simcmoi/todo-overlay/issues)
+[![GitHub pull requests](https://img.shields.io/github/issues-pr/simcmoi/todo-overlay)](https://github.com/simcmoi/todo-overlay/pulls)
+
+</div>
+
+---
+
+## 🔐 Security | Sécurité
+
+- ✅ All data stored locally (no cloud)
+- ✅ Code-signed binaries (macOS/Windows)
+- ✅ Regular security updates
+- ✅ Open source - audit the code
+- ✅ No telemetry or tracking
+
+**Report security vulnerabilities**: [Create a private security advisory](https://github.com/simcmoi/todo-overlay/security/advisories/new)
+
+---
 
 ## 📄 License
 
-MIT © Simon Fessy
+MIT License © 2024 [Simon Fessy](https://github.com/simcmoi)
+
+This project is open source and free to use. See [LICENSE](LICENSE) for details.
+
+---
+
+## 🌟 Support the Project
+
+If you find Todo Overlay useful, consider:
+
+- ⭐ **Starring** the repository
+- 🐛 **Reporting bugs** or requesting features
+- 💬 **Sharing** with friends and colleagues
+- 🤝 **Contributing** code or documentation
 
 ---
 
 <div align="center">
 
-**Fait avec ❤️ en Rust et React**
+### Made with ❤️ using Rust and React
 
-[⭐ Star ce projet](https://github.com/simcmoi/todo-overlay) • [🐦 Suivre sur Twitter](https://twitter.com/simonfessy)
+**[⭐ Star this project](https://github.com/simcmoi/todo-overlay)** • **[📥 Download now](https://github.com/simcmoi/todo-overlay/releases)** • **[📖 Read the docs](DOCUMENTATION.md)**
+
+---
+
+**Keywords:** todo app, task manager, overlay app, productivity tool, desktop app, tauri app, rust app, react app, cross-platform, macOS app, Windows app, Linux app, todo list, task list, GTD, getting things done, productivity software, open source todo, privacy-first, local storage, keyboard shortcuts, hotkey app, quick capture, minimal todo
 
 </div>
