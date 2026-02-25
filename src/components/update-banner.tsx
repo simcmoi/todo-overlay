@@ -1,10 +1,10 @@
 import { AnimatePresence, motion } from 'framer-motion'
-import { Download, X, AlertCircle, CheckCircle } from 'lucide-react'
-import { Badge } from '@/components/ui/badge'
+import { Download, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useUpdateStore } from '@/store/use-update-store'
 import { useToast } from '@/hooks/use-toast'
 import { useEffect } from 'react'
+import { cn } from '@/lib/utils'
 
 export function UpdateBanner() {
   const { state, updateInfo, downloadProgress, installUpdate, dismissUpdate } = useUpdateStore()
@@ -25,68 +25,49 @@ export function UpdateBanner() {
     }
   }, [state, downloadProgress, toast, updateInfo?.latestVersion])
 
-  if (state === 'idle' || state === 'checking') {
+  if (state !== 'available') {
     return null
   }
 
   return (
     <AnimatePresence>
-      {(state === 'available' || state === 'error') && (
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 0.9 }}
-          transition={{ type: 'spring', stiffness: 400, damping: 25 }}
-          className="fixed bottom-4 right-4 z-50"
-        >
-          {state === 'error' ? (
-            <Badge 
-              variant="destructive" 
-              className="flex items-center gap-2 px-3 py-1.5 shadow-lg bg-red-600 dark:bg-red-600"
-            >
-              <AlertCircle className="h-3.5 w-3.5" />
-              <span>Update failed</span>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                className="h-4 w-4 ml-1 text-white hover:bg-white/20"
-                onClick={dismissUpdate}
-              >
-                <X className="h-3 w-3" />
-              </Button>
-            </Badge>
-          ) : (
-            <Badge 
-              className="flex items-center gap-2 px-3 py-1.5 shadow-lg bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900"
-            >
-              <CheckCircle className="h-3.5 w-3.5" />
-              <span>v{updateInfo?.latestVersion} available</span>
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                className="h-5 px-2 text-[10px] ml-1 border-white/30 bg-white/10 text-white hover:bg-white/20 dark:border-slate-900/30 dark:bg-slate-900/10 dark:text-slate-900 dark:hover:bg-slate-900/20"
-                onClick={() => {
-                  void installUpdate()
-                }}
-              >
-                <Download className="mr-1 h-2.5 w-2.5" />
-                Install
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                className="h-4 w-4 ml-1 text-white hover:bg-white/20 dark:text-slate-900 dark:hover:bg-slate-900/20"
-                onClick={dismissUpdate}
-              >
-                <X className="h-3 w-3" />
-              </Button>
-            </Badge>
-          )}
-        </motion.div>
-      )}
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -10 }}
+        transition={{ duration: 0.2, ease: 'easeOut' }}
+        className="mb-2 flex items-center justify-between gap-2 rounded-lg border border-blue-200/50 bg-blue-50/50 px-2.5 py-1.5 text-xs dark:border-blue-800/30 dark:bg-blue-950/30"
+      >
+        <div className="flex items-center gap-1.5 text-blue-700 dark:text-blue-300">
+          <div className={cn(
+            "h-1.5 w-1.5 rounded-full bg-blue-500 animate-pulse"
+          )} />
+          <span className="font-medium">v{updateInfo?.latestVersion}</span>
+        </div>
+        <div className="flex items-center gap-1">
+          <Button
+            type="button"
+            size="sm"
+            variant="ghost"
+            className="h-5 px-2 text-[10px] font-medium text-blue-700 hover:bg-blue-100 dark:text-blue-300 dark:hover:bg-blue-900/50"
+            onClick={() => {
+              void installUpdate()
+            }}
+          >
+            <Download className="mr-1 h-2.5 w-2.5" />
+            Installer
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="h-5 w-5 text-blue-600/60 hover:bg-blue-100 hover:text-blue-700 dark:text-blue-400/60 dark:hover:bg-blue-900/50 dark:hover:text-blue-300"
+            onClick={dismissUpdate}
+          >
+            <X className="h-3 w-3" />
+          </Button>
+        </div>
+      </motion.div>
     </AnimatePresence>
   )
 }

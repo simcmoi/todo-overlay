@@ -32,6 +32,16 @@ pub fn run() {
             Some(vec!["--autostart"]),
         ))
         .setup(|app| {
+            // Hide app from Dock on macOS (menu bar only)
+            #[cfg(target_os = "macos")]
+            {
+                use cocoa::appkit::{NSApp, NSApplication, NSApplicationActivationPolicy::NSApplicationActivationPolicyAccessory};
+                unsafe {
+                    let app = NSApp();
+                    app.setActivationPolicy_(NSApplicationActivationPolicyAccessory);
+                }
+            }
+
             let app_handle = app.handle().clone();
 
             let data = storage::load_or_create(&app_handle)
