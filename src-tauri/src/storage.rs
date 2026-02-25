@@ -6,51 +6,36 @@ use std::sync::Mutex;
 use std::time::{SystemTime, UNIX_EPOCH};
 use tauri::{AppHandle, Manager};
 
-const STORAGE_FILE_NAME: &str = "todos.json";
+pub const STORAGE_FILE_NAME: &str = "todos.json";
 pub const DEFAULT_LIST_ID: &str = "default";
 pub const DEFAULT_GLOBAL_SHORTCUT: &str = "Shift+Space";
 
-#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
-#[serde(rename_all = "lowercase")]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Default)]
+#[serde(rename_all = "camelCase")]
 pub enum SortOrder {
     Asc,
+    #[default]
     Desc,
 }
 
-impl Default for SortOrder {
-    fn default() -> Self {
-        Self::Desc
-    }
-}
-
-#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Default)]
 #[serde(rename_all = "camelCase")]
 pub enum SortMode {
     Manual,
+    #[default]
     Recent,
     Oldest,
     Title,
     DueDate,
 }
 
-impl Default for SortMode {
-    fn default() -> Self {
-        Self::Recent
-    }
-}
-
-#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Default)]
 #[serde(rename_all = "lowercase")]
 pub enum ThemeMode {
+    #[default]
     System,
     Light,
     Dark,
-}
-
-impl Default for ThemeMode {
-    fn default() -> Self {
-        Self::System
-    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -61,20 +46,15 @@ pub struct TodoLabel {
     pub color: String,
 }
 
-#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Default)]
 #[serde(rename_all = "lowercase")]
 pub enum TodoPriority {
+    #[default]
     None,
     Low,
     Medium,
     High,
     Urgent,
-}
-
-impl Default for TodoPriority {
-    fn default() -> Self {
-        Self::None
-    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -218,7 +198,7 @@ fn default_enable_autostart() -> bool {
     true
 }
 
-fn normalize_shortcut(value: &str) -> String {
+pub fn normalize_shortcut(value: &str) -> String {
     let trimmed = value.trim();
     if trimmed.is_empty() {
         default_global_shortcut()

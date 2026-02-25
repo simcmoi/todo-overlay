@@ -1,11 +1,11 @@
 use serde::Deserialize;
 use std::collections::{HashMap, HashSet};
-use tauri::{AppHandle, State};
+use tauri::{AppHandle, Manager, State};
 use uuid::Uuid;
 
 use crate::storage::{
-    now_millis, persist, AppData, AppState, Settings, Todo, TodoLabel, TodoList, TodoPriority,
-    DEFAULT_GLOBAL_SHORTCUT, DEFAULT_LIST_ID,
+    normalize_shortcut, now_millis, persist, AppData, AppState, Settings, Todo, TodoLabel,
+    TodoList, TodoPriority, DEFAULT_LIST_ID,
 };
 use crate::shortcuts;
 use crate::window;
@@ -46,15 +46,6 @@ fn normalize_list_name(value: &str, fallback: &str) -> String {
     let trimmed = value.trim();
     if trimmed.is_empty() {
         fallback.to_string()
-    } else {
-        trimmed.to_string()
-    }
-}
-
-fn normalize_shortcut(value: &str) -> String {
-    let trimmed = value.trim();
-    if trimmed.is_empty() {
-        DEFAULT_GLOBAL_SHORTCUT.to_string()
     } else {
         trimmed.to_string()
     }
@@ -757,11 +748,9 @@ pub fn set_autostart_enabled(
             log::error!("failed to enable autostart: {error}");
             return Err(format!("failed to enable autostart: {error}"));
         }
-    } else {
-        if let Err(error) = app.autolaunch().disable() {
-            log::error!("failed to disable autostart: {error}");
-            return Err(format!("failed to disable autostart: {error}"));
-        }
+    } else if let Err(error) = app.autolaunch().disable() {
+        log::error!("failed to disable autostart: {error}");
+        return Err(format!("failed to disable autostart: {error}"));
     }
 
     persist_state(&app, &state)
@@ -799,4 +788,62 @@ pub fn set_todo_reminder(
 #[tauri::command]
 pub fn hide_overlay(app: AppHandle) -> Result<(), String> {
     window::hide_main_window(&app).map_err(|error| error.to_string())
+}
+
+#[tauri::command]
+pub fn get_app_version() -> String {
+    env!("CARGO_PKG_VERSION").to_string()
+}
+
+#[tauri::command]
+pub fn get_data_file_path(app: AppHandle) -> Result<String, String> {
+    let app_dir = app
+        .path()
+        .app_data_dir()
+        .map_err(|error| format!("failed to resolve appDataDir: {error}"))?;
+    
+    let path = app_dir.join(crate::storage::STORAGE_FILE_NAME);
+    
+    path.to_str()
+        .ok_or_else(|| "invalid path".to_string())
+        .map(|s| s.to_string())
+}
+
+#[tauri::command]
+pub fn open_data_file(app: AppHandle) -> Result<(), String> {
+    let app_dir = app
+        .path()
+        .app_data_dir()
+        .map_err(|error| format!("failed to resolve appDataDir: {error}"))?;
+    
+    let path = app_dir.join(crate::storage::STORAGE_FILE_NAME);
+    
+    // Utiliser la commande 'open' sur macOS pour ouvrir le fichier avec l'éditeur par défaut
+    #[cfg(target_os = "macos")]
+    {
+        std::process::Command::new("open")
+            .arg(&path)
+            .spawn()
+            .map_err(|error| format!("failed to open file: {error}"))?;
+    }
+    
+    // Utiliser 'xdg-open' sur Linux
+    #[cfg(target_os = "linux")]
+    {
+        std::process::Command::new("xdg-open")
+            .arg(&path)
+            .spawn()
+            .map_err(|error| format!("failed to open file: {error}"))?;
+    }
+    
+    // Utiliser 'start' sur Windows
+    #[cfg(target_os = "windows")]
+    {
+        std::process::Command::new("cmd")
+            .args(["/C", "start", "", path.to_str().unwrap_or("")])
+            .spawn()
+            .map_err(|error| format!("failed to open file: {error}"))?;
+    }
+    
+    Ok(())
 }

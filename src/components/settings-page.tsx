@@ -1,8 +1,10 @@
-import { ArrowLeft, Keyboard, Palette, Plus, SlidersHorizontal, Tags, Trash2 } from 'lucide-react'
+import { ArrowLeft, FileText, FolderOpen, Info, Keyboard, Palette, Plus, RefreshCw, SlidersHorizontal, Tags, Trash2 } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Switch } from '@/components/ui/switch'
+import { useUpdateStore } from '@/store/use-update-store'
+import { getAppVersion, getDataFilePath, openDataFile } from '@/lib/tauri'
 import { cn } from '@/lib/utils'
 import type { Settings, ThemeMode, TodoLabel } from '@/types/todo'
 
@@ -89,6 +91,14 @@ export function SettingsPage({
   const [isCapturingShortcut, setIsCapturingShortcut] = useState(false)
   const [isSavingShortcut, setIsSavingShortcut] = useState(false)
   const [labelDrafts, setLabelDrafts] = useState<Record<string, string>>({})
+  const [appVersion, setAppVersion] = useState<string>('')
+  const [dataFilePath, setDataFilePath] = useState<string>('')
+  const { checkForUpdate, state: updateState } = useUpdateStore()
+
+  useEffect(() => {
+    void getAppVersion().then(setAppVersion)
+    void getDataFilePath().then(setDataFilePath)
+  }, [])
 
   useEffect(() => {
     setShortcutDraft(settings.globalShortcut)
@@ -423,6 +433,61 @@ export function SettingsPage({
                 </Button>
               </div>
             ))}
+          </div>
+        </section>
+
+        <section className="rounded-lg border border-border bg-card/70 p-3">
+          <div className="mb-2 flex items-center gap-2">
+            <FileText className="h-4 w-4 text-muted-foreground" />
+            <p className="text-sm font-medium">Stockage des données</p>
+          </div>
+          <div className="space-y-3">
+            <div className="space-y-1">
+              <span className="text-xs text-muted-foreground">Fichier de données</span>
+              <p className="break-all rounded-md bg-muted px-2 py-1.5 text-[10px] font-mono">{dataFilePath}</p>
+            </div>
+            <div>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                className="h-7 w-full gap-1 px-2 text-xs"
+                onClick={() => {
+                  void openDataFile()
+                }}
+              >
+                <FolderOpen className="h-3.5 w-3.5" />
+                Ouvrir avec l'éditeur de texte
+              </Button>
+            </div>
+          </div>
+        </section>
+
+        <section className="rounded-lg border border-border bg-card/70 p-3">
+          <div className="mb-2 flex items-center gap-2">
+            <Info className="h-4 w-4 text-muted-foreground" />
+            <p className="text-sm font-medium">À propos</p>
+          </div>
+          <div className="space-y-3">
+            <div className="flex items-center justify-between gap-3">
+              <span className="text-xs text-muted-foreground">Version</span>
+              <span className="text-xs font-mono font-medium">{appVersion}</span>
+            </div>
+            <div>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                className="h-7 w-full gap-1 px-2 text-xs"
+                onClick={() => {
+                  void checkForUpdate()
+                }}
+                disabled={updateState === 'checking'}
+              >
+                <RefreshCw className={cn('h-3.5 w-3.5', updateState === 'checking' && 'animate-spin')} />
+                {updateState === 'checking' ? 'Vérification...' : 'Vérifier les mises à jour'}
+              </Button>
+            </div>
           </div>
         </section>
       </div>

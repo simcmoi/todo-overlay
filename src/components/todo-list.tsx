@@ -8,7 +8,7 @@ import {
   useRef,
   useState,
 } from 'react'
-import { AlertTriangle, CalendarClock, Check, ChevronDown, ChevronRight, Ellipsis, FileText, GripVertical, Plus, Star, Tags } from 'lucide-react'
+import { AlertTriangle, CalendarClock, Check, ChevronDown, ChevronRight, Ellipsis, FileText, GripVertical, Star, Tags } from 'lucide-react'
 import { AnimatePresence, LayoutGroup, motion } from 'framer-motion'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -25,6 +25,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Input } from '@/components/ui/input'
 import { ScrollArea } from '@/components/ui/scroll-area'
+import { TodoCreateForm } from '@/components/todo-create-form'
 import { cn } from '@/lib/utils'
 import type { Todo, TodoLabel, TodoListMeta, TodoPriority } from '@/types/todo'
 
@@ -908,17 +909,10 @@ export function TodoList({
       <LayoutGroup id="todo-items">
         <ul className="py-1 pr-2">
           <li className="px-2 py-1">
-            <Button
-              type="button"
-              variant="ghost"
-              className="h-8 w-full justify-start px-2 text-sm text-muted-foreground hover:text-foreground"
-              onClick={() => {
-                void openCreateEditor()
-              }}
-            >
-              <Plus className="mr-1 h-4 w-4" />
-              Ajouter une tâche
-            </Button>
+            <TodoCreateForm
+              inputRef={composeInputRef}
+              onCreate={onCreate}
+            />
           </li>
 
           {editingId === 'new' && newParentId === null ? renderEditorRow('new', 0) : null}

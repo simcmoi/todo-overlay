@@ -4,6 +4,8 @@ import { motion } from 'framer-motion'
 import { SettingsMenu } from '@/components/settings-menu'
 import { SettingsPage } from '@/components/settings-page'
 import { TodoList } from '@/components/todo-list'
+import { UpdateBanner } from '@/components/update-banner'
+import { Toaster } from '@/components/ui/toaster'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -16,6 +18,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { useWindowBehavior } from '@/hooks/use-window-behavior'
 import { useTodoStore } from '@/store/use-todo-store'
+import { useUpdateStore } from '@/store/use-update-store'
 import { cn } from '@/lib/utils'
 import type { SortMode, Todo, TodoPriority } from '@/types/todo'
 
@@ -132,11 +135,32 @@ export default function App() {
     updateTodo,
   } = useTodoStore()
 
+  const { checkForUpdate } = useUpdateStore()
+
   useWindowBehavior(settings.autoCloseOnBlur, inputRef)
 
   useEffect(() => {
     void hydrate()
   }, [hydrate])
+
+  // Vérifier les mises à jour au démarrage
+  useEffect(() => {
+    if (hydrated) {
+      void checkForUpdate()
+    }
+  }, [hydrated, checkForUpdate])
+
+  // Vérifier les mises à jour périodiquement (toutes les 24h)
+  useEffect(() => {
+    if (!hydrated) return
+
+    const TWENTY_FOUR_HOURS = 24 * 60 * 60 * 1000
+    const interval = setInterval(() => {
+      void checkForUpdate()
+    }, TWENTY_FOUR_HOURS)
+
+    return () => clearInterval(interval)
+  }, [hydrated, checkForUpdate])
 
   useEffect(() => {
     const root = document.documentElement
@@ -306,6 +330,7 @@ export default function App() {
         transition={{ duration: 0.12 }}
         className="mx-auto flex h-full w-full flex-col overflow-hidden rounded-2xl border border-border bg-card px-3 pb-3 pt-2"
       >
+        <UpdateBanner />
         <div className="mb-2 flex items-center justify-between gap-2">
           <div className="flex min-w-0 items-center gap-2">
             <img src="/app-icon.png" alt="ToDo Overlay" className="h-4 w-4 rounded-sm" />
@@ -614,6 +639,7 @@ export default function App() {
           {error ? `Erreur: ${error}` : `${settings.globalShortcut} pour afficher/masquer · Tri: ${selectedSortModeLabel}`}
         </p>
       </motion.section>
+      <Toaster />
     </main>
   )
 }

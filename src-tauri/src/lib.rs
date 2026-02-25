@@ -3,6 +3,7 @@ mod reminder;
 mod shortcuts;
 mod storage;
 mod tray;
+mod updater;
 mod window;
 
 use tauri_plugin_autostart::ManagerExt;
@@ -18,6 +19,7 @@ pub fn run() {
         )
         .plugin(tauri_plugin_notification::init())
         .plugin(tauri_plugin_global_shortcut::Builder::new().build())
+        .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_autostart::init(
             tauri_plugin_autostart::MacosLauncher::LaunchAgent,
             Some(vec!["--autostart"]),
@@ -26,7 +28,7 @@ pub fn run() {
             let app_handle = app.handle().clone();
 
             let data = storage::load_or_create(&app_handle)
-                .map_err(|error| std::io::Error::other(error))?;
+                .map_err(std::io::Error::other)?;
             app.manage(storage::AppState::new(data));
 
             tray::create_tray(&app_handle)?;
@@ -90,7 +92,12 @@ pub fn run() {
             commands::set_global_shortcut,
             commands::set_autostart_enabled,
             commands::set_todo_reminder,
-            commands::hide_overlay
+            commands::hide_overlay,
+            commands::get_app_version,
+            commands::get_data_file_path,
+            commands::open_data_file,
+            updater::check_for_update,
+            updater::install_update
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

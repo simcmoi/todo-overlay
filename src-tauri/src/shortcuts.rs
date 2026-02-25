@@ -1,7 +1,7 @@
 use tauri::AppHandle;
 use tauri_plugin_global_shortcut::{GlobalShortcutExt, Shortcut, ShortcutState};
 
-use crate::storage::DEFAULT_GLOBAL_SHORTCUT;
+use crate::storage::{normalize_shortcut, DEFAULT_GLOBAL_SHORTCUT};
 use crate::window;
 
 fn attach_shortcut(
@@ -17,15 +17,6 @@ fn attach_shortcut(
             log::error!("failed to toggle window from global shortcut: {error}");
         }
     })
-}
-
-fn normalize_shortcut(value: &str) -> String {
-    let trimmed = value.trim();
-    if trimmed.is_empty() {
-        DEFAULT_GLOBAL_SHORTCUT.to_string()
-    } else {
-        trimmed.to_string()
-    }
 }
 
 pub fn register(

@@ -1,6 +1,14 @@
 import { invoke } from '@tauri-apps/api/core'
 import type { AppData, Settings, TodoPriority } from '@/types/todo'
 
+export type UpdateInfo = {
+  available: boolean
+  currentVersion: string
+  latestVersion?: string
+  releaseDate?: string
+  releaseNotes?: string
+}
+
 export async function loadState(): Promise<AppData> {
   return invoke<AppData>('load_state')
 }
@@ -139,4 +147,24 @@ export async function setTodoReminder(
 
 export async function hideOverlay(): Promise<void> {
   await invoke('hide_overlay')
+}
+
+export async function checkForUpdate(): Promise<UpdateInfo> {
+  return invoke<UpdateInfo>('check_for_update')
+}
+
+export async function installUpdate(): Promise<void> {
+  await invoke('install_update')
+}
+
+export async function getAppVersion(): Promise<string> {
+  return invoke<string>('get_app_version')
+}
+
+export async function getDataFilePath(): Promise<string> {
+  return invoke<string>('get_data_file_path')
+}
+
+export async function openDataFile(): Promise<void> {
+  await invoke('open_data_file')
 }
