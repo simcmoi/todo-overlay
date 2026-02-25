@@ -14,6 +14,14 @@ import { Progress } from '@/components/ui/progress'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Upload, Download, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react'
 import { useTodoStore } from '@/store/use-todo-store'
+import {
+  createTodo as createTodoCommand,
+  updateSettings as updateSettingsCommand,
+  setTodoCompleted,
+  setTodoStarred,
+  setTodoPriority,
+  setTodoLabel,
+} from '@/lib/tauri'
 
 type MigrationDirection = 'local-to-cloud' | 'cloud-to-local'
 
@@ -53,12 +61,58 @@ export function MigrationDialog({ open, onOpenChange, direction }: MigrationDial
 
       if (isLocalToCloud) {
         // Export local data to cloud
+        setProgress(20)
         await storageProvider.save({ todos, settings })
+        setProgress(90)
       } else {
         // Import cloud data to local
-        // Note: This would require calling Tauri commands to save to local storage
-        // For now, we'll just load from cloud
-        await storageProvider.load()
+        // Load data from cloud first
+        setProgress(10)
+        const cloudData = await storageProvider.load()
+        setProgress(30)
+        
+        // Update settings first (includes lists and labels)
+        await updateSettingsCommand(cloudData.settings)
+        setProgress(50)
+        
+        // Create each todo in local storage
+        const totalTodos = cloudData.todos.length
+        if (totalTodos > 0) {
+          for (let i = 0; i < totalTodos; i++) {
+            const todo = cloudData.todos[i]
+            
+            // Create the todo
+            const result = await createTodoCommand(
+              todo.title,
+              todo.details,
+              todo.reminderAt,
+              todo.parentId,
+              todo.listId
+            )
+            
+            // Get the newly created todo ID (last todo in the result)
+            const createdTodo = result.todos[result.todos.length - 1]
+            if (createdTodo) {
+              // Set additional properties
+              if (todo.completedAt) {
+                await setTodoCompleted(createdTodo.id, true)
+              }
+              if (todo.starred) {
+                await setTodoStarred(createdTodo.id, true)
+              }
+              if (todo.priority && todo.priority !== 'none') {
+                await setTodoPriority(createdTodo.id, todo.priority)
+              }
+              if (todo.labelId) {
+                await setTodoLabel(createdTodo.id, todo.labelId)
+              }
+            }
+            
+            // Update progress based on todos created
+            setProgress(50 + Math.floor((i / totalTodos) * 40))
+          }
+        }
+        setProgress(90)
       }
 
       clearInterval(progressInterval)

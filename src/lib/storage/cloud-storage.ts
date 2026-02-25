@@ -1,6 +1,45 @@
-import { createClient, type SupabaseClient, type RealtimeChannel } from '@supabase/supabase-js'
+import { createClient, type SupabaseClient, type RealtimeChannel, type AuthError } from '@supabase/supabase-js'
 import type { AppData, Todo, TodoLabel, Settings } from '@/types/todo'
 import type { StorageProvider, StorageMode, SyncStatus, AuthUser } from './types'
+
+// Helper to check if error is an auth error
+function isAuthError(error: unknown): error is AuthError {
+  return typeof error === 'object' && error !== null && 'status' in error && '__isAuthError' in error
+}
+
+// Helper to format auth errors with user-friendly messages
+function formatAuthError(error: unknown): string {
+  if (isAuthError(error)) {
+    switch (error.status) {
+      case 400:
+        if (error.message.includes('Invalid login credentials')) {
+          return 'Email ou mot de passe incorrect'
+        }
+        if (error.message.includes('email') || error.message.includes('Email')) {
+          return 'Adresse email invalide'
+        }
+        return 'Identifiants invalides. Veuillez vérifier vos informations.'
+      case 422:
+        if (error.message.includes('email')) {
+          return 'Cette adresse email est déjà utilisée'
+        }
+        if (error.message.includes('password')) {
+          return 'Le mot de passe doit contenir au moins 6 caractères'
+        }
+        return error.message
+      case 429:
+        return 'Trop de tentatives. Veuillez réessayer dans quelques instants.'
+      default:
+        return error.message || 'Erreur d\'authentification'
+    }
+  }
+  
+  if (error instanceof Error) {
+    return error.message
+  }
+  
+  return 'Une erreur inattendue s\'est produite'
+}
 
 // Types Supabase DB
 interface DbTodo {
@@ -152,11 +191,11 @@ export class CloudStorageProvider implements StorageProvider {
   
   async load(): Promise<AppData> {
     if (!this.isAuthenticated()) {
-      throw new Error('Not authenticated')
+      throw new Error('Vous devez être connecté pour accéder à vos données cloud')
     }
     
     if (this.syncStatus === 'offline') {
-      throw new Error('Cannot load data while offline')
+      throw new Error('Impossible de charger les données hors ligne. Vérifiez votre connexion internet.')
     }
     
     this.syncStatus = 'syncing'
@@ -171,7 +210,13 @@ export class CloudStorageProvider implements StorageProvider {
         .eq('user_id', userId)
         .is('deleted_at', null)
       
-      if (todosError) throw todosError
+      if (todosError) {
+        // Check if it's an auth error
+        if (todosError.message.includes('JWT') || todosError.message.includes('expired')) {
+          throw new Error('Votre session a expiré. Veuillez vous reconnecter.')
+        }
+        throw todosError
+      }
       
       // Charger toutes les listes
       const { data: lists, error: listsError } = await this.client
@@ -180,7 +225,12 @@ export class CloudStorageProvider implements StorageProvider {
         .eq('user_id', userId)
         .is('deleted_at', null)
       
-      if (listsError) throw listsError
+      if (listsError) {
+        if (listsError.message.includes('JWT') || listsError.message.includes('expired')) {
+          throw new Error('Votre session a expiré. Veuillez vous reconnecter.')
+        }
+        throw listsError
+      }
       
       // Charger tous les labels
       const { data: labels, error: labelsError } = await this.client
@@ -189,7 +239,12 @@ export class CloudStorageProvider implements StorageProvider {
         .eq('user_id', userId)
         .is('deleted_at', null)
       
-      if (labelsError) throw labelsError
+      if (labelsError) {
+        if (labelsError.message.includes('JWT') || labelsError.message.includes('expired')) {
+          throw new Error('Votre session a expiré. Veuillez vous reconnecter.')
+        }
+        throw labelsError
+      }
       
       // Charger les settings
       const { data: settings, error: settingsError } = await this.client
@@ -200,6 +255,9 @@ export class CloudStorageProvider implements StorageProvider {
       
       // Settings peuvent ne pas exister encore (premier chargement)
       if (settingsError && settingsError.code !== 'PGRST116') {
+        if (settingsError.message.includes('JWT') || settingsError.message.includes('expired')) {
+          throw new Error('Votre session a expiré. Veuillez vous reconnecter.')
+        }
         throw settingsError
       }
       
@@ -217,17 +275,23 @@ export class CloudStorageProvider implements StorageProvider {
     } catch (error) {
       this.syncStatus = 'error'
       console.error('Failed to load cloud data:', error)
+      
+      // Rethrow with formatted message if it's already an Error
+      if (error instanceof Error) {
+        throw error
+      }
+      
       throw new Error('Impossible de charger les données du cloud')
     }
   }
   
   async save(data: AppData): Promise<void> {
     if (!this.isAuthenticated()) {
-      throw new Error('Not authenticated')
+      throw new Error('Vous devez être connecté pour sauvegarder vos données dans le cloud')
     }
     
     if (this.syncStatus === 'offline') {
-      throw new Error('Cannot save data while offline')
+      throw new Error('Impossible de sauvegarder hors ligne. Vérifiez votre connexion internet.')
     }
     
     this.syncStatus = 'syncing'
@@ -263,7 +327,12 @@ export class CloudStorageProvider implements StorageProvider {
           .from('todos')
           .upsert(dbTodos)
         
-        if (todosError) throw todosError
+        if (todosError) {
+          if (todosError.message.includes('JWT') || todosError.message.includes('expired')) {
+            throw new Error('Votre session a expiré. Veuillez vous reconnecter.')
+          }
+          throw todosError
+        }
       }
       
       // Upsert lists
@@ -283,7 +352,12 @@ export class CloudStorageProvider implements StorageProvider {
           .from('lists')
           .upsert(dbLists)
         
-        if (listsError) throw listsError
+        if (listsError) {
+          if (listsError.message.includes('JWT') || listsError.message.includes('expired')) {
+            throw new Error('Votre session a expiré. Veuillez vous reconnecter.')
+          }
+          throw listsError
+        }
       }
       
       // Upsert labels
@@ -304,7 +378,12 @@ export class CloudStorageProvider implements StorageProvider {
           .from('labels')
           .upsert(dbLabels)
         
-        if (labelsError) throw labelsError
+        if (labelsError) {
+          if (labelsError.message.includes('JWT') || labelsError.message.includes('expired')) {
+            throw new Error('Votre session a expiré. Veuillez vous reconnecter.')
+          }
+          throw labelsError
+        }
       }
       
       // Upsert settings
@@ -326,7 +405,12 @@ export class CloudStorageProvider implements StorageProvider {
         .from('user_settings')
         .upsert(dbSettings)
       
-      if (settingsError) throw settingsError
+      if (settingsError) {
+        if (settingsError.message.includes('JWT') || settingsError.message.includes('expired')) {
+          throw new Error('Votre session a expiré. Veuillez vous reconnecter.')
+        }
+        throw settingsError
+      }
       
       // Mettre à jour les données actuelles
       this.currentData = data
@@ -335,39 +419,53 @@ export class CloudStorageProvider implements StorageProvider {
     } catch (error) {
       this.syncStatus = 'error'
       console.error('Failed to save cloud data:', error)
+      
+      // Rethrow with formatted message if it's already an Error
+      if (error instanceof Error) {
+        throw error
+      }
+      
       throw new Error('Impossible de sauvegarder les données dans le cloud')
     }
   }
   
   async signIn(email: string, password: string): Promise<void> {
-    const { data, error } = await this.client.auth.signInWithPassword({
-      email,
-      password
-    })
-    
-    if (error) throw error
-    
-    if (data.user) {
-      this.currentUser = {
-        id: data.user.id,
-        email: data.user.email || ''
+    try {
+      const { data, error } = await this.client.auth.signInWithPassword({
+        email,
+        password
+      })
+      
+      if (error) throw error
+      
+      if (data.user) {
+        this.currentUser = {
+          id: data.user.id,
+          email: data.user.email || ''
+        }
       }
+    } catch (error) {
+      throw new Error(formatAuthError(error))
     }
   }
   
   async signUp(email: string, password: string): Promise<void> {
-    const { data, error } = await this.client.auth.signUp({
-      email,
-      password
-    })
-    
-    if (error) throw error
-    
-    if (data.user) {
-      this.currentUser = {
-        id: data.user.id,
-        email: data.user.email || ''
+    try {
+      const { data, error } = await this.client.auth.signUp({
+        email,
+        password
+      })
+      
+      if (error) throw error
+      
+      if (data.user) {
+        this.currentUser = {
+          id: data.user.id,
+          email: data.user.email || ''
+        }
       }
+    } catch (error) {
+      throw new Error(formatAuthError(error))
     }
   }
   

@@ -9,6 +9,7 @@ import { Loader2, AlertCircle } from 'lucide-react'
 import { useTodoStore } from '@/store/use-todo-store'
 
 export function AuthForm() {
+  const [activeTab, setActiveTab] = useState<'signin' | 'signup'>('signin')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [isLoading, setIsLoading] = useState(false)
@@ -16,6 +17,15 @@ export function AuthForm() {
   const [success, setSuccess] = useState<string | null>(null)
 
   const { signIn, signUp } = useTodoStore()
+
+  // Clear form state when switching tabs
+  const handleTabChange = (value: string) => {
+    setActiveTab(value as 'signin' | 'signup')
+    setEmail('')
+    setPassword('')
+    setError(null)
+    setSuccess(null)
+  }
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -62,7 +72,7 @@ export function AuthForm() {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <Tabs defaultValue="signin" className="w-full">
+        <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="signin">Connexion</TabsTrigger>
             <TabsTrigger value="signup">Inscription</TabsTrigger>

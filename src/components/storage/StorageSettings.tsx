@@ -7,7 +7,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { useTodoStore } from '@/store/use-todo-store'
 import { AuthForm } from '@/components/auth/AuthForm'
 import { SyncStatusIndicator } from '@/components/storage/SyncStatusIndicator'
-import { Cloud, HardDrive, LogOut, AlertTriangle } from 'lucide-react'
+import { Cloud, HardDrive, LogOut, AlertTriangle, Loader2 } from 'lucide-react'
 
 export function StorageSettings() {
   const {
@@ -16,6 +16,7 @@ export function StorageSettings() {
     isAuthenticated,
     getCurrentUserEmail,
     signOut,
+    todos,
   } = useTodoStore()
 
   const [isChangingMode, setIsChangingMode] = useState(false)
@@ -35,8 +36,19 @@ export function StorageSettings() {
       return
     }
 
-    // Afficher un avertissement si on change de mode
-    setShowMigrationWarning(true)
+    // Afficher un avertissement seulement si l'utilisateur a des données à migrer
+    const hasData = todos.length > 0
+    if (hasData) {
+      setShowMigrationWarning(true)
+    } else {
+      // Pas de données, changement direct sans avertissement
+      setIsChangingMode(true)
+      try {
+        await setStorageMode(targetMode)
+      } finally {
+        setIsChangingMode(false)
+      }
+    }
   }
 
   const confirmModeChange = async () => {
@@ -114,12 +126,14 @@ export function StorageSettings() {
                 </p>
                 <div className="flex gap-2 mt-3">
                   <Button size="sm" onClick={confirmModeChange} disabled={isChangingMode}>
+                    {isChangingMode && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     Confirmer le changement
                   </Button>
                   <Button
                     size="sm"
                     variant="outline"
                     onClick={() => setShowMigrationWarning(false)}
+                    disabled={isChangingMode}
                   >
                     Annuler
                   </Button>
