@@ -17,6 +17,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Input } from '@/components/ui/input'
 import { useWindowBehavior } from '@/hooks/use-window-behavior'
+import { useSoundEffects } from '@/hooks/useSoundEffects'
 import { useTodoStore } from '@/store/use-todo-store'
 import { useUpdateStore } from '@/store/use-update-store'
 import { cn } from '@/lib/utils'
@@ -109,6 +110,8 @@ export default function App() {
   const [priorityFilter, setPriorityFilter] = useState<TodoPriority | 'all'>('all')
   const [labelFilterId, setLabelFilterId] = useState<string | 'all'>('all')
   const [settingsPageOpen, setSettingsPageOpen] = useState(false)
+
+  const { playAdd, playDelete, playComplete } = useSoundEffects()
 
   const {
     hydrated,
@@ -633,12 +636,16 @@ export default function App() {
                     ...payload,
                     listId: activeList?.id,
                   })
+                  playAdd()
                 }}
                 onUpdate={async (payload) => {
                   await updateTodo(payload)
                 }}
                 onSetCompleted={async (id, completed) => {
                   await setTodoCompleted(id, completed)
+                  if (completed) {
+                    playComplete()
+                  }
                 }}
                 onSetStarred={async (id, starred) => {
                   await setTodoStarred(id, starred)
@@ -651,6 +658,7 @@ export default function App() {
                 }}
                 onDelete={async (id) => {
                   await deleteTodo(id)
+                  playDelete()
                 }}
                 onMoveToList={async (id, listId) => {
                   await moveTodoToList(id, listId)
@@ -660,6 +668,7 @@ export default function App() {
                 }}
                 onDeleteCompleted={async (id) => {
                   await deleteTodo(id)
+                  playDelete()
                 }}
                 emptyLabel="Aucune tâche active"
               />

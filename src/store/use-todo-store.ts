@@ -87,6 +87,7 @@ const defaultSettings: Settings = {
   lists: [{ id: 'default', name: 'Mes tâches', createdAt: 0 }],
   labels: [{ id: 'general', name: 'Général', color: 'slate' }],
   enableAutostart: true,
+  enableSoundEffects: true,
 }
 
 // Récupérer le mode de stockage depuis localStorage (par défaut: local)

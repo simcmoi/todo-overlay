@@ -111,6 +111,8 @@ pub struct Settings {
     pub labels: Vec<TodoLabel>,
     #[serde(default = "default_enable_autostart")]
     pub enable_autostart: bool,
+    #[serde(default = "default_enable_sound_effects")]
+    pub enable_sound_effects: bool,
     #[serde(default, alias = "listName", alias = "list_name", skip_serializing)]
     pub legacy_list_name: Option<String>,
 }
@@ -127,6 +129,7 @@ impl Default for Settings {
             theme_mode: ThemeMode::System,
             labels: default_labels(),
             enable_autostart: true,
+            enable_sound_effects: true,
             legacy_list_name: None,
         }
     }
@@ -195,6 +198,10 @@ fn default_labels() -> Vec<TodoLabel> {
 }
 
 fn default_enable_autostart() -> bool {
+    true
+}
+
+fn default_enable_sound_effects() -> bool {
     true
 }
 

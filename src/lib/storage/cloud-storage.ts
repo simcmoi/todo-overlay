@@ -90,6 +90,7 @@ interface DbSettings {
   theme_mode: string
   auto_close_on_blur: boolean
   enable_autostart: boolean
+  enable_sound_effects: boolean
   global_shortcut: string
   sort_mode: string
   sort_order: string
@@ -440,6 +441,7 @@ export class CloudStorageProvider implements StorageProvider {
         theme_mode: data.settings.themeMode,
         auto_close_on_blur: data.settings.autoCloseOnBlur,
         enable_autostart: data.settings.enableAutostart,
+        enable_sound_effects: data.settings.enableSoundEffects,
         global_shortcut: data.settings.globalShortcut,
         sort_mode: data.settings.sortMode,
         sort_order: data.settings.sortOrder,
@@ -892,7 +894,8 @@ export class CloudStorageProvider implements StorageProvider {
         name: label.name,
         color: label.color as TodoLabel['color']
       })),
-      enableAutostart: dbSettings.enable_autostart
+      enableAutostart: dbSettings.enable_autostart,
+      enableSoundEffects: dbSettings.enable_sound_effects
     }
   }
   
@@ -914,7 +917,8 @@ export class CloudStorageProvider implements StorageProvider {
         name: label.name,
         color: label.color as TodoLabel['color']
       })),
-      enableAutostart: true
+      enableAutostart: true,
+      enableSoundEffects: true
     }
   }
   

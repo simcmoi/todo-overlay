@@ -233,6 +233,15 @@ export function SettingsPage({
                 }}
               />
             </div>
+            <div className="flex items-center justify-between gap-3">
+              <span className="text-xs text-muted-foreground">Activer les effets sonores</span>
+              <Switch
+                checked={settings.enableSoundEffects}
+                onCheckedChange={async (checked) => {
+                  await onUpdateSettings({ enableSoundEffects: checked })
+                }}
+              />
+            </div>
             <div className="space-y-2 pt-1">
               <p className="text-xs text-muted-foreground">Tri par défaut</p>
               <div className="flex flex-wrap gap-1.5">

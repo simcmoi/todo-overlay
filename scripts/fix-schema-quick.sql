@@ -70,6 +70,7 @@ CREATE TABLE public.user_settings (
   theme_mode TEXT DEFAULT 'system',
   auto_close_on_blur BOOLEAN DEFAULT TRUE,
   enable_autostart BOOLEAN DEFAULT TRUE,
+  enable_sound_effects BOOLEAN DEFAULT TRUE,
   global_shortcut TEXT DEFAULT 'Shift+Space',
   sort_mode TEXT DEFAULT 'recent',
   sort_order TEXT DEFAULT 'desc',
