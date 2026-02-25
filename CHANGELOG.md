@@ -7,6 +7,33 @@ et ce projet adhère au [Semantic Versioning](https://semver.org/lang/fr/).
 
 ## [Non publié]
 
+## [0.2.5] - 2026-02-25
+
+### Ajouté
+- Réorganisation complète de la documentation dans une structure claire et navigable
+- Nouveau hub de documentation (`docs/README.md`) avec index de tous les guides
+- Composant Calendar de shadcn/ui pour la sélection de dates
+- Composant Popover de shadcn/ui pour une meilleure UX du sélecteur de date
+
+### Modifié
+- Remplacement de l'input datetime natif par le Calendar shadcn/ui dans un Popover
+- Interface de sélection de date plus moderne et intuitive
+- Heure par défaut réglée à 9h00 lors de la sélection d'une date
+- Texte du bouton "Détails" changé en "Détail" (singulier) pour plus de concision
+- Placeholder de l'input détail changé en "Détail"
+- L'icône FileText se cache maintenant quand l'input détail est visible
+
+### Documentation
+- Consolidation de 3 guides auto-update en un seul guide complet
+- Structure organisée : `features/`, `deployment/`, `development/`, `archive/`
+- Déplacement des fichiers temporaires obsolètes vers `docs/archive/`
+- Amélioration du guide auto-update avec plus de détails techniques
+
+### Technique
+- Nettoyage du code : suppression de l'ancien état `dateTimeInput`
+- Suppression des fonctions `toDateTimeInputValue` et `fromDateTimeInputValue`
+- Simplification de la fonction `applyReminder`
+
 ## [0.2.4] - 2026-02-25
 
 ### Ajouté
