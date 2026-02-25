@@ -1,7 +1,8 @@
 import { motion } from "framer-motion"
-import { Apple, MonitorSmartphone } from "lucide-react"
+import { Apple, MonitorSmartphone, Download as DownloadIcon, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useEffect, useState } from "react"
+import { useGitHubReleases } from "@/hooks/use-github-releases"
 
 type OS = "macOS" | "Windows" | "Linux" | "Unknown"
 
@@ -21,38 +22,59 @@ function detectOS(): OS {
   return "Unknown"
 }
 
+function isAppleSilicon(): boolean {
+  // Détecte si c'est un Mac Apple Silicon (M1/M2/M3)
+  return navigator.userAgent.includes('Mac') && navigator.maxTouchPoints > 0
+}
+
 export function Download() {
   const [os, setOs] = useState<OS>("Unknown")
+  const { release, loading, error } = useGitHubReleases()
 
   useEffect(() => {
     setOs(detectOS())
   }, [])
 
   const getPrimaryDownload = () => {
+    if (!release) {
+      return {
+        label: "Télécharger",
+        icon: DownloadIcon,
+        href: "https://github.com/simcmoi/todo-overlay/releases/latest"
+      }
+    }
+
     switch (os) {
-      case "macOS":
+      case "macOS": {
+        // Prioriser Apple Silicon si détecté, sinon Intel
+        const isSilicon = isAppleSilicon()
+        const url = isSilicon 
+          ? (release.macOS.arm64 || release.macOS.intel)
+          : (release.macOS.intel || release.macOS.arm64)
+        
         return {
-          label: "Télécharger pour macOS",
+          label: isSilicon ? "Télécharger pour macOS (Apple Silicon)" : "Télécharger pour macOS (Intel)",
           icon: Apple,
-          href: "#download-macos"
+          href: url || "https://github.com/simcmoi/todo-overlay/releases/latest"
         }
+      }
       case "Windows":
         return {
           label: "Télécharger pour Windows",
           icon: MonitorSmartphone,
-          href: "#download-windows"
+          href: release.windows.exe || release.windows.msi || "https://github.com/simcmoi/todo-overlay/releases/latest"
         }
       case "Linux":
         return {
           label: "Télécharger pour Linux",
           icon: MonitorSmartphone,
-          href: "#download-linux"
+          href: release.linux.appimage || release.linux.deb || "https://github.com/simcmoi/todo-overlay/releases/latest"
         }
       default:
         return {
           label: "Télécharger",
           icon: MonitorSmartphone,
-          href: "#download"
+          href: "https://github.com/simcmoi/todo-overlay/releases/latest"
         }
     }
   }
@@ -61,7 +83,7 @@ export function Download() {
   const PrimaryIcon = primary.icon
 
   return (
-    <section className="py-24 bg-gradient-to-b from-secondary/20 to-background">
+    <section className="py-24 bg-gradient-to-b from-secondary/20 to-background" id="download">
       <div className="container px-4 md:px-6">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -80,39 +102,83 @@ export function Download() {
           </div>
 
           <div className="flex flex-col items-center gap-4">
-            <Button size="lg" asChild>
-              <a href={primary.href}>
-                <PrimaryIcon />
-                {primary.label}
-              </a>
-            </Button>
+            {loading ? (
+              <Button size="lg" disabled>
+                <Loader2 className="animate-spin" />
+                Chargement...
+              </Button>
+            ) : error ? (
+              <Button size="lg" asChild>
+                <a href="https://github.com/simcmoi/todo-overlay/releases/latest">
+                  <DownloadIcon />
+                  Voir les releases
+                </a>
+              </Button>
+            ) : (
+              <Button size="lg" asChild>
+                <a href={primary.href}>
+                  <PrimaryIcon />
+                  {primary.label}
+                </a>
+              </Button>
+            )}
 
             <div className="text-sm text-muted-foreground">
-              Version 0.2.0 • Mise à jour automatique
+              {release ? `Version ${release.version}` : 'Version 0.2.0'} • Mise à jour automatique
             </div>
           </div>
 
           <div className="pt-8">
             <p className="text-sm text-muted-foreground mb-4">Disponible sur :</p>
             <div className="flex flex-wrap justify-center gap-4">
-              <Button variant="outline" size="sm" asChild>
-                <a href="#download-macos">
-                  <Apple />
-                  macOS
-                </a>
-              </Button>
-              <Button variant="outline" size="sm" asChild>
-                <a href="#download-windows">
-                  <MonitorSmartphone />
-                  Windows
-                </a>
-              </Button>
-              <Button variant="outline" size="sm" asChild>
-                <a href="#download-linux">
-                  <MonitorSmartphone />
-                  Linux
-                </a>
-              </Button>
+              {release?.macOS.arm64 && (
+                <Button variant="outline" size="sm" asChild>
+                  <a href={release.macOS.arm64}>
+                    <Apple />
+                    macOS (Apple Silicon)
+                  </a>
+                </Button>
+              )}
+              {release?.macOS.intel && (
+                <Button variant="outline" size="sm" asChild>
+                  <a href={release.macOS.intel}>
+                    <Apple />
+                    macOS (Intel)
+                  </a>
+                </Button>
+              )}
+              {release?.windows.exe && (
+                <Button variant="outline" size="sm" asChild>
+                  <a href={release.windows.exe}>
+                    <MonitorSmartphone />
+                    Windows (.exe)
+                  </a>
+                </Button>
+              )}
+              {release?.windows.msi && (
+                <Button variant="outline" size="sm" asChild>
+                  <a href={release.windows.msi}>
+                    <MonitorSmartphone />
+                    Windows (.msi)
+                  </a>
+                </Button>
+              )}
+              {release?.linux.appimage && (
+                <Button variant="outline" size="sm" asChild>
+                  <a href={release.linux.appimage}>
+                    <MonitorSmartphone />
+                    Linux (AppImage)
+                  </a>
+                </Button>
+              )}
+              {release?.linux.deb && (
+                <Button variant="outline" size="sm" asChild>
+                  <a href={release.linux.deb}>
+                    <MonitorSmartphone />
+                    Linux (.deb)
+                  </a>
+                </Button>
+              )}
             </div>
           </div>
 

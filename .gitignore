@@ -26,6 +26,7 @@ dist-ssr
 # Tauri signing keys (NEVER commit these!)
 *.key
 *.pem
+.tauri-keys/
 
 # Docker
 .env
