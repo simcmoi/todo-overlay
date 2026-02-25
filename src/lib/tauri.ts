@@ -176,3 +176,7 @@ export async function getLogFilePath(): Promise<string> {
 export async function openLogFile(): Promise<void> {
   await invoke('open_log_file')
 }
+
+export async function resetAllData(): Promise<void> {
+  await invoke('reset_all_data')
+}

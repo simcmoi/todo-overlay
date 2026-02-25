@@ -1,5 +1,5 @@
 use std::collections::{HashMap, HashSet};
-use tauri::{AppHandle, Manager, State};
+use tauri::{AppHandle, Emitter, Manager, State};
 use uuid::Uuid;
 
 use crate::storage::{
@@ -264,6 +264,48 @@ pub fn open_log_file(app: AppHandle) -> Result<(), String> {
             .map_err(|error| format!("failed to open log file: {error}"))?;
     }
     
+    Ok(())
+}
+
+#[tauri::command]
+pub fn reset_all_data(app: AppHandle, state: State<'_, AppState>) -> Result<(), String> {
+    log::info!("Resetting all data");
+    
+    // Clear in-memory state
+    {
+        let mut guard = state.data.lock().map_err(|_| lock_error("todo"))?;
+        *guard = AppData::default();
+    }
+    
+    // Clear notified todos
+    {
+        let mut notified_guard = state.notified_todos.lock().map_err(|_| lock_error("reminder"))?;
+        notified_guard.clear();
+    }
+    
+    // Re-register the default shortcut after reset
+    if let Err(error) = crate::shortcuts::replace_registered_shortcut(&app, crate::storage::DEFAULT_GLOBAL_SHORTCUT) {
+        log::error!("failed to re-register shortcut after reset: {error}");
+        // Don't fail the reset if shortcut registration fails
+    }
+    
+    // Delete the data file
+    let app_dir = app
+        .path()
+        .app_data_dir()
+        .map_err(|error| format!("failed to resolve appDataDir: {error}"))?;
+    
+    let path = app_dir.join(crate::storage::STORAGE_FILE_NAME);
+    
+    if path.exists() {
+        std::fs::remove_file(&path)
+            .map_err(|error| format!("failed to delete data file: {error}"))?;
+    }
+    
+    // Emit event to notify frontend that data has been reset
+    app.emit("data-reset", ()).ok();
+    
+    log::info!("All data has been reset");
     Ok(())
 }
 

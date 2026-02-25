@@ -40,6 +40,7 @@ export type Settings = {
   lists: TodoListMeta[]
   labels: TodoLabel[]
   enableAutostart: boolean
+  enableSoundEffects: boolean
 }
 
 export type AppData = {

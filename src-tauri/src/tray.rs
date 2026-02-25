@@ -4,11 +4,13 @@ use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent}
 use crate::window;
 
 pub fn create_tray(app: &tauri::AppHandle) -> tauri::Result<()> {
-    let toggle_item = MenuItemBuilder::with_id("toggle", "Afficher / Masquer").build(app)?;
+    let show_main_item = MenuItemBuilder::with_id("show_main", "Afficher fenêtre principale").build(app)?;
+    let toggle_overlay_item = MenuItemBuilder::with_id("toggle_overlay", "Afficher / Masquer overlay").build(app)?;
     let quit_item = MenuItemBuilder::with_id("quit", "Quitter").build(app)?;
 
     let menu = MenuBuilder::new(app)
-        .item(&toggle_item)
+        .item(&show_main_item)
+        .item(&toggle_overlay_item)
         .item(&quit_item)
         .build()?;
 
@@ -18,9 +20,14 @@ pub fn create_tray(app: &tauri::AppHandle) -> tauri::Result<()> {
         .menu(&menu)
         .show_menu_on_left_click(false)
         .on_menu_event(|app, event| match event.id.as_ref() {
-            "toggle" => {
-                if let Err(error) = window::toggle_main_window(app) {
-                    log::error!("failed to toggle window from tray menu: {error}");
+            "show_main" => {
+                if let Err(error) = window::show_main_window(app) {
+                    log::error!("failed to show main window from tray menu: {error}");
+                }
+            }
+            "toggle_overlay" => {
+                if let Err(error) = window::toggle_overlay(app) {
+                    log::error!("failed to toggle overlay from tray menu: {error}");
                 }
             }
             "quit" => {
@@ -35,8 +42,8 @@ pub fn create_tray(app: &tauri::AppHandle) -> tauri::Result<()> {
                 ..
             } = event
             {
-                if let Err(error) = window::toggle_main_window(tray.app_handle()) {
-                    log::error!("failed to toggle window from tray click: {error}");
+                if let Err(error) = window::toggle_overlay(tray.app_handle()) {
+                    log::error!("failed to toggle overlay from tray click: {error}");
                 }
             }
         });
