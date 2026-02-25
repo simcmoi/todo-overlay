@@ -1,5 +1,18 @@
 # Changelog
 
+
+## [0.2.2] - 2026-02-25
+
+### Changed
+- Redesigned settings page with cleaner, minimal interface
+- Removed unnecessary borders and boxes from settings
+- Improved visual hierarchy with subtle separators
+- Redesigned update notification banner (more discreet and integrated)
+
+### Fixed
+- App now properly hides from macOS Dock (menu bar only)
+- Fixed updater signing key configuration
+
 Toutes les modifications notables de ce projet seront documentées dans ce fichier.
 
 Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/),
