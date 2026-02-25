@@ -24,6 +24,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { DateTimePicker } from '@/components/ui/date-time-picker'
@@ -31,7 +32,7 @@ import { cn } from '@/lib/utils'
 import type { Todo, TodoLabel, TodoListMeta, TodoPriority } from '@/types/todo'
 
 type TodoListProps = {
-  composeInputRef: MutableRefObject<HTMLInputElement | null>
+  composeInputRef: MutableRefObject<HTMLInputElement | HTMLTextAreaElement | null>
   activeListId: string
   canReorder: boolean
   lists: TodoListMeta[]
@@ -229,7 +230,7 @@ export function TodoList({
   )
   const labelById = useMemo(() => new Map(labels.map((label) => [label.id, label])), [labels])
 
-  const titleInputRef = useRef<HTMLInputElement | null>(null)
+  const titleInputRef = useRef<HTMLTextAreaElement | null>(null)
   const detailsInputRef = useRef<HTMLInputElement | null>(null)
   const editorContainerRef = useRef<HTMLDivElement | null>(null)
   const saveInFlightRef = useRef(false)
@@ -311,8 +312,22 @@ export function TodoList({
     window.requestAnimationFrame(() => {
       titleInputRef.current?.focus()
       titleInputRef.current?.select()
+      
+      // Auto-resize textarea
+      if (titleInputRef.current) {
+        titleInputRef.current.style.height = 'auto'
+        titleInputRef.current.style.height = `${Math.min(titleInputRef.current.scrollHeight, 120)}px`
+      }
     })
   }, [editingId, composeInputRef])
+
+  // Auto-resize textarea when content changes
+  useEffect(() => {
+    if (titleInputRef.current && draft.title) {
+      titleInputRef.current.style.height = 'auto'
+      titleInputRef.current.style.height = `${Math.min(titleInputRef.current.scrollHeight, 120)}px`
+    }
+  }, [draft.title])
 
   useEffect(() => {
     if (!completedExpanded) {
@@ -705,7 +720,7 @@ export function TodoList({
 
           <div className="min-w-0 flex-1 space-y-1.5">
             {/* Ligne 1: Titre */}
-            <Input
+            <Textarea
               ref={(node) => {
                 titleInputRef.current = node
                 composeInputRef.current = node
@@ -713,10 +728,13 @@ export function TodoList({
               value={draft.title}
               onChange={(event) => {
                 setSaveError(null)
-                setDraft((previous) => ({
-                  ...previous,
-                  title: event.target.value,
-                }))
+                const newValue = event.target.value
+                if (newValue.length <= 1000) {
+                  setDraft((previous) => ({
+                    ...previous,
+                    title: newValue,
+                  }))
+                }
               }}
               onKeyDown={(event) => {
                 if (event.key === 'Tab' && !event.shiftKey) {
@@ -738,7 +756,9 @@ export function TodoList({
                 }
               }}
               placeholder="Titre de la tâche"
-              className="h-8 border-none bg-transparent px-0 text-sm shadow-none focus-visible:ring-0"
+              maxLength={1000}
+              rows={1}
+              className="min-h-[32px] max-h-[120px] resize-none overflow-y-auto border-none bg-transparent px-0 py-1 text-sm shadow-none focus-visible:ring-0"
             />
 
             {/* Ligne 2: Détails */}
@@ -1016,7 +1036,7 @@ export function TodoList({
                             void openTodoEditor(todo)
                           }}
                         >
-                          <p className="text-sm text-foreground line-clamp-2 break-words">{todo.title}</p>
+                          <p className="text-sm text-foreground line-clamp-3 break-words">{todo.title}</p>
                           {(todo.details || todo.reminderAt || priority !== 'none' || label) && (
                             <div className="mt-0.5 flex items-center gap-2 text-[11px] text-muted-foreground flex-wrap">
                               {dueMeta ? (
@@ -1242,7 +1262,7 @@ export function TodoList({
                           />
 
                           <div className="min-w-0 flex-1">
-                            <p className="text-sm text-muted-foreground line-through line-clamp-2 break-words">{todo.title}</p>
+                            <p className="text-sm text-muted-foreground line-through line-clamp-3 break-words">{todo.title}</p>
                             <p className="mt-0.5 text-[11px] text-muted-foreground">
                               {todo.completedAt
                                 ? `Terminée ${formatDateLabel(todo.completedAt)}`
