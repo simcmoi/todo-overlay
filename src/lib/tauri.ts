@@ -168,3 +168,11 @@ export async function getDataFilePath(): Promise<string> {
 export async function openDataFile(): Promise<void> {
   await invoke('open_data_file')
 }
+
+export async function getLogFilePath(): Promise<string> {
+  return invoke<string>('get_log_file_path')
+}
+
+export async function openLogFile(): Promise<void> {
+  await invoke('open_log_file')
+}

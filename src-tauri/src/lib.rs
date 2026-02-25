@@ -15,6 +15,13 @@ pub fn run() {
         .plugin(
             tauri_plugin_log::Builder::default()
                 .level(log::LevelFilter::Info)
+                .target(tauri_plugin_log::Target::new(
+                    tauri_plugin_log::TargetKind::LogDir {
+                        file_name: Some("todo-overlay.log".to_string()),
+                    }
+                ))
+                .rotation_strategy(tauri_plugin_log::RotationStrategy::KeepAll)
+                .max_file_size(5_000_000) // 5MB max
                 .build(),
         )
         .plugin(tauri_plugin_notification::init())
@@ -96,6 +103,8 @@ pub fn run() {
             commands::get_app_version,
             commands::get_data_file_path,
             commands::open_data_file,
+            commands::get_log_file_path,
+            commands::open_log_file,
             updater::check_for_update,
             updater::install_update
         ])

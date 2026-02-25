@@ -23,6 +23,20 @@ pub fn toggle_main_window(app: &AppHandle) -> tauri::Result<()> {
     if window.is_visible()? {
         window.hide()?;
     } else {
+        // Set window to float above fullscreen apps on macOS
+        #[cfg(target_os = "macos")]
+        {
+            use cocoa::appkit::{NSMainMenuWindowLevel, NSWindow};
+            use cocoa::base::id;
+            
+            let ns_window = window.ns_window().unwrap() as id;
+            unsafe {
+                // NSFloatingWindowLevel = NSMainMenuWindowLevel + 2 (level 24)
+                // This makes the window float above fullscreen apps
+                ns_window.setLevel_((NSMainMenuWindowLevel + 2) as i64);
+            }
+        }
+        
         window.set_always_on_top(true)?;
         window.set_skip_taskbar(true)?;
         window.center()?;

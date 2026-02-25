@@ -128,25 +128,10 @@ function labelClasses(color: TodoLabel['color']): string {
   }
 }
 
-function toDateInputValue(timestamp: number): string {
-  const date = new Date(timestamp)
-  const timezoneOffsetMs = date.getTimezoneOffset() * 60_000
-  return new Date(date.getTime() - timezoneOffsetMs).toISOString().slice(0, 10)
-}
-
 function toDateTimeInputValue(timestamp: number): string {
   const date = new Date(timestamp)
   const timezoneOffsetMs = date.getTimezoneOffset() * 60_000
   return new Date(date.getTime() - timezoneOffsetMs).toISOString().slice(0, 16)
-}
-
-function fromDateInputValue(value: string): number | undefined {
-  if (!value) {
-    return undefined
-  }
-
-  const timestamp = new Date(`${value}T18:00`).getTime()
-  return Number.isNaN(timestamp) ? undefined : timestamp
 }
 
 function fromDateTimeInputValue(value: string): number | undefined {
@@ -243,7 +228,6 @@ export function TodoList({
   const [showDetails, setShowDetails] = useState(false)
   const [showDate, setShowDate] = useState(false)
   const [dateMode, setDateMode] = useState<DateEditMode>(null)
-  const [dateInput, setDateInput] = useState('')
   const [dateTimeInput, setDateTimeInput] = useState('')
   const [completedExpanded, setCompletedExpanded] = useState(false)
   const [completedVisibleCount, setCompletedVisibleCount] = useState(INITIAL_COMPLETED_VISIBLE_COUNT)
@@ -297,7 +281,41 @@ export function TodoList({
 
   useEffect(() => {
     editingIdRef.current = editingId
+    
+    // Emit event to notify other components about editor state
+    const event = new CustomEvent('todo-editor-state-changed', { 
+      detail: { isEditing: editingId !== null } 
+    })
+    window.dispatchEvent(event)
   }, [editingId])
+
+  // Auto-open create editor on mount AND when window gains focus
+  useEffect(() => {
+    const openCreateEditor = () => {
+      // Only open editor if nothing is being edited
+      if (editingIdRef.current === null) {
+        setEditingId('new')
+        setNewParentId(null)
+        setDraft({ title: '', details: '' })
+        setSaveError(null)
+        setShowDetails(false)
+        setShowDate(false)
+        setDateMode(null)
+        setDateTimeInput('')
+      }
+    }
+
+    // Open on mount
+    openCreateEditor()
+
+    // Listen to custom event emitted by use-window-behavior hook
+    const handleWindowFocused = () => {
+      openCreateEditor()
+    }
+
+    window.addEventListener('tauri-window-focused', handleWindowFocused)
+    return () => window.removeEventListener('tauri-window-focused', handleWindowFocused)
+  }, [])
 
   useEffect(() => {
     if (editingId === null) {
@@ -330,7 +348,6 @@ export function TodoList({
     setShowDetails(false)
     setShowDate(false)
     setDateMode(null)
-    setDateInput('')
     setDateTimeInput('')
   }
 
@@ -372,7 +389,19 @@ export function TodoList({
     } finally {
       saveInFlightRef.current = false
       if (persistSucceeded && shouldClose && editingIdRef.current === editingIdAtStart) {
-        closeEditor()
+        if (editingIdAtStart === 'new' && newParentIdAtStart === null) {
+          // After creating a new top-level task, reopen the editor
+          setEditingId('new')
+          setNewParentId(null)
+          setDraft({ title: '', details: '' })
+          setSaveError(null)
+          setShowDetails(false)
+          setShowDate(false)
+          setDateMode(null)
+        setDateTimeInput('')
+        } else {
+          closeEditor()
+        }
       }
     }
 
@@ -394,8 +423,7 @@ export function TodoList({
     setShowDetails(false)
     setShowDate(false)
     setDateMode(null)
-    setDateInput('')
-    setDateTimeInput('')
+setDateTimeInput('')
   }
 
   const openTodoEditor = async (
@@ -427,7 +455,6 @@ export function TodoList({
     setShowDetails(options?.showDetails ?? Boolean(todo.details))
     setShowDate(options?.showDate ?? Boolean(todo.reminderAt))
     setDateMode(null)
-    setDateInput(todo.reminderAt ? toDateInputValue(todo.reminderAt) : '')
     setDateTimeInput(todo.reminderAt ? toDateTimeInputValue(todo.reminderAt) : '')
   }
 
@@ -464,12 +491,10 @@ export function TodoList({
     }))
 
     if (!timestamp) {
-      setDateInput('')
-      setDateTimeInput('')
+setDateTimeInput('')
       return
     }
 
-    setDateInput(toDateInputValue(timestamp))
     setDateTimeInput(toDateTimeInputValue(timestamp))
   }
 
@@ -584,8 +609,10 @@ export function TodoList({
   }
 
   const onRowDragStart = (event: DragEvent<HTMLElement>, todoId: string) => {
+    console.log('🚀 onRowDragStart', { todoId, canReorder, editingId })
     if (!canReorder || editingId !== null) {
       event.preventDefault()
+      console.log('❌ Drag prevented:', { canReorder, editingId })
       return
     }
 
@@ -594,10 +621,12 @@ export function TodoList({
     setDraggingTodoId(todoId)
     setDropTargetTodoId(null)
     setDropPosition(null)
+    console.log('✅ Drag started successfully')
   }
 
   const onRowDragOver = (event: DragEvent<HTMLLIElement>, targetTodoId: string) => {
     if (!canReorder || editingId !== null) {
+      console.log('⚠️ onRowDragOver blocked:', { canReorder, editingId })
       return
     }
 
@@ -634,6 +663,8 @@ export function TodoList({
     const nextPosition: 'before' | 'after' =
       event.clientY < rect.top + rect.height / 2 ? 'before' : 'after'
 
+    console.log('📍 onRowDragOver position:', { targetTodoId, nextPosition })
+
     if (dropTargetTodoId !== targetTodoId || dropPosition !== nextPosition) {
       setDropTargetTodoId(targetTodoId)
       setDropPosition(nextPosition)
@@ -646,32 +677,28 @@ export function TodoList({
     const currentDraggedId = draggingTodoId ?? event.dataTransfer.getData('text/plain')
     const nextPosition = dropPosition
 
+    console.log('🎯 onRowDrop called:', { 
+      currentDraggedId, 
+      targetTodoId, 
+      nextPosition,
+      canReorder,
+      editingId
+    })
+
     clearDragState()
 
     if (!canReorder || editingId !== null || !currentDraggedId || !nextPosition) {
+      console.log('❌ Drop blocked:', { canReorder, editingId, currentDraggedId, nextPosition })
       return
     }
 
+    console.log('✅ Executing reorder:', { currentDraggedId, targetTodoId, nextPosition })
     await reorderWithinSiblingGroup(currentDraggedId, targetTodoId, nextPosition)
-  }
-
-  const openDetailsInlineInput = () => {
-    setSaveError(null)
-    setShowDetails(true)
-    window.requestAnimationFrame(() => {
-      detailsInputRef.current?.focus()
-      detailsInputRef.current?.setSelectionRange(
-        detailsInputRef.current.value.length,
-        detailsInputRef.current.value.length,
-      )
-    })
   }
 
   const renderEditorRow = (targetId: string | 'new', depth = 0) => {
     const isExistingTodo = targetId !== 'new'
-    const reminderEditorVisible = showDate || Boolean(draft.reminderAt)
     const detailsInputVisible = showDetails || draft.details.trim().length > 0
-    const showQuickDateAction = !reminderEditorVisible
     const leftOffset = Math.min(depth, 6) * 16
 
     return (
@@ -702,7 +729,8 @@ export function TodoList({
             <Checkbox className="mt-1" checked={false} disabled aria-label="Nouvelle tâche" />
           )}
 
-          <div className="min-w-0 flex-1 space-y-2">
+          <div className="min-w-0 flex-1 space-y-1.5">
+            {/* Ligne 1: Titre */}
             <Input
               ref={(node) => {
                 titleInputRef.current = node
@@ -724,6 +752,7 @@ export function TodoList({
 
                 if (event.key === 'Escape') {
                   event.preventDefault()
+                  event.stopPropagation() // Prevent window from closing
                   closeEditor()
                 }
               }}
@@ -731,9 +760,10 @@ export function TodoList({
               className="h-8 border-none bg-transparent px-0 text-sm shadow-none focus-visible:ring-0"
             />
 
-            {detailsInputVisible ? (
-              <motion.div layout className="flex items-center gap-1.5 rounded-md border border-input/70 bg-background/70 px-2">
-                <FileText className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+            {/* Ligne 2: Détails */}
+            <div className="flex items-center gap-1.5">
+              <FileText className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+              {detailsInputVisible ? (
                 <Input
                   ref={detailsInputRef}
                   value={draft.details}
@@ -749,157 +779,103 @@ export function TodoList({
                       setShowDetails(false)
                     }
                   }}
-                  placeholder="Détails"
-                  className="h-7 border-none bg-transparent px-0 text-xs shadow-none focus-visible:ring-0"
+                  placeholder="Ajouter des détails"
+                  className="h-6 border-none bg-transparent px-0 text-xs shadow-none focus-visible:ring-0"
                 />
-              </motion.div>
-            ) : (
-              <button
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowDetails(true)
+                    setTimeout(() => detailsInputRef.current?.focus(), 0)
+                  }}
+                  className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  Détails
+                </button>
+              )}
+            </div>
+
+            {/* Ligne 3: Date rapide */}
+            <div className="flex items-center gap-2">
+              <Button
                 type="button"
+                size="sm"
+                variant="ghost"
+                className="h-6 px-2 text-xs text-muted-foreground hover:text-foreground"
                 onClick={() => {
-                  setShowDetails(true)
-                  setTimeout(() => detailsInputRef.current?.focus(), 0)
+                  setSaveError(null)
+                  applyReminder(getTodayAtDefaultHour())
                 }}
-                className="text-xs text-muted-foreground hover:text-foreground transition-colors"
               >
-                Détails
-              </button>
-            )}
+                Aujourd&apos;hui
+              </Button>
+              <span className="text-xs text-muted-foreground">|</span>
+              <Button
+                type="button"
+                size="sm"
+                variant="ghost"
+                className="h-6 px-2 text-xs text-muted-foreground hover:text-foreground"
+                onClick={() => {
+                  setSaveError(null)
+                  applyReminder(getTomorrowAtDefaultHour())
+                }}
+              >
+                Demain
+              </Button>
+              <span className="text-xs text-muted-foreground">|</span>
+              <Button
+                type="button"
+                size="sm"
+                variant="ghost"
+                className="h-6 w-6 p-0"
+                onClick={() => {
+                  setSaveError(null)
+                  setShowDate(true)
+                  setDateMode('datetime')
+                }}
+              >
+                <CalendarClock className="h-3.5 w-3.5 text-muted-foreground" />
+              </Button>
+              {draft.reminderAt ? (
+                <>
+                  <span className="text-xs text-muted-foreground">·</span>
+                  <span className="text-xs text-muted-foreground">
+                    {reminderFormatter.format(new Date(draft.reminderAt))}
+                  </span>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="ghost"
+                    className="h-6 px-2 text-xs text-muted-foreground hover:text-foreground"
+                    onClick={() => {
+                      setSaveError(null)
+                      applyReminder(undefined)
+                    }}
+                  >
+                    Supprimer
+                  </Button>
+                </>
+              ) : null}
+            </div>
 
-            {reminderEditorVisible ? (
-              <div className="space-y-1">
-                {draft.reminderAt ? (
-                  <p className="text-xs text-muted-foreground">
-                    {`Échéance ${reminderFormatter.format(new Date(draft.reminderAt))}`}
-                  </p>
-                ) : null}
-
-                <div className="flex flex-wrap gap-1">
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="outline"
-                    className="h-7 px-2 text-xs"
-                    onClick={() => {
-                      setSaveError(null)
-                      applyReminder(getTodayAtDefaultHour())
-                    }}
-                  >
-                    Aujourd&apos;hui
-                  </Button>
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="outline"
-                    className="h-7 px-2 text-xs"
-                    onClick={() => {
-                      setSaveError(null)
-                      applyReminder(getTomorrowAtDefaultHour())
-                    }}
-                  >
-                    Demain
-                  </Button>
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="outline"
-                    className="h-7 px-2 text-xs"
-                    onClick={() => {
-                      setSaveError(null)
-                      setDateMode('date')
-                    }}
-                  >
-                    Choisir date
-                  </Button>
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="outline"
-                    className="h-7 px-2 text-xs"
-                    onClick={() => {
-                      setSaveError(null)
-                      setDateMode('datetime')
-                    }}
-                  >
-                    Date + heure
-                  </Button>
-                  {draft.reminderAt ? (
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="ghost"
-                      className="h-7 px-2 text-xs"
-                      onClick={() => {
-                        setSaveError(null)
-                        applyReminder(undefined)
-                      }}
-                    >
-                      Supprimer
-                    </Button>
-                  ) : null}
-                </div>
-
-                {dateMode === 'date' ? (
-                  <Input
-                    type="date"
-                    value={dateInput}
-                    onChange={(event) => {
-                      setSaveError(null)
-                      setDateInput(event.target.value)
-                      applyReminder(fromDateInputValue(event.target.value))
-                    }}
-                    className="h-8 text-xs"
-                  />
-                ) : null}
-
-                {dateMode === 'datetime' ? (
-                  <Input
-                    type="datetime-local"
-                    value={dateTimeInput}
-                    onChange={(event) => {
-                      setSaveError(null)
-                      setDateTimeInput(event.target.value)
-                      applyReminder(fromDateTimeInputValue(event.target.value))
-                    }}
-                    className="h-8 text-xs"
-                    step={60}
-                  />
-                ) : null}
-              </div>
-            ) : null}
-
-            {!detailsInputVisible || showQuickDateAction ? (
-              <motion.div layout className="flex flex-wrap items-center gap-2 pt-0.5">
-                {!detailsInputVisible ? (
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="outline"
-                    className="h-7 rounded-full px-2.5 text-xs"
-                    onClick={() => {
-                      openDetailsInlineInput()
-                    }}
-                  >
-                    <FileText className="mr-1 h-3.5 w-3.5" />
-                    Détails
-                  </Button>
-                ) : null}
-                {showQuickDateAction ? (
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="outline"
-                    className="h-7 w-7 rounded-full p-0"
-                    onClick={() => {
-                      setSaveError(null)
-                      setShowDate(true)
-                    }}
-                    aria-label="Ajouter une date"
-                  >
-                    <CalendarClock className="h-3.5 w-3.5" />
-                  </Button>
-                ) : null}
-              </motion.div>
+            {/* Sélecteur de date/heure si ouvert */}
+            {showDate && dateMode === 'datetime' ? (
+              <Input
+                type="datetime-local"
+                value={dateTimeInput}
+                onChange={(event) => {
+                  setSaveError(null)
+                  setDateTimeInput(event.target.value)
+                  applyReminder(fromDateTimeInputValue(event.target.value))
+                }}
+                onBlur={() => {
+                  setShowDate(false)
+                }}
+                className="h-8 text-xs"
+                step={60}
+                autoFocus
+              />
             ) : null}
 
             {saveError ? <p className="text-xs text-muted-foreground">{`Échec de sauvegarde: ${saveError}`}</p> : null}
@@ -918,19 +894,21 @@ export function TodoList({
     <ScrollArea className="h-full rounded-md border border-border">
       <LayoutGroup id="todo-items">
         <ul className="py-1 pr-2">
-          <li className="px-2 py-1">
-            <Button
-              type="button"
-              variant="ghost"
-              className="h-8 w-full justify-start px-2 text-sm text-muted-foreground hover:text-foreground"
-              onClick={() => {
-                void openCreateEditor()
-              }}
-            >
-              <Plus className="mr-1 h-4 w-4" />
-              Ajouter une tâche
-            </Button>
-          </li>
+          {editingId !== 'new' || newParentId !== null ? (
+            <li className="px-2 py-1">
+              <Button
+                type="button"
+                variant="ghost"
+                className="h-8 w-full justify-start px-2 text-sm text-muted-foreground hover:text-foreground"
+                onClick={() => {
+                  void openCreateEditor()
+                }}
+              >
+                <Plus className="mr-1 h-4 w-4" />
+                Ajouter une tâche
+              </Button>
+            </li>
+          ) : null}
 
           {editingId === 'new' && newParentId === null ? renderEditorRow('new', 0) : null}
 

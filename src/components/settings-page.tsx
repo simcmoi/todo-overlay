@@ -1,10 +1,10 @@
-import { ArrowLeft, FileText, FolderOpen, Info, Keyboard, Palette, Plus, RefreshCw, SlidersHorizontal, Tags, Trash2 } from 'lucide-react'
+import { ArrowLeft, FileText, FolderOpen, Info, Keyboard, Palette, Plus, RefreshCw, ScrollText, SlidersHorizontal, Tags, Trash2 } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Switch } from '@/components/ui/switch'
 import { useUpdateStore } from '@/store/use-update-store'
-import { getAppVersion, getDataFilePath, openDataFile } from '@/lib/tauri'
+import { getAppVersion, getDataFilePath, openDataFile, getLogFilePath, openLogFile } from '@/lib/tauri'
 import { cn } from '@/lib/utils'
 import type { Settings, ThemeMode, TodoLabel } from '@/types/todo'
 
@@ -93,11 +93,13 @@ export function SettingsPage({
   const [labelDrafts, setLabelDrafts] = useState<Record<string, string>>({})
   const [appVersion, setAppVersion] = useState<string>('')
   const [dataFilePath, setDataFilePath] = useState<string>('')
+  const [logFilePath, setLogFilePath] = useState<string>('')
   const { checkForUpdate, state: updateState } = useUpdateStore()
 
   useEffect(() => {
     void getAppVersion().then(setAppVersion)
     void getDataFilePath().then(setDataFilePath)
+    void getLogFilePath().then(setLogFilePath)
   }, [])
 
   useEffect(() => {
@@ -458,6 +460,33 @@ export function SettingsPage({
               >
                 <FolderOpen className="h-3.5 w-3.5" />
                 Ouvrir avec l'éditeur de texte
+              </Button>
+            </div>
+          </div>
+        </section>
+
+        <section className="rounded-lg border border-border bg-card/70 p-3">
+          <div className="mb-2 flex items-center gap-2">
+            <ScrollText className="h-4 w-4 text-muted-foreground" />
+            <p className="text-sm font-medium">Logs de débogage</p>
+          </div>
+          <div className="space-y-3">
+            <div className="space-y-1">
+              <span className="text-xs text-muted-foreground">Fichier de log</span>
+              <p className="break-all rounded-md bg-muted px-2 py-1.5 text-[10px] font-mono">{logFilePath}</p>
+            </div>
+            <div>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                className="h-7 w-full gap-1 px-2 text-xs"
+                onClick={() => {
+                  void openLogFile()
+                }}
+              >
+                <FolderOpen className="h-3.5 w-3.5" />
+                Ouvrir le fichier de log
               </Button>
             </div>
           </div>

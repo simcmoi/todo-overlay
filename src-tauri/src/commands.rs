@@ -1,4 +1,3 @@
-use serde::Deserialize;
 use std::collections::{HashMap, HashSet};
 use tauri::{AppHandle, Manager, State};
 use uuid::Uuid;
@@ -206,14 +205,68 @@ fn push_todo(
     Ok(())
 }
 
-#[derive(Debug, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct TodoPatchInput {
-    pub id: String,
-    pub title: String,
-    pub details: Option<String>,
-    pub reminder_at: Option<i64>,
+#[tauri::command]
+pub fn get_log_file_path(app: AppHandle) -> Result<String, String> {
+    log::info!("Getting log file path");
+    
+    let log_dir = app
+        .path()
+        .app_log_dir()
+        .map_err(|error| format!("failed to resolve log directory: {error}"))?;
+    
+    let path = log_dir.join("todo-overlay.log");
+    
+    path.to_str()
+        .ok_or_else(|| "invalid path".to_string())
+        .map(|s| s.to_string())
 }
+
+#[tauri::command]
+pub fn open_log_file(app: AppHandle) -> Result<(), String> {
+    log::info!("Opening log file");
+    
+    let log_dir = app
+        .path()
+        .app_log_dir()
+        .map_err(|error| format!("failed to resolve log directory: {error}"))?;
+    
+    let path = log_dir.join("todo-overlay.log");
+    
+    // Vérifier si le fichier existe
+    if !path.exists() {
+        return Err("Log file does not exist yet".to_string());
+    }
+    
+    // Utiliser la commande 'open' sur macOS pour ouvrir le fichier avec l'éditeur par défaut
+    #[cfg(target_os = "macos")]
+    {
+        std::process::Command::new("open")
+            .arg(&path)
+            .spawn()
+            .map_err(|error| format!("failed to open log file: {error}"))?;
+    }
+    
+    // Utiliser 'xdg-open' sur Linux
+    #[cfg(target_os = "linux")]
+    {
+        std::process::Command::new("xdg-open")
+            .arg(&path)
+            .spawn()
+            .map_err(|error| format!("failed to open log file: {error}"))?;
+    }
+    
+    // Utiliser 'start' sur Windows
+    #[cfg(target_os = "windows")]
+    {
+        std::process::Command::new("cmd")
+            .args(["/C", "start", "", path.to_str().unwrap_or("")])
+            .spawn()
+            .map_err(|error| format!("failed to open log file: {error}"))?;
+    }
+    
+    Ok(())
+}
+
 
 #[tauri::command]
 pub fn load_state(state: State<'_, AppState>) -> AppData {
@@ -222,6 +275,7 @@ pub fn load_state(state: State<'_, AppState>) -> AppData {
 
 #[tauri::command]
 pub fn add_todo(text: String, app: AppHandle, state: State<'_, AppState>) -> Result<AppData, String> {
+    log::info!("Adding todo: {}", text);
     push_todo(&state, text, None, None, None, None)?;
     persist_state(&app, &state)
 }
@@ -236,8 +290,19 @@ pub fn create_todo(
     app: AppHandle,
     state: State<'_, AppState>,
 ) -> Result<AppData, String> {
+    log::info!("Creating todo: title='{}', has_details={}, has_reminder={}, parent_id={:?}, list_id={:?}", 
+        title, details.is_some(), reminder_at.is_some(), parent_id, list_id);
     push_todo(&state, title, details, reminder_at, parent_id, list_id)?;
     persist_state(&app, &state)
+}
+
+#[derive(Debug, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TodoPatchInput {
+    pub id: String,
+    pub title: String,
+    pub details: Option<String>,
+    pub reminder_at: Option<i64>,
 }
 
 #[tauri::command]
@@ -246,6 +311,8 @@ pub fn update_todo(
     app: AppHandle,
     state: State<'_, AppState>,
 ) -> Result<AppData, String> {
+    log::info!("Updating todo: id='{}', title='{}'", payload.id, payload.title);
+    
     let trimmed_title = payload.title.trim();
     if trimmed_title.is_empty() {
         return persist_state(&app, &state);
@@ -288,6 +355,8 @@ pub fn set_todo_completed(
     app: AppHandle,
     state: State<'_, AppState>,
 ) -> Result<AppData, String> {
+    log::info!("Setting todo completed: id='{}', completed={}", id, completed);
+    
     let next_completed_at = completed.then_some(now_millis());
 
     let affected_ids = {
@@ -609,6 +678,8 @@ pub fn reorder_todos(
 
 #[tauri::command]
 pub fn delete_todo(id: String, app: AppHandle, state: State<'_, AppState>) -> Result<AppData, String> {
+    log::info!("Deleting todo: id='{}'", id);
+    
     let deleted_ids = {
         let mut guard = state.data.lock().map_err(|_| lock_error("todo"))?;
         let mut ids = collect_subtree_ids(&guard.todos, &id);
