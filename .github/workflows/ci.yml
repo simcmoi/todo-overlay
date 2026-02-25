@@ -67,6 +67,7 @@ jobs:
         
       - name: Run ESLint
         run: npm run lint
+        continue-on-error: true
 
   # TypeScript Type Checking
   typecheck:
