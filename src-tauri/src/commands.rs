@@ -3,7 +3,11 @@ use std::collections::{HashMap, HashSet};
 use tauri::{AppHandle, State};
 use uuid::Uuid;
 
-use crate::storage::{now_millis, persist, AppData, AppState, Settings, Todo, TodoList, DEFAULT_LIST_ID};
+use crate::storage::{
+    now_millis, persist, AppData, AppState, Settings, Todo, TodoLabel, TodoList, TodoPriority,
+    DEFAULT_GLOBAL_SHORTCUT, DEFAULT_LIST_ID,
+};
+use crate::shortcuts;
 use crate::window;
 
 fn lock_error(name: &str) -> String {
@@ -47,6 +51,23 @@ fn normalize_list_name(value: &str, fallback: &str) -> String {
     }
 }
 
+fn normalize_shortcut(value: &str) -> String {
+    let trimmed = value.trim();
+    if trimmed.is_empty() {
+        DEFAULT_GLOBAL_SHORTCUT.to_string()
+    } else {
+        trimmed.to_string()
+    }
+}
+
+fn normalize_label_color(value: &str) -> String {
+    let normalized = value.trim().to_ascii_lowercase();
+    match normalized.as_str() {
+        "slate" | "blue" | "green" | "amber" | "rose" | "violet" => normalized,
+        _ => "slate".to_string(),
+    }
+}
+
 fn sanitize_settings(mut settings: Settings) -> Settings {
     if settings.lists.is_empty() {
         settings.lists.push(TodoList {
@@ -74,6 +95,30 @@ fn sanitize_settings(mut settings: Settings) -> Settings {
             .map(|list| list.id.clone())
             .unwrap_or_else(|| DEFAULT_LIST_ID.to_string());
     }
+
+    if settings.labels.is_empty() {
+        settings.labels.push(TodoLabel {
+            id: "general".to_string(),
+            name: "Général".to_string(),
+            color: "slate".to_string(),
+        });
+    } else {
+        let mut used_label_ids = HashSet::new();
+        for (index, label) in settings.labels.iter_mut().enumerate() {
+            let fallback_name = format!("Label {}", index + 1);
+            label.name = normalize_list_name(&label.name, &fallback_name);
+            label.color = normalize_label_color(&label.color);
+
+            let mut label_id = normalize_list_name(&label.id, &format!("label-{}", index + 1));
+            if used_label_ids.contains(&label_id) {
+                label_id = format!("label-{}-{}", index + 1, now_millis());
+            }
+            used_label_ids.insert(label_id.clone());
+            label.id = label_id;
+        }
+    }
+
+    settings.global_shortcut = normalize_shortcut(&settings.global_shortcut);
 
     settings.legacy_list_name = None;
     settings
@@ -140,6 +185,18 @@ fn push_todo(
             .map(|todo| todo.id.clone())
     });
 
+    let next_sort_index = guard
+        .todos
+        .iter()
+        .filter(|todo| {
+            todo.list_id.as_deref() == Some(target_list_id.as_str())
+                && todo.parent_id.as_deref() == validated_parent_id.as_deref()
+                && todo.completed_at.is_none()
+        })
+        .filter_map(|todo| todo.sort_index)
+        .max()
+        .map(|value| value.saturating_add(1));
+
     guard.todos.push(Todo {
         id: Uuid::new_v4().to_string(),
         title: trimmed_title.to_string(),
@@ -147,6 +204,9 @@ fn push_todo(
         parent_id: validated_parent_id,
         list_id: Some(target_list_id),
         starred: false,
+        priority: TodoPriority::None,
+        label_id: None,
+        sort_index: next_sort_index,
         created_at: now_millis(),
         completed_at: None,
         reminder_at,
@@ -283,6 +343,52 @@ pub fn set_todo_starred(
 }
 
 #[tauri::command]
+pub fn set_todo_priority(
+    id: String,
+    priority: TodoPriority,
+    app: AppHandle,
+    state: State<'_, AppState>,
+) -> Result<AppData, String> {
+    {
+        let mut guard = state.data.lock().map_err(|_| lock_error("todo"))?;
+
+        if let Some(todo) = guard.todos.iter_mut().find(|todo| todo.id == id) {
+            todo.priority = priority;
+        }
+    }
+
+    persist_state(&app, &state)
+}
+
+#[tauri::command]
+pub fn set_todo_label(
+    id: String,
+    label_id: Option<String>,
+    app: AppHandle,
+    state: State<'_, AppState>,
+) -> Result<AppData, String> {
+    let normalized_label_id = normalize_optional_id(label_id);
+
+    {
+        let mut guard = state.data.lock().map_err(|_| lock_error("todo"))?;
+        let valid_label_id = normalized_label_id.and_then(|candidate| {
+            guard
+                .settings
+                .labels
+                .iter()
+                .find(|label| label.id == candidate)
+                .map(|label| label.id.clone())
+        });
+
+        if let Some(todo) = guard.todos.iter_mut().find(|todo| todo.id == id) {
+            todo.label_id = valid_label_id;
+        }
+    }
+
+    persist_state(&app, &state)
+}
+
+#[tauri::command]
 pub fn create_list(name: String, app: AppHandle, state: State<'_, AppState>) -> Result<AppData, String> {
     let list_name = normalize_list_name(&name, "Nouvelle liste");
     let list_id = Uuid::new_v4().to_string();
@@ -328,6 +434,182 @@ pub fn set_active_list(id: String, app: AppHandle, state: State<'_, AppState>) -
         let mut guard = state.data.lock().map_err(|_| lock_error("todo"))?;
         if guard.settings.lists.iter().any(|list| list.id == id) {
             guard.settings.active_list_id = id;
+        }
+    }
+
+    persist_state(&app, &state)
+}
+
+#[tauri::command]
+pub fn move_todo_to_list(
+    id: String,
+    list_id: String,
+    app: AppHandle,
+    state: State<'_, AppState>,
+) -> Result<AppData, String> {
+    let normalized_list_id = normalize_list_name(&list_id, "");
+    if normalized_list_id.is_empty() {
+        return persist_state(&app, &state);
+    }
+
+    {
+        let mut guard = state.data.lock().map_err(|_| lock_error("todo"))?;
+
+        if !guard
+            .settings
+            .lists
+            .iter()
+            .any(|list| list.id == normalized_list_id)
+        {
+            return persist_state(&app, &state);
+        }
+
+        let moved_ids = collect_subtree_ids(&guard.todos, &id);
+        if moved_ids.is_empty() {
+            return persist_state(&app, &state);
+        }
+
+        let root_completed = guard
+            .todos
+            .iter()
+            .find(|todo| todo.id == id)
+            .map(|todo| todo.completed_at.is_some())
+            .unwrap_or(false);
+
+        let next_root_sort_index = guard
+            .todos
+            .iter()
+            .filter(|todo| {
+                todo.list_id.as_deref() == Some(normalized_list_id.as_str())
+                    && todo.parent_id.is_none()
+                    && (todo.completed_at.is_some() == root_completed)
+            })
+            .filter_map(|todo| todo.sort_index)
+            .max()
+            .map(|value| value.saturating_add(1));
+
+        for todo in &mut guard.todos {
+            if !moved_ids.contains(&todo.id) {
+                continue;
+            }
+
+            todo.list_id = Some(normalized_list_id.clone());
+            if todo.id == id {
+                todo.parent_id = None;
+                todo.sort_index = next_root_sort_index;
+                continue;
+            }
+
+            if todo
+                .parent_id
+                .as_ref()
+                .map(|parent_id| !moved_ids.contains(parent_id))
+                .unwrap_or(false)
+            {
+                todo.parent_id = None;
+            }
+        }
+    }
+
+    persist_state(&app, &state)
+}
+
+#[tauri::command]
+pub fn clear_completed_in_list(
+    list_id: String,
+    app: AppHandle,
+    state: State<'_, AppState>,
+) -> Result<AppData, String> {
+    let normalized_list_id = normalize_list_name(&list_id, "");
+    if normalized_list_id.is_empty() {
+        return persist_state(&app, &state);
+    }
+
+    let removed_ids = {
+        let mut guard = state.data.lock().map_err(|_| lock_error("todo"))?;
+
+        let ids = guard
+            .todos
+            .iter()
+            .filter(|todo| {
+                todo.completed_at.is_some()
+                    && todo.list_id.as_deref() == Some(normalized_list_id.as_str())
+            })
+            .map(|todo| todo.id.clone())
+            .collect::<Vec<_>>();
+
+        guard.todos.retain(|todo| {
+            !(todo.completed_at.is_some()
+                && todo.list_id.as_deref() == Some(normalized_list_id.as_str()))
+        });
+        ids
+    };
+
+    {
+        let mut notified_guard = state
+            .notified_todos
+            .lock()
+            .map_err(|_| lock_error("reminder"))?;
+        for id in removed_ids {
+            notified_guard.remove(&id);
+        }
+    }
+
+    persist_state(&app, &state)
+}
+
+#[tauri::command]
+pub fn reorder_todos(
+    list_id: String,
+    parent_id: Option<String>,
+    completed: bool,
+    ordered_ids: Vec<String>,
+    app: AppHandle,
+    state: State<'_, AppState>,
+) -> Result<AppData, String> {
+    if ordered_ids.len() < 2 {
+        return persist_state(&app, &state);
+    }
+
+    {
+        let normalized_parent_id = normalize_optional_id(parent_id);
+        let mut guard = state.data.lock().map_err(|_| lock_error("todo"))?;
+
+        let sibling_ids: Vec<String> = guard
+            .todos
+            .iter()
+            .filter(|todo| {
+                todo.list_id.as_deref() == Some(list_id.as_str())
+                    && todo.parent_id.as_deref() == normalized_parent_id.as_deref()
+                    && (todo.completed_at.is_some() == completed)
+            })
+            .map(|todo| todo.id.clone())
+            .collect();
+
+        if sibling_ids.len() >= 2 {
+            let sibling_set: HashSet<String> = sibling_ids.iter().cloned().collect();
+            let mut seen = HashSet::new();
+            let mut deduped_order: Vec<String> = Vec::with_capacity(sibling_ids.len());
+
+            for candidate in ordered_ids {
+                if sibling_set.contains(&candidate) && seen.insert(candidate.clone()) {
+                    deduped_order.push(candidate);
+                }
+            }
+
+            if deduped_order.len() >= 2 {
+                let rank_by_id: HashMap<String, i64> = deduped_order
+                    .into_iter()
+                    .enumerate()
+                    .map(|(index, id)| (id, index as i64))
+                    .collect();
+
+                for todo in &mut guard.todos {
+                    if let Some(rank) = rank_by_id.get(&todo.id) {
+                        todo.sort_index = Some(*rank);
+                    }
+                }
+            }
         }
     }
 
@@ -395,6 +677,20 @@ pub fn update_settings(
     state: State<'_, AppState>,
 ) -> Result<AppData, String> {
     let sanitized_settings = sanitize_settings(settings);
+    let previous_shortcut = {
+        state
+            .data
+            .lock()
+            .map_err(|_| lock_error("todo"))?
+            .settings
+            .global_shortcut
+            .clone()
+    };
+
+    if sanitized_settings.global_shortcut != previous_shortcut {
+        shortcuts::replace_registered_shortcut(&app, &sanitized_settings.global_shortcut)
+            .map_err(|error| format!("failed to update global shortcut: {error}"))?;
+    }
 
     {
         let mut guard = state.data.lock().map_err(|_| lock_error("todo"))?;
@@ -402,6 +698,8 @@ pub fn update_settings(
 
         let valid_list_ids: HashSet<String> =
             guard.settings.lists.iter().map(|list| list.id.clone()).collect();
+        let valid_label_ids: HashSet<String> =
+            guard.settings.labels.iter().map(|label| label.id.clone()).collect();
         let fallback_list_id = guard.settings.active_list_id.clone();
         for todo in &mut guard.todos {
             match todo.list_id.as_deref() {
@@ -410,6 +708,59 @@ pub fn update_settings(
                     todo.list_id = Some(fallback_list_id.clone());
                 }
             }
+
+            match todo.label_id.as_deref() {
+                Some(label_id) if valid_label_ids.contains(label_id) => {}
+                _ => {
+                    todo.label_id = None;
+                }
+            }
+        }
+    }
+
+    persist_state(&app, &state)
+}
+
+#[tauri::command]
+pub fn set_global_shortcut(
+    shortcut: String,
+    app: AppHandle,
+    state: State<'_, AppState>,
+) -> Result<AppData, String> {
+    let normalized_shortcut = normalize_shortcut(&shortcut);
+    shortcuts::replace_registered_shortcut(&app, &normalized_shortcut)
+        .map_err(|error| format!("failed to update global shortcut: {error}"))?;
+
+    {
+        let mut guard = state.data.lock().map_err(|_| lock_error("todo"))?;
+        guard.settings.global_shortcut = normalized_shortcut;
+    }
+
+    persist_state(&app, &state)
+}
+
+#[tauri::command]
+pub fn set_autostart_enabled(
+    enabled: bool,
+    app: AppHandle,
+    state: State<'_, AppState>,
+) -> Result<AppData, String> {
+    use tauri_plugin_autostart::ManagerExt;
+
+    {
+        let mut guard = state.data.lock().map_err(|_| lock_error("todo"))?;
+        guard.settings.enable_autostart = enabled;
+    }
+
+    if enabled {
+        if let Err(error) = app.autolaunch().enable() {
+            log::error!("failed to enable autostart: {error}");
+            return Err(format!("failed to enable autostart: {error}"));
+        }
+    } else {
+        if let Err(error) = app.autolaunch().disable() {
+            log::error!("failed to disable autostart: {error}");
+            return Err(format!("failed to disable autostart: {error}"));
         }
     }
 

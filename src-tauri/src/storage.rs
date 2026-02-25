@@ -8,6 +8,7 @@ use tauri::{AppHandle, Manager};
 
 const STORAGE_FILE_NAME: &str = "todos.json";
 pub const DEFAULT_LIST_ID: &str = "default";
+pub const DEFAULT_GLOBAL_SHORTCUT: &str = "Shift+Space";
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "lowercase")]
@@ -19,6 +20,60 @@ pub enum SortOrder {
 impl Default for SortOrder {
     fn default() -> Self {
         Self::Desc
+    }
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub enum SortMode {
+    Manual,
+    Recent,
+    Oldest,
+    Title,
+    DueDate,
+}
+
+impl Default for SortMode {
+    fn default() -> Self {
+        Self::Recent
+    }
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "lowercase")]
+pub enum ThemeMode {
+    System,
+    Light,
+    Dark,
+}
+
+impl Default for ThemeMode {
+    fn default() -> Self {
+        Self::System
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TodoLabel {
+    pub id: String,
+    pub name: String,
+    pub color: String,
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "lowercase")]
+pub enum TodoPriority {
+    None,
+    Low,
+    Medium,
+    High,
+    Urgent,
+}
+
+impl Default for TodoPriority {
+    fn default() -> Self {
+        Self::None
     }
 }
 
@@ -44,6 +99,12 @@ pub struct Todo {
     pub list_id: Option<String>,
     #[serde(default)]
     pub starred: bool,
+    #[serde(default)]
+    pub priority: TodoPriority,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub label_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub sort_index: Option<i64>,
     pub created_at: i64,
     pub completed_at: Option<i64>,
     pub reminder_at: Option<i64>,
@@ -53,6 +114,8 @@ pub struct Todo {
 #[serde(rename_all = "camelCase")]
 pub struct Settings {
     #[serde(default)]
+    pub sort_mode: SortMode,
+    #[serde(default)]
     pub sort_order: SortOrder,
     #[serde(default = "default_auto_close_on_blur")]
     pub auto_close_on_blur: bool,
@@ -60,6 +123,14 @@ pub struct Settings {
     pub lists: Vec<TodoList>,
     #[serde(default = "default_active_list_id")]
     pub active_list_id: String,
+    #[serde(default = "default_global_shortcut")]
+    pub global_shortcut: String,
+    #[serde(default)]
+    pub theme_mode: ThemeMode,
+    #[serde(default = "default_labels")]
+    pub labels: Vec<TodoLabel>,
+    #[serde(default = "default_enable_autostart")]
+    pub enable_autostart: bool,
     #[serde(default, alias = "listName", alias = "list_name", skip_serializing)]
     pub legacy_list_name: Option<String>,
 }
@@ -67,10 +138,15 @@ pub struct Settings {
 impl Default for Settings {
     fn default() -> Self {
         Self {
+            sort_mode: SortMode::Recent,
             sort_order: SortOrder::Desc,
             auto_close_on_blur: true,
             lists: default_lists(),
             active_list_id: default_active_list_id(),
+            global_shortcut: default_global_shortcut(),
+            theme_mode: ThemeMode::System,
+            labels: default_labels(),
+            enable_autostart: true,
             legacy_list_name: None,
         }
     }
@@ -126,6 +202,39 @@ fn default_lists() -> Vec<TodoList> {
     }]
 }
 
+fn default_global_shortcut() -> String {
+    DEFAULT_GLOBAL_SHORTCUT.to_string()
+}
+
+fn default_labels() -> Vec<TodoLabel> {
+    vec![TodoLabel {
+        id: "general".to_string(),
+        name: "Général".to_string(),
+        color: "slate".to_string(),
+    }]
+}
+
+fn default_enable_autostart() -> bool {
+    true
+}
+
+fn normalize_shortcut(value: &str) -> String {
+    let trimmed = value.trim();
+    if trimmed.is_empty() {
+        default_global_shortcut()
+    } else {
+        trimmed.to_string()
+    }
+}
+
+fn normalize_label_color(value: &str) -> String {
+    let normalized = value.trim().to_ascii_lowercase();
+    match normalized.as_str() {
+        "slate" | "blue" | "green" | "amber" | "rose" | "violet" => normalized,
+        _ => "slate".to_string(),
+    }
+}
+
 fn normalize_name(value: &str, fallback: &str) -> String {
     let trimmed = value.trim();
     if trimmed.is_empty() {
@@ -175,6 +284,34 @@ fn normalize_data(mut data: AppData) -> AppData {
     };
 
     let valid_list_ids: HashSet<String> = lists.iter().map(|list| list.id.clone()).collect();
+
+    let mut labels = data.settings.labels.clone();
+    if labels.is_empty() {
+        labels = default_labels();
+    } else {
+        let mut normalized_labels = Vec::with_capacity(labels.len());
+        let mut used_ids = HashSet::new();
+
+        for (index, label) in labels.into_iter().enumerate() {
+            let fallback_name = format!("Label {}", index + 1);
+            let mut id = normalize_name(&label.id, &format!("label-{}", index + 1));
+            if used_ids.contains(&id) {
+                id = format!("label-{}-{}", index + 1, now_millis());
+            }
+            used_ids.insert(id.clone());
+
+            normalized_labels.push(TodoLabel {
+                id,
+                name: normalize_name(&label.name, &fallback_name),
+                color: normalize_label_color(&label.color),
+            });
+        }
+
+        labels = normalized_labels;
+    }
+
+    let valid_label_ids: HashSet<String> = labels.iter().map(|label| label.id.clone()).collect();
+
     for todo in &mut data.todos {
         let fallback_id = active_list_id.clone();
         match todo.list_id.as_deref() {
@@ -183,10 +320,19 @@ fn normalize_data(mut data: AppData) -> AppData {
                 todo.list_id = Some(fallback_id);
             }
         }
+
+        match todo.label_id.as_deref() {
+            Some(label_id) if valid_label_ids.contains(label_id) => {}
+            _ => {
+                todo.label_id = None;
+            }
+        }
     }
 
     data.settings.lists = lists;
     data.settings.active_list_id = active_list_id;
+    data.settings.global_shortcut = normalize_shortcut(&data.settings.global_shortcut);
+    data.settings.labels = labels;
     data.settings.legacy_list_name = None;
     data
 }

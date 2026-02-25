@@ -1,5 +1,14 @@
-import { type FocusEvent, type MutableRefObject, type ReactNode, useEffect, useMemo, useRef, useState } from 'react'
-import { CalendarClock, ChevronDown, ChevronRight, Ellipsis, FileText, Plus, Star } from 'lucide-react'
+import {
+  type DragEvent,
+  type FocusEvent,
+  type MutableRefObject,
+  type ReactNode,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
+import { AlertTriangle, CalendarClock, Check, ChevronDown, ChevronRight, Ellipsis, FileText, GripVertical, Plus, Star, Tags } from 'lucide-react'
 import { AnimatePresence, LayoutGroup, motion } from 'framer-motion'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -7,15 +16,24 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Input } from '@/components/ui/input'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { cn } from '@/lib/utils'
-import type { Todo } from '@/types/todo'
+import type { Todo, TodoLabel, TodoListMeta, TodoPriority } from '@/types/todo'
 
 type TodoListProps = {
   composeInputRef: MutableRefObject<HTMLInputElement | null>
+  activeListId: string
+  canReorder: boolean
+  lists: TodoListMeta[]
+  labels: TodoLabel[]
   activeTodos: Todo[]
   completedTodos: Todo[]
   onCreate: (payload: {
@@ -32,6 +50,16 @@ type TodoListProps = {
   }) => Promise<void>
   onSetCompleted: (id: string, completed: boolean) => Promise<void>
   onSetStarred: (id: string, starred: boolean) => Promise<void>
+  onSetPriority: (id: string, priority: TodoPriority) => Promise<void>
+  onSetLabel: (id: string, labelId?: string) => Promise<void>
+  onDelete: (id: string) => Promise<void>
+  onMoveToList: (id: string, listId: string) => Promise<void>
+  onReorder: (payload: {
+    listId: string
+    parentId?: string
+    completed: boolean
+    orderedIds: string[]
+  }) => Promise<void>
   onDeleteCompleted: (id: string) => Promise<void>
   emptyLabel: string
 }
@@ -51,6 +79,54 @@ type TodoWithDepth = {
 
 const INITIAL_COMPLETED_VISIBLE_COUNT = 5
 const COMPLETED_VISIBLE_STEP = 10
+const PRIORITY_ORDER: TodoPriority[] = ['none', 'low', 'medium', 'high', 'urgent']
+
+function priorityLabel(priority: TodoPriority): string {
+  switch (priority) {
+    case 'low':
+      return 'Faible'
+    case 'medium':
+      return 'Moyenne'
+    case 'high':
+      return 'Haute'
+    case 'urgent':
+      return 'Urgente'
+    default:
+      return 'Aucune'
+  }
+}
+
+function priorityClasses(priority: TodoPriority): string {
+  switch (priority) {
+    case 'urgent':
+      return 'bg-destructive/15 text-destructive border-destructive/30'
+    case 'high':
+      return 'bg-amber-500/15 text-amber-700 border-amber-700/30'
+    case 'medium':
+      return 'bg-blue-500/15 text-blue-700 border-blue-700/30'
+    case 'low':
+      return 'bg-muted text-muted-foreground border-border'
+    default:
+      return 'bg-transparent text-muted-foreground border-border'
+  }
+}
+
+function labelClasses(color: TodoLabel['color']): string {
+  switch (color) {
+    case 'blue':
+      return 'bg-blue-500/15 text-blue-700 border-blue-700/30'
+    case 'green':
+      return 'bg-green-500/15 text-green-700 border-green-700/30'
+    case 'amber':
+      return 'bg-amber-500/15 text-amber-700 border-amber-700/30'
+    case 'rose':
+      return 'bg-rose-500/15 text-rose-700 border-rose-700/30'
+    case 'violet':
+      return 'bg-violet-500/15 text-violet-700 border-violet-700/30'
+    default:
+      return 'bg-muted text-muted-foreground border-border'
+  }
+}
 
 function toDateInputValue(timestamp: number): string {
   const date = new Date(timestamp)
@@ -142,12 +218,21 @@ function buildTodoWithDepth(todos: Todo[]): TodoWithDepth[] {
 
 export function TodoList({
   composeInputRef,
+  activeListId,
+  canReorder,
+  lists,
+  labels,
   activeTodos,
   completedTodos,
   onCreate,
   onUpdate,
   onSetCompleted,
   onSetStarred,
+  onSetPriority,
+  onSetLabel,
+  onDelete,
+  onMoveToList,
+  onReorder,
   onDeleteCompleted,
   emptyLabel,
 }: TodoListProps) {
@@ -162,11 +247,20 @@ export function TodoList({
   const [dateTimeInput, setDateTimeInput] = useState('')
   const [completedExpanded, setCompletedExpanded] = useState(false)
   const [completedVisibleCount, setCompletedVisibleCount] = useState(INITIAL_COMPLETED_VISIBLE_COUNT)
+  const [draggingTodoId, setDraggingTodoId] = useState<string | null>(null)
+  const [dropTargetTodoId, setDropTargetTodoId] = useState<string | null>(null)
+  const [dropPosition, setDropPosition] = useState<'before' | 'after' | null>(null)
 
   const activeItems = useMemo(() => buildTodoWithDepth(activeTodos), [activeTodos])
   const completedItems = useMemo(() => buildTodoWithDepth(completedTodos), [completedTodos])
+  const activeTodoById = useMemo(
+    () => new Map(activeTodos.map((todo) => [todo.id, todo])),
+    [activeTodos],
+  )
+  const labelById = useMemo(() => new Map(labels.map((label) => [label.id, label])), [labels])
 
   const titleInputRef = useRef<HTMLInputElement | null>(null)
+  const detailsInputRef = useRef<HTMLInputElement | null>(null)
   const editorContainerRef = useRef<HTMLDivElement | null>(null)
   const saveInFlightRef = useRef(false)
   const editingIdRef = useRef<string | 'new' | null>(null)
@@ -304,7 +398,13 @@ export function TodoList({
     setDateTimeInput('')
   }
 
-  const openTodoEditor = async (todo: Todo) => {
+  const openTodoEditor = async (
+    todo: Todo,
+    options?: {
+      showDate?: boolean
+      showDetails?: boolean
+    },
+  ) => {
     if (editingId === todo.id) {
       return
     }
@@ -324,8 +424,8 @@ export function TodoList({
     })
     setNewParentId(null)
     setSaveError(null)
-    setShowDetails(Boolean(todo.details))
-    setShowDate(Boolean(todo.reminderAt))
+    setShowDetails(options?.showDetails ?? Boolean(todo.details))
+    setShowDate(options?.showDate ?? Boolean(todo.reminderAt))
     setDateMode(null)
     setDateInput(todo.reminderAt ? toDateInputValue(todo.reminderAt) : '')
     setDateTimeInput(todo.reminderAt ? toDateTimeInputValue(todo.reminderAt) : '')
@@ -421,10 +521,156 @@ export function TodoList({
     return { label: formatDateLabel(reminderAt), overdue }
   }
 
+  const clearDragState = () => {
+    setDraggingTodoId(null)
+    setDropTargetTodoId(null)
+    setDropPosition(null)
+  }
+
+  const reorderWithinSiblingGroup = async (
+    draggedId: string,
+    targetId: string,
+    position: 'before' | 'after',
+  ) => {
+    const draggedTodo = activeTodoById.get(draggedId)
+    const targetTodo = activeTodoById.get(targetId)
+    if (!draggedTodo || !targetTodo) {
+      return
+    }
+
+    const draggedParentId = draggedTodo.parentId ?? null
+    const targetParentId = targetTodo.parentId ?? null
+    if (draggedParentId !== targetParentId) {
+      return
+    }
+    if (Boolean(draggedTodo.starred) !== Boolean(targetTodo.starred)) {
+      return
+    }
+
+    const siblingIds = activeTodos
+      .filter(
+        (todo) =>
+          (todo.parentId ?? null) === targetParentId &&
+          Boolean(todo.starred) === Boolean(targetTodo.starred),
+      )
+      .map((todo) => todo.id)
+
+    if (siblingIds.length < 2) {
+      return
+    }
+
+    const sourceIndex = siblingIds.indexOf(draggedId)
+    const targetIndex = siblingIds.indexOf(targetId)
+    if (sourceIndex < 0 || targetIndex < 0) {
+      return
+    }
+
+    const reorderedIds = siblingIds.filter((id) => id !== draggedId)
+    const insertionTargetIndex = reorderedIds.indexOf(targetId)
+    const insertionIndex = position === 'after' ? insertionTargetIndex + 1 : insertionTargetIndex
+
+    reorderedIds.splice(insertionIndex, 0, draggedId)
+
+    if (reorderedIds.every((id, index) => id === siblingIds[index])) {
+      return
+    }
+
+    await onReorder({
+      listId: activeListId,
+      parentId: targetTodo.parentId,
+      completed: false,
+      orderedIds: reorderedIds,
+    })
+  }
+
+  const onRowDragStart = (event: DragEvent<HTMLElement>, todoId: string) => {
+    if (!canReorder || editingId !== null) {
+      event.preventDefault()
+      return
+    }
+
+    event.dataTransfer.effectAllowed = 'move'
+    event.dataTransfer.setData('text/plain', todoId)
+    setDraggingTodoId(todoId)
+    setDropTargetTodoId(null)
+    setDropPosition(null)
+  }
+
+  const onRowDragOver = (event: DragEvent<HTMLLIElement>, targetTodoId: string) => {
+    if (!canReorder || editingId !== null) {
+      return
+    }
+
+    const currentDraggedId = draggingTodoId ?? event.dataTransfer.getData('text/plain')
+    if (!currentDraggedId || currentDraggedId === targetTodoId) {
+      return
+    }
+
+    const draggedTodo = activeTodoById.get(currentDraggedId)
+    const targetTodo = activeTodoById.get(targetTodoId)
+    if (!draggedTodo || !targetTodo) {
+      return
+    }
+
+    if ((draggedTodo.parentId ?? null) !== (targetTodo.parentId ?? null)) {
+      if (dropTargetTodoId === targetTodoId) {
+        setDropTargetTodoId(null)
+        setDropPosition(null)
+      }
+      return
+    }
+    if (Boolean(draggedTodo.starred) !== Boolean(targetTodo.starred)) {
+      if (dropTargetTodoId === targetTodoId) {
+        setDropTargetTodoId(null)
+        setDropPosition(null)
+      }
+      return
+    }
+
+    event.preventDefault()
+    event.dataTransfer.dropEffect = 'move'
+
+    const rect = event.currentTarget.getBoundingClientRect()
+    const nextPosition: 'before' | 'after' =
+      event.clientY < rect.top + rect.height / 2 ? 'before' : 'after'
+
+    if (dropTargetTodoId !== targetTodoId || dropPosition !== nextPosition) {
+      setDropTargetTodoId(targetTodoId)
+      setDropPosition(nextPosition)
+    }
+  }
+
+  const onRowDrop = async (event: DragEvent<HTMLLIElement>, targetTodoId: string) => {
+    event.preventDefault()
+
+    const currentDraggedId = draggingTodoId ?? event.dataTransfer.getData('text/plain')
+    const nextPosition = dropPosition
+
+    clearDragState()
+
+    if (!canReorder || editingId !== null || !currentDraggedId || !nextPosition) {
+      return
+    }
+
+    await reorderWithinSiblingGroup(currentDraggedId, targetTodoId, nextPosition)
+  }
+
+  const openDetailsInlineInput = () => {
+    setSaveError(null)
+    setShowDetails(true)
+    window.requestAnimationFrame(() => {
+      detailsInputRef.current?.focus()
+      detailsInputRef.current?.setSelectionRange(
+        detailsInputRef.current.value.length,
+        detailsInputRef.current.value.length,
+      )
+    })
+  }
+
   const renderEditorRow = (targetId: string | 'new', depth = 0) => {
     const isExistingTodo = targetId !== 'new'
     const reminderEditorVisible = showDate || Boolean(draft.reminderAt)
-    const showQuickDetailsAction = !showDetails
+    const detailsInputVisible = showDetails || draft.details.trim().length > 0
     const showQuickDateAction = !reminderEditorVisible
     const leftOffset = Math.min(depth, 6) * 16
 
@@ -485,9 +731,11 @@ export function TodoList({
               className="h-8 border-none bg-transparent px-0 text-sm shadow-none focus-visible:ring-0"
             />
 
-            {showDetails ? (
-              <div className="space-y-1">
-                <textarea
+            {detailsInputVisible ? (
+              <motion.div layout className="flex items-center gap-1.5 rounded-md border border-input/70 bg-background/70 px-2">
+                <FileText className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                <Input
+                  ref={detailsInputRef}
                   value={draft.details}
                   onChange={(event) => {
                     setSaveError(null)
@@ -496,24 +744,15 @@ export function TodoList({
                       details: event.target.value,
                     }))
                   }}
-                  rows={3}
-                  className="w-full resize-none rounded-md border border-input bg-transparent px-2 py-1 text-sm text-foreground outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                  placeholder="Détails"
-                />
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowDetails(false)
-                    setDraft((previous) => ({
-                      ...previous,
-                      details: '',
-                    }))
+                  onBlur={(event) => {
+                    if (!event.target.value.trim()) {
+                      setShowDetails(false)
+                    }
                   }}
-                  className="text-xs text-muted-foreground hover:text-foreground"
-                >
-                  Supprimer les détails
-                </button>
-              </div>
+                  placeholder="Détails"
+                  className="h-7 border-none bg-transparent px-0 text-xs shadow-none focus-visible:ring-0"
+                />
+              </motion.div>
             ) : null}
 
             {reminderEditorVisible ? (
@@ -618,21 +857,20 @@ export function TodoList({
               </div>
             ) : null}
 
-            {showQuickDetailsAction || showQuickDateAction ? (
+            {!detailsInputVisible || showQuickDateAction ? (
               <motion.div layout className="flex flex-wrap items-center gap-2 pt-0.5">
-                {showQuickDetailsAction ? (
+                {!detailsInputVisible ? (
                   <Button
                     type="button"
                     size="sm"
                     variant="outline"
                     className="h-7 rounded-full px-2.5 text-xs"
                     onClick={() => {
-                      setSaveError(null)
-                      setShowDetails(true)
+                      openDetailsInlineInput()
                     }}
                   >
                     <FileText className="mr-1 h-3.5 w-3.5" />
-                    Ajouter des détails
+                    Détails
                   </Button>
                 ) : null}
                 {showQuickDateAction ? (
@@ -640,14 +878,14 @@ export function TodoList({
                     type="button"
                     size="sm"
                     variant="outline"
-                    className="h-7 rounded-full px-2.5 text-xs"
+                    className="h-7 w-7 rounded-full p-0"
                     onClick={() => {
                       setSaveError(null)
                       setShowDate(true)
                     }}
+                    aria-label="Ajouter une date"
                   >
-                    <CalendarClock className="mr-1 h-3.5 w-3.5" />
-                    Ajouter une date
+                    <CalendarClock className="h-3.5 w-3.5" />
                   </Button>
                 ) : null}
               </motion.div>
@@ -692,6 +930,10 @@ export function TodoList({
               {activeItems.flatMap(({ todo, depth }) => {
                 const leftOffset = Math.min(depth, 6) * 16
                 const dueMeta = todo.reminderAt ? reminderMeta(todo.reminderAt) : null
+                const priority = todo.priority ?? 'none'
+                const label = todo.labelId ? labelById.get(todo.labelId) : undefined
+                const isDropBefore = dropTargetTodoId === todo.id && dropPosition === 'before'
+                const isDropAfter = dropTargetTodoId === todo.id && dropPosition === 'after'
                 const rows: ReactNode[] = []
 
                 if (editingId === todo.id) {
@@ -705,14 +947,52 @@ export function TodoList({
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, x: -12, scale: 0.96 }}
                       transition={{ type: 'spring', stiffness: 520, damping: 36, mass: 0.55 }}
-                      className="px-2 py-1"
+                      className={cn(
+                        'px-2 py-1',
+                        isDropBefore && 'shadow-[inset_0_1px_0_0_hsl(var(--foreground))]',
+                        isDropAfter && 'shadow-[inset_0_-1px_0_0_hsl(var(--foreground))]',
+                      )}
                       style={leftOffset > 0 ? { paddingLeft: `${leftOffset + 8}px` } : undefined}
+                      onDragOver={(event) => {
+                        onRowDragOver(event, todo.id)
+                      }}
+                      onDrop={(event) => {
+                        void onRowDrop(event, todo.id)
+                      }}
                     >
                       <motion.div
                         layout
                         layoutId={`todo-card-${todo.id}`}
-                        className="flex items-start gap-2 rounded-md px-1 py-1 hover:bg-muted/40"
+                        className={cn(
+                          'flex items-start gap-2 rounded-md px-1 py-1 hover:bg-muted/40',
+                          priority === 'urgent' ? 'ring-1 ring-destructive/35' : undefined,
+                          draggingTodoId === todo.id ? 'opacity-55' : undefined,
+                        )}
                       >
+                        <button
+                          type="button"
+                          draggable={canReorder && editingId === null}
+                          onDragStart={(event) => {
+                            onRowDragStart(event, todo.id)
+                          }}
+                          onDragEnd={() => {
+                            clearDragState()
+                          }}
+                          onClick={(event) => {
+                            event.preventDefault()
+                            event.stopPropagation()
+                          }}
+                          className={cn(
+                            'mt-1 inline-flex h-4 w-4 items-center justify-center rounded-sm text-muted-foreground',
+                            canReorder
+                              ? 'cursor-grab active:cursor-grabbing hover:text-foreground'
+                              : 'cursor-default opacity-40',
+                          )}
+                          aria-label="Déplacer la tâche"
+                        >
+                          <GripVertical className="h-3.5 w-3.5" />
+                        </button>
+
                         <Checkbox
                           className="mt-1"
                           checked={Boolean(todo.completedAt)}
@@ -732,7 +1012,7 @@ export function TodoList({
                           }}
                         >
                           <p className="truncate text-sm text-foreground">{todo.title}</p>
-                          {(todo.details || todo.reminderAt) && (
+                          {(todo.details || todo.reminderAt || priority !== 'none' || label) && (
                             <div className="mt-0.5 flex items-center gap-2 text-[11px] text-muted-foreground">
                               {dueMeta ? (
                                 <span
@@ -743,6 +1023,28 @@ export function TodoList({
                                 >
                                   <CalendarClock className="h-3 w-3" />
                                   {dueMeta.label}
+                                </span>
+                              ) : null}
+                              {priority !== 'none' ? (
+                                <span
+                                  className={cn(
+                                    'inline-flex items-center gap-1 rounded-full border px-1.5 py-0.5',
+                                    priorityClasses(priority),
+                                  )}
+                                >
+                                  {priority === 'urgent' ? <AlertTriangle className="h-3 w-3" /> : null}
+                                  {priorityLabel(priority)}
+                                </span>
+                              ) : null}
+                              {label ? (
+                                <span
+                                  className={cn(
+                                    'inline-flex items-center gap-1 rounded-full border px-1.5 py-0.5',
+                                    labelClasses(label.color),
+                                  )}
+                                >
+                                  <Tags className="h-3 w-3" />
+                                  {label.name}
                                 </span>
                               ) : null}
                               {todo.details ? (
@@ -785,14 +1087,90 @@ export function TodoList({
                               <Ellipsis className="h-3.5 w-3.5" />
                             </Button>
                           </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="w-44">
+                          <DropdownMenuContent align="end" className="w-52">
+                            <DropdownMenuSub>
+                              <DropdownMenuSubTrigger>Priorité</DropdownMenuSubTrigger>
+                              <DropdownMenuSubContent className="w-40">
+                                {PRIORITY_ORDER.map((option) => (
+                                  <DropdownMenuItem
+                                    key={option}
+                                    className={cn(option === priority ? 'font-medium' : undefined)}
+                                    onSelect={() => {
+                                      void onSetPriority(todo.id, option)
+                                    }}
+                                  >
+                                    {priorityLabel(option)}
+                                  </DropdownMenuItem>
+                                ))}
+                              </DropdownMenuSubContent>
+                            </DropdownMenuSub>
+                            <DropdownMenuSub>
+                              <DropdownMenuSubTrigger>Label</DropdownMenuSubTrigger>
+                              <DropdownMenuSubContent className="w-44">
+                                <DropdownMenuItem
+                                  className={cn(!label ? 'font-medium' : undefined)}
+                                  onSelect={() => {
+                                    void onSetLabel(todo.id, undefined)
+                                  }}
+                                >
+                                  Aucun label
+                                </DropdownMenuItem>
+                                {labels.map((item) => (
+                                  <DropdownMenuItem
+                                    key={item.id}
+                                    className={cn(item.id === todo.labelId ? 'font-medium' : undefined)}
+                                    onSelect={() => {
+                                      void onSetLabel(todo.id, item.id)
+                                    }}
+                                  >
+                                    {item.name}
+                                  </DropdownMenuItem>
+                                ))}
+                              </DropdownMenuSubContent>
+                            </DropdownMenuSub>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                              onSelect={() => {
+                                void openTodoEditor(todo, { showDate: true })
+                              }}
+                            >
+                              Ajouter une date limite
+                            </DropdownMenuItem>
                             <DropdownMenuItem
                               onSelect={() => {
                                 void openCreateEditor(todo.id)
                               }}
                             >
-                              Ajouter une sous-tâche
+                              Ajouter une tâche secondaire
                             </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onSelect={() => {
+                                void onDelete(todo.id)
+                              }}
+                            >
+                              Supprimer
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuLabel className="px-2 py-1 text-xs text-muted-foreground">
+                              Déplacer vers
+                            </DropdownMenuLabel>
+                            {lists.map((list) => {
+                              const isCurrentList = (todo.listId ?? activeListId) === list.id
+                              return (
+                                <DropdownMenuItem
+                                  key={`move-${todo.id}-${list.id}`}
+                                  className="flex items-center justify-between gap-2"
+                                  onSelect={() => {
+                                    if (!isCurrentList) {
+                                      void onMoveToList(todo.id, list.id)
+                                    }
+                                  }}
+                                >
+                                  <span className="truncate">{list.name}</span>
+                                  {isCurrentList ? <Check className="h-3.5 w-3.5" /> : null}
+                                </DropdownMenuItem>
+                              )
+                            })}
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </motion.div>
@@ -865,6 +1243,11 @@ export function TodoList({
                                 ? `Terminée ${formatDateLabel(todo.completedAt)}`
                                 : 'Terminée'}
                             </p>
+                            {todo.priority && todo.priority !== 'none' ? (
+                              <p className={cn('mt-0.5 text-[11px]', todo.priority === 'urgent' ? 'text-destructive' : 'text-muted-foreground')}>
+                                {`Priorité ${priorityLabel(todo.priority)}`}
+                              </p>
+                            ) : null}
                           </div>
 
                           <Button
@@ -912,6 +1295,27 @@ export function TodoList({
                               >
                                 Supprimer la tâche
                               </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuLabel className="px-2 py-1 text-xs text-muted-foreground">
+                                Déplacer vers
+                              </DropdownMenuLabel>
+                              {lists.map((list) => {
+                                const isCurrentList = (todo.listId ?? activeListId) === list.id
+                                return (
+                                  <DropdownMenuItem
+                                    key={`move-completed-${todo.id}-${list.id}`}
+                                    className="flex items-center justify-between gap-2"
+                                    onSelect={() => {
+                                      if (!isCurrentList) {
+                                        void onMoveToList(todo.id, list.id)
+                                      }
+                                    }}
+                                  >
+                                    <span className="truncate">{list.name}</span>
+                                    {isCurrentList ? <Check className="h-3.5 w-3.5" /> : null}
+                                  </DropdownMenuItem>
+                                )
+                              })}
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </motion.div>

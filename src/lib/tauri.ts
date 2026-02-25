@@ -1,5 +1,5 @@
 import { invoke } from '@tauri-apps/api/core'
-import type { AppData, Settings } from '@/types/todo'
+import type { AppData, Settings, TodoPriority } from '@/types/todo'
 
 export async function loadState(): Promise<AppData> {
   return invoke<AppData>('load_state')
@@ -59,6 +59,20 @@ export async function setTodoStarred(
   return invoke<AppData>('set_todo_starred', { id, starred })
 }
 
+export async function setTodoPriority(
+  id: string,
+  priority: TodoPriority,
+): Promise<AppData> {
+  return invoke<AppData>('set_todo_priority', { id, priority })
+}
+
+export async function setTodoLabel(
+  id: string,
+  labelId: string | undefined,
+): Promise<AppData> {
+  return invoke<AppData>('set_todo_label', { id, labelId: labelId ?? null })
+}
+
 export async function deleteTodo(id: string): Promise<AppData> {
   return invoke<AppData>('delete_todo', { id })
 }
@@ -71,6 +85,14 @@ export async function updateSettings(settings: Settings): Promise<AppData> {
   return invoke<AppData>('update_settings', { settings })
 }
 
+export async function setGlobalShortcut(shortcut: string): Promise<AppData> {
+  return invoke<AppData>('set_global_shortcut', { shortcut })
+}
+
+export async function setAutostartEnabled(enabled: boolean): Promise<AppData> {
+  return invoke<AppData>('set_autostart_enabled', { enabled })
+}
+
 export async function createList(name: string): Promise<AppData> {
   return invoke<AppData>('create_list', { name })
 }
@@ -81,6 +103,31 @@ export async function renameList(id: string, name: string): Promise<AppData> {
 
 export async function setActiveList(id: string): Promise<AppData> {
   return invoke<AppData>('set_active_list', { id })
+}
+
+export async function moveTodoToList(
+  id: string,
+  listId: string,
+): Promise<AppData> {
+  return invoke<AppData>('move_todo_to_list', { id, listId })
+}
+
+export async function clearCompletedInList(listId: string): Promise<AppData> {
+  return invoke<AppData>('clear_completed_in_list', { listId })
+}
+
+export async function reorderTodos(
+  listId: string,
+  parentId: string | undefined,
+  completed: boolean,
+  orderedIds: string[],
+): Promise<AppData> {
+  return invoke<AppData>('reorder_todos', {
+    listId,
+    parentId: parentId ?? null,
+    completed,
+    orderedIds,
+  })
 }
 
 export async function setTodoReminder(

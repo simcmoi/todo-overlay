@@ -30,13 +30,40 @@ pub fn run() {
             app.manage(storage::AppState::new(data));
 
             tray::create_tray(&app_handle)?;
-            shortcuts::register(&app_handle)?;
+            let current_shortcut = app_handle
+                .state::<storage::AppState>()
+                .snapshot()
+                .settings
+                .global_shortcut;
+            if let Err(error) = shortcuts::register(&app_handle, &current_shortcut) {
+                log::error!("failed to register saved shortcut {current_shortcut}: {error}");
+                shortcuts::register(&app_handle, storage::DEFAULT_GLOBAL_SHORTCUT)?;
+                {
+                    let state = app_handle.state::<storage::AppState>();
+                    let mut guard = state
+                        .data
+                        .lock()
+                        .map_err(|_| std::io::Error::other("failed to lock todo state"))?;
+                    guard.settings.global_shortcut = storage::DEFAULT_GLOBAL_SHORTCUT.to_string();
+                    if let Err(persist_error) = storage::persist(&app_handle, &guard) {
+                        log::error!("failed to persist fallback shortcut: {persist_error}");
+                    }
+                }
+            }
             window::hide_main_window(&app_handle)?;
 
             reminder::start_scheduler(app_handle.clone());
 
-            if let Err(error) = app_handle.autolaunch().enable() {
-                log::error!("failed to enable autostart: {error}");
+            let enable_autostart = app_handle
+                .state::<storage::AppState>()
+                .snapshot()
+                .settings
+                .enable_autostart;
+
+            if enable_autostart {
+                if let Err(error) = app_handle.autolaunch().enable() {
+                    log::error!("failed to enable autostart: {error}");
+                }
             }
 
             Ok(())
@@ -50,11 +77,18 @@ pub fn run() {
             commands::complete_todo,
             commands::set_todo_completed,
             commands::set_todo_starred,
+            commands::set_todo_priority,
+            commands::set_todo_label,
             commands::rename_list,
             commands::set_active_list,
+            commands::move_todo_to_list,
+            commands::clear_completed_in_list,
+            commands::reorder_todos,
             commands::delete_todo,
             commands::clear_history,
             commands::update_settings,
+            commands::set_global_shortcut,
+            commands::set_autostart_enabled,
             commands::set_todo_reminder,
             commands::hide_overlay
         ])

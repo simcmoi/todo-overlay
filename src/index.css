@@ -31,6 +31,31 @@
   }
 }
 
+/* Explicit class-based themes override system media preference */
+:root.theme-light {
+  --background: 0 0% 98%;
+  --foreground: 0 0% 8%;
+  --card: 0 0% 100%;
+  --card-foreground: 0 0% 8%;
+  --muted: 0 0% 94%;
+  --muted-foreground: 0 0% 40%;
+  --border: 0 0% 82%;
+  --input: 0 0% 82%;
+  --ring: 0 0% 8%;
+}
+
+:root.theme-dark {
+  --background: 0 0% 5%;
+  --foreground: 0 0% 96%;
+  --card: 0 0% 8%;
+  --card-foreground: 0 0% 96%;
+  --muted: 0 0% 12%;
+  --muted-foreground: 0 0% 70%;
+  --border: 0 0% 22%;
+  --input: 0 0% 22%;
+  --ring: 0 0% 96%;
+}
+
 * {
   @apply border-border;
 }

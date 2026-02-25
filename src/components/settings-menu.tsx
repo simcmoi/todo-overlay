@@ -2,7 +2,6 @@ import { MoreHorizontal } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
-  DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
@@ -10,18 +9,18 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Switch } from '@/components/ui/switch'
-import type { Settings, SortOrder } from '@/types/todo'
+import type { Settings } from '@/types/todo'
 
 type SettingsMenuProps = {
   settings: Settings
-  onSortOrderChange: (order: SortOrder) => Promise<void>
   onAutoCloseChange: (enabled: boolean) => Promise<void>
+  onOpenSettingsPage: () => void
 }
 
 export function SettingsMenu({
   settings,
-  onSortOrderChange,
   onAutoCloseChange,
+  onOpenSettingsPage,
 }: SettingsMenuProps) {
   return (
     <DropdownMenu>
@@ -32,27 +31,6 @@ export function SettingsMenu({
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-64">
         <DropdownMenuLabel>Paramètres</DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        <DropdownMenuCheckboxItem
-          checked={settings.sortOrder === 'desc'}
-          onCheckedChange={async (checked) => {
-            if (checked) {
-              await onSortOrderChange('desc')
-            }
-          }}
-        >
-          Plus récent en haut
-        </DropdownMenuCheckboxItem>
-        <DropdownMenuCheckboxItem
-          checked={settings.sortOrder === 'asc'}
-          onCheckedChange={async (checked) => {
-            if (checked) {
-              await onSortOrderChange('asc')
-            }
-          }}
-        >
-          Plus ancien en haut
-        </DropdownMenuCheckboxItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem
           onSelect={(event) => {
@@ -68,6 +46,14 @@ export function SettingsMenu({
             }}
             aria-label="Activer fermeture au blur"
           />
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem
+          onSelect={() => {
+            onOpenSettingsPage()
+          }}
+        >
+          Ouvrir la page paramètres
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
