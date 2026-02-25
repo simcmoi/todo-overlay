@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Check, ChevronDown, Filter, MoreHorizontal, Plus, Printer, Star, Trash2 } from 'lucide-react'
+import { Check, ChevronDown, Filter, MoreHorizontal, Plus, Printer, Settings, Star, Trash2 } from 'lucide-react'
 import { motion } from 'framer-motion'
-import { SettingsMenu } from '@/components/settings-menu'
 import { SettingsPage } from '@/components/settings-page'
 import { TodoList } from '@/components/todo-list'
 import { UpdateBanner } from '@/components/update-banner'
@@ -482,15 +481,17 @@ export default function App() {
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
-          <SettingsMenu
-            settings={settings}
-            onAutoCloseChange={async (autoCloseOnBlur) => {
-              await updateSettings({ autoCloseOnBlur })
-            }}
-            onOpenSettingsPage={() => {
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            onClick={() => {
               setSettingsPageOpen(true)
             }}
-          />
+            aria-label="Ouvrir les paramètres"
+          >
+            <Settings className="h-4 w-4" />
+          </Button>
         </div>
 
         {!settingsPageOpen ? (

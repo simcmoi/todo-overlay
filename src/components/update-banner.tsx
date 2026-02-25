@@ -42,7 +42,7 @@ export function UpdateBanner() {
           {state === 'error' ? (
             <Badge 
               variant="destructive" 
-              className="flex items-center gap-2 px-3 py-2 shadow-lg"
+              className="flex items-center gap-2 px-3 py-1.5 shadow-lg bg-red-600 dark:bg-red-600"
             >
               <AlertCircle className="h-3.5 w-3.5" />
               <span>Update failed</span>
@@ -50,7 +50,7 @@ export function UpdateBanner() {
                 type="button"
                 variant="ghost"
                 size="icon"
-                className="h-4 w-4 ml-1 hover:bg-destructive-foreground/20"
+                className="h-4 w-4 ml-1 text-white hover:bg-white/20"
                 onClick={dismissUpdate}
               >
                 <X className="h-3 w-3" />
@@ -58,8 +58,7 @@ export function UpdateBanner() {
             </Badge>
           ) : (
             <Badge 
-              variant="default"
-              className="flex items-center gap-2 px-3 py-2 shadow-lg"
+              className="flex items-center gap-2 px-3 py-1.5 shadow-lg bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900"
             >
               <CheckCircle className="h-3.5 w-3.5" />
               <span>v{updateInfo?.latestVersion} available</span>
@@ -67,7 +66,7 @@ export function UpdateBanner() {
                 type="button"
                 size="sm"
                 variant="outline"
-                className="h-5 px-2 text-[10px] ml-1"
+                className="h-5 px-2 text-[10px] ml-1 border-white/30 bg-white/10 text-white hover:bg-white/20 dark:border-slate-900/30 dark:bg-slate-900/10 dark:text-slate-900 dark:hover:bg-slate-900/20"
                 onClick={() => {
                   void installUpdate()
                 }}
@@ -79,7 +78,7 @@ export function UpdateBanner() {
                 type="button"
                 variant="ghost"
                 size="icon"
-                className="h-4 w-4 ml-1 hover:bg-primary-foreground/20"
+                className="h-4 w-4 ml-1 text-white hover:bg-white/20 dark:text-slate-900 dark:hover:bg-slate-900/20"
                 onClick={dismissUpdate}
               >
                 <X className="h-3 w-3" />
