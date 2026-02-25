@@ -1016,9 +1016,9 @@ export function TodoList({
                             void openTodoEditor(todo)
                           }}
                         >
-                          <p className="truncate text-sm text-foreground">{todo.title}</p>
+                          <p className="text-sm text-foreground line-clamp-2 break-words">{todo.title}</p>
                           {(todo.details || todo.reminderAt || priority !== 'none' || label) && (
-                            <div className="mt-0.5 flex items-center gap-2 text-[11px] text-muted-foreground">
+                            <div className="mt-0.5 flex items-center gap-2 text-[11px] text-muted-foreground flex-wrap">
                               {dueMeta ? (
                                 <span
                                   className={cn(
@@ -1242,7 +1242,7 @@ export function TodoList({
                           />
 
                           <div className="min-w-0 flex-1">
-                            <p className="truncate text-sm text-muted-foreground line-through">{todo.title}</p>
+                            <p className="text-sm text-muted-foreground line-through line-clamp-2 break-words">{todo.title}</p>
                             <p className="mt-0.5 text-[11px] text-muted-foreground">
                               {todo.completedAt
                                 ? `Terminée ${formatDateLabel(todo.completedAt)}`
