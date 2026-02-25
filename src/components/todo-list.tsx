@@ -26,7 +26,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
-import { Calendar } from '@/components/ui/calendar'
+import { DateTimePicker } from '@/components/ui/date-time-picker'
 import { cn } from '@/lib/utils'
 import type { Todo, TodoLabel, TodoListMeta, TodoPriority } from '@/types/todo'
 
@@ -822,24 +822,15 @@ export function TodoList({
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={draft.reminderAt ? new Date(draft.reminderAt) : undefined}
-                    onSelect={(date) => {
-                      if (date) {
-                        // Set time to default hour if not already set
-                        const reminderDate = draft.reminderAt ? new Date(draft.reminderAt) : new Date(date)
-                        if (!draft.reminderAt) {
-                          reminderDate.setHours(9, 0, 0, 0)
-                        } else {
-                          reminderDate.setFullYear(date.getFullYear(), date.getMonth(), date.getDate())
-                        }
-                        applyReminder(reminderDate.getTime())
-                      }
+                  <DateTimePicker
+                    date={draft.reminderAt ? new Date(draft.reminderAt) : undefined}
+                    onDateTimeChange={(date) => {
+                      applyReminder(date.getTime())
+                    }}
+                    onClose={() => {
                       setShowDate(false)
                       setDateMode(null)
                     }}
-                    initialFocus
                   />
                 </PopoverContent>
               </Popover>
