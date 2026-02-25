@@ -335,7 +335,7 @@ export function TodoList({
     setDateMode(null)
   }
 
-  const persistAndMaybeClose = async (shouldClose: boolean): Promise<boolean> => {
+  const persistAndMaybeClose = async (shouldClose: boolean, reopenAfterCreate = false): Promise<boolean> => {
     if (editingId === null || saveInFlightRef.current) {
       return false
     }
@@ -373,8 +373,8 @@ export function TodoList({
     } finally {
       saveInFlightRef.current = false
       if (persistSucceeded && shouldClose && editingIdRef.current === editingIdAtStart) {
-        if (editingIdAtStart === 'new' && newParentIdAtStart === null) {
-          // After creating a new top-level task, reopen the editor
+        if (editingIdAtStart === 'new' && newParentIdAtStart === null && reopenAfterCreate) {
+          // After creating a new top-level task with Enter, reopen the editor
           setEditingId('new')
           setNewParentId(null)
           setDraft({ title: '', details: '' })
@@ -728,7 +728,7 @@ export function TodoList({
 
                 if (event.key === 'Enter' && !event.shiftKey) {
                   event.preventDefault()
-                  void persistAndMaybeClose(true)
+                  void persistAndMaybeClose(true, true) // reopen after create
                 }
 
                 if (event.key === 'Escape') {
