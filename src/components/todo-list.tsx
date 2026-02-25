@@ -25,6 +25,8 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Input } from '@/components/ui/input'
 import { ScrollArea } from '@/components/ui/scroll-area'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { Calendar } from '@/components/ui/calendar'
 import { cn } from '@/lib/utils'
 import type { Todo, TodoLabel, TodoListMeta, TodoPriority } from '@/types/todo'
 
@@ -128,21 +130,6 @@ function labelClasses(color: TodoLabel['color']): string {
   }
 }
 
-function toDateTimeInputValue(timestamp: number): string {
-  const date = new Date(timestamp)
-  const timezoneOffsetMs = date.getTimezoneOffset() * 60_000
-  return new Date(date.getTime() - timezoneOffsetMs).toISOString().slice(0, 16)
-}
-
-function fromDateTimeInputValue(value: string): number | undefined {
-  if (!value) {
-    return undefined
-  }
-
-  const timestamp = new Date(value).getTime()
-  return Number.isNaN(timestamp) ? undefined : timestamp
-}
-
 function getTodayAtDefaultHour(): number {
   const now = new Date()
   now.setHours(18, 0, 0, 0)
@@ -228,7 +215,6 @@ export function TodoList({
   const [showDetails, setShowDetails] = useState(false)
   const [showDate, setShowDate] = useState(false)
   const [dateMode, setDateMode] = useState<DateEditMode>(null)
-  const [dateTimeInput, setDateTimeInput] = useState('')
   const [completedExpanded, setCompletedExpanded] = useState(false)
   const [completedVisibleCount, setCompletedVisibleCount] = useState(INITIAL_COMPLETED_VISIBLE_COUNT)
   const [draggingTodoId, setDraggingTodoId] = useState<string | null>(null)
@@ -301,7 +287,6 @@ export function TodoList({
         setShowDetails(false)
         setShowDate(false)
         setDateMode(null)
-        setDateTimeInput('')
       }
     }
 
@@ -348,7 +333,6 @@ export function TodoList({
     setShowDetails(false)
     setShowDate(false)
     setDateMode(null)
-    setDateTimeInput('')
   }
 
   const persistAndMaybeClose = async (shouldClose: boolean): Promise<boolean> => {
@@ -398,7 +382,6 @@ export function TodoList({
           setShowDetails(false)
           setShowDate(false)
           setDateMode(null)
-        setDateTimeInput('')
         } else {
           closeEditor()
         }
@@ -423,7 +406,6 @@ export function TodoList({
     setShowDetails(false)
     setShowDate(false)
     setDateMode(null)
-setDateTimeInput('')
   }
 
   const openTodoEditor = async (
@@ -455,7 +437,6 @@ setDateTimeInput('')
     setShowDetails(options?.showDetails ?? Boolean(todo.details))
     setShowDate(options?.showDate ?? Boolean(todo.reminderAt))
     setDateMode(null)
-    setDateTimeInput(todo.reminderAt ? toDateTimeInputValue(todo.reminderAt) : '')
   }
 
   const onEditorBlur = (event: FocusEvent<HTMLDivElement>) => {
@@ -489,13 +470,6 @@ setDateTimeInput('')
       ...previous,
       reminderAt: timestamp,
     }))
-
-    if (!timestamp) {
-setDateTimeInput('')
-      return
-    }
-
-    setDateTimeInput(toDateTimeInputValue(timestamp))
   }
 
   const normalizeDateLabel = (label: string): string => {
@@ -762,7 +736,9 @@ setDateTimeInput('')
 
             {/* Ligne 2: Détails */}
             <div className="flex items-center gap-1.5">
-              <FileText className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+              {!detailsInputVisible && (
+                <FileText className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+              )}
               {detailsInputVisible ? (
                 <Input
                   ref={detailsInputRef}
@@ -779,7 +755,7 @@ setDateTimeInput('')
                       setShowDetails(false)
                     }
                   }}
-                  placeholder="Ajouter des détails"
+                  placeholder="Détail"
                   className="h-6 border-none bg-transparent px-0 text-xs shadow-none focus-visible:ring-0"
                 />
               ) : (
@@ -791,7 +767,7 @@ setDateTimeInput('')
                   }}
                   className="text-xs text-muted-foreground hover:text-foreground transition-colors"
                 >
-                  Détails
+                  Détail
                 </button>
               )}
             </div>
@@ -824,19 +800,49 @@ setDateTimeInput('')
                 Demain
               </Button>
               <span className="text-xs text-muted-foreground">|</span>
-              <Button
-                type="button"
-                size="sm"
-                variant="ghost"
-                className="h-6 w-6 p-0"
-                onClick={() => {
-                  setSaveError(null)
-                  setShowDate(true)
-                  setDateMode('datetime')
-                }}
-              >
-                <CalendarClock className="h-3.5 w-3.5 text-muted-foreground" />
-              </Button>
+              <Popover open={showDate && dateMode === 'datetime'} onOpenChange={(open) => {
+                setShowDate(open)
+                if (!open) {
+                  setDateMode(null)
+                }
+              }}>
+                <PopoverTrigger asChild>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="ghost"
+                    className="h-6 w-6 p-0"
+                    onClick={() => {
+                      setSaveError(null)
+                      setShowDate(true)
+                      setDateMode('datetime')
+                    }}
+                  >
+                    <CalendarClock className="h-3.5 w-3.5 text-muted-foreground" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={draft.reminderAt ? new Date(draft.reminderAt) : undefined}
+                    onSelect={(date) => {
+                      if (date) {
+                        // Set time to default hour if not already set
+                        const reminderDate = draft.reminderAt ? new Date(draft.reminderAt) : new Date(date)
+                        if (!draft.reminderAt) {
+                          reminderDate.setHours(9, 0, 0, 0)
+                        } else {
+                          reminderDate.setFullYear(date.getFullYear(), date.getMonth(), date.getDate())
+                        }
+                        applyReminder(reminderDate.getTime())
+                      }
+                      setShowDate(false)
+                      setDateMode(null)
+                    }}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
               {draft.reminderAt ? (
                 <>
                   <span className="text-xs text-muted-foreground">·</span>
@@ -858,25 +864,6 @@ setDateTimeInput('')
                 </>
               ) : null}
             </div>
-
-            {/* Sélecteur de date/heure si ouvert */}
-            {showDate && dateMode === 'datetime' ? (
-              <Input
-                type="datetime-local"
-                value={dateTimeInput}
-                onChange={(event) => {
-                  setSaveError(null)
-                  setDateTimeInput(event.target.value)
-                  applyReminder(fromDateTimeInputValue(event.target.value))
-                }}
-                onBlur={() => {
-                  setShowDate(false)
-                }}
-                className="h-8 text-xs"
-                step={60}
-                autoFocus
-              />
-            ) : null}
 
             {saveError ? <p className="text-xs text-muted-foreground">{`Échec de sauvegarde: ${saveError}`}</p> : null}
           </div>

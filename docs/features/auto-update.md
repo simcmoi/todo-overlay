@@ -1,10 +1,14 @@
 # Système de Mise à Jour Automatique
 
-Ce document explique comment fonctionne le système de mise à jour automatique de Todo Overlay, de la création d'une release jusqu'à l'installation chez l'utilisateur.
+Guide complet du système de mise à jour automatique de Todo Overlay, de la configuration initiale jusqu'à l'utilisation par les utilisateurs finaux.
+
+---
 
 ## 📋 Vue d'ensemble
 
 Todo Overlay utilise le plugin Tauri Updater pour fournir des mises à jour automatiques signées et sécurisées. Le processus est entièrement automatisé via GitHub Actions et GitHub Releases.
+
+### Architecture
 
 ```
 Développeur            GitHub Actions          GitHub Releases         Application Utilisateur
@@ -36,13 +40,100 @@ Développeur            GitHub Actions          GitHub Releases         Applicat
 
 ---
 
-## 🔐 Architecture de Sécurité
+## 🔑 Configuration Initiale
 
-### Clés de Signature (Minisign)
+### Étape 1 : Générer les Clés de Signature
 
-Les mises à jour sont signées avec **Minisign** pour garantir leur authenticité.
+Les clés de signature permettent de sécuriser les mises à jour automatiques. Sans clés, les binaires fonctionneront mais **l'auto-update ne marchera pas**.
 
-**Localisation des clés :**
+**⚠️ IMPORTANT : Les clés privées ne doivent JAMAIS être commitées dans Git**
+
+#### 1.1 Générer les clés
+
+```bash
+# Créer le dossier pour les clés (déjà dans .gitignore)
+mkdir -p .tauri-keys
+
+# Générer les clés
+npx @tauri-apps/cli signer generate -w .tauri-keys/keys.key
+```
+
+Le terminal va te demander un mot de passe **2 fois**. Choisis un mot de passe FORT et **note-le quelque part de sûr** (gestionnaire de mots de passe).
+
+#### 1.2 Vérifier que les clés existent
+
+```bash
+ls -la .tauri-keys/
+```
+
+Tu devrais voir :
+```
+keys.key       ← Clé PRIVÉE (secret, ne JAMAIS commiter)
+keys.key.pub   ← Clé PUBLIQUE (à mettre dans tauri.conf.json)
+```
+
+#### 1.3 Copier la clé publique
+
+```bash
+cat .tauri-keys/keys.key.pub
+```
+
+Copie TOUT le contenu (ça ressemble à ça) :
+```
+dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEVGMTcyQkQzN0I5MzU2RkIKUld...
+```
+
+#### 1.4 Mettre à jour tauri.conf.json
+
+Ouvre `src-tauri/tauri.conf.json` et colle la clé publique :
+
+```json
+{
+  "plugins": {
+    "updater": {
+      "endpoints": [
+        "https://github.com/simcmoi/todo-overlay/releases/latest/download/latest.json"
+      ],
+      "pubkey": "COLLE_ICI_LE_CONTENU_DE_keys.key.pub",
+      "windows": {
+        "installMode": "passive"
+      }
+    }
+  }
+}
+```
+
+#### 1.5 Configurer les secrets GitHub
+
+Va sur : https://github.com/simcmoi/todo-overlay/settings/secrets/actions
+
+Ajoute 2 nouveaux secrets :
+
+**SECRET 1**
+- Name : `TAURI_SIGNING_PRIVATE_KEY`
+- Secret : Contenu COMPLET de `.tauri-keys/keys.key`
+
+```bash
+# Pour copier le contenu :
+cat .tauri-keys/keys.key
+# Copie TOUT et colle dans GitHub
+```
+
+**SECRET 2**
+- Name : `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`
+- Secret : Le mot de passe que tu as choisi à l'étape 1
+
+#### 1.6 Commit la clé publique
+
+```bash
+git add src-tauri/tauri.conf.json
+git commit -m "chore: add updater public key for signed releases"
+git push
+```
+
+### Localisation des Clés
+
+**Clés locales :**
 ```
 ~/.tauri/
 ├── todo-overlay.key       # Clé privée (GARDÉE SECRÈTE)
@@ -60,24 +151,26 @@ Les mises à jour sont signées avec **Minisign** pour garantir leur authenticit
 }
 ```
 
-**Clé privée (GitHub Secret) :**
-- Nom : `TAURI_SIGNING_PRIVATE_KEY`
-- Contenu : Le contenu exact de `~/.tauri/todo-overlay.key`
-- ⚠️ Ne JAMAIS commit cette clé dans le code
+**⚠️ SÉCURITÉ IMPORTANT**
 
-### Vérification des Signatures
+**À FAIRE :**
+- ✅ Garde `.tauri-keys/` en local uniquement (déjà dans .gitignore)
+- ✅ Sauvegarde les clés dans un gestionnaire de mots de passe
+- ✅ Note le mot de passe dans un endroit sûr
 
-Lors de l'installation d'une mise à jour :
-1. L'app télécharge le fichier `.tar.gz` et son `.sig`
-2. Vérifie la signature avec la clé publique intégrée
-3. ✅ Si valide → Installation
-4. ❌ Si invalide → Rejet et erreur
+**À NE JAMAIS FAIRE :**
+- ❌ Commiter les fichiers `.tauri-keys/*` dans Git
+- ❌ Partager la clé privée ou le mot de passe
+- ❌ Pousser les clés sur GitHub
+- ❌ Utiliser les mêmes clés pour plusieurs projets
 
 ---
 
-## 🚀 Processus de Release (Développeur)
+## 🚀 Créer une Release
 
 ### Option 1 : Script Automatique (Recommandé)
+
+Le script automatique s'occupe de tout :
 
 ```bash
 # Patch release (0.2.1 → 0.2.2)
@@ -137,7 +230,7 @@ on:
 
 ### Étapes du Build
 
-**Pour chaque plateforme (macOS Intel, macOS ARM, Windows, Linux) :**
+Pour chaque plateforme (macOS Intel, macOS ARM, Windows, Linux) :
 
 1. **Setup** : Installe Node, Rust, dépendances système
 2. **Install** : `npm install`
@@ -214,30 +307,11 @@ https://github.com/simcmoi/todo-overlay/releases/latest/download/latest.json
 
 ---
 
-## 📱 Détection des Mises à Jour (Application)
-
-### Configuration Tauri
-
-**`src-tauri/tauri.conf.json` :**
-```json
-{
-  "plugins": {
-    "updater": {
-      "endpoints": [
-        "https://github.com/simcmoi/todo-overlay/releases/latest/download/latest.json"
-      ],
-      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDBEQUE4NjAwMTFGMDcyMjUKUldRbGN2QVJBSWFxRGVqelNHYVJuRnFZalNZSDkzaHlPNWZHclF6Rkd1NU9nZWNXeXlLbG9jRzYK",
-      "windows": {
-        "installMode": "passive"
-      }
-    }
-  }
-}
-```
+## 📱 Détection des Mises à Jour
 
 ### Vérification Automatique
 
-**Quand l'app vérifie les mises à jour :**
+L'application vérifie automatiquement les mises à jour :
 1. ✅ Au démarrage de l'application (`App.tsx` → `useEffect`)
 2. ✅ Toutes les 24 heures (interval dans `App.tsx`)
 3. ✅ Manuellement (bouton dans Settings)
@@ -302,7 +376,7 @@ state: 'idle' → 'checking' → 'available'
 
 ### Badge de Mise à Jour
 
-**Quand une mise à jour est disponible, un badge apparaît en haut de l'interface :**
+Quand une mise à jour est disponible, un badge apparaît en haut de l'interface :
 
 ```tsx
 // src/components/update-banner.tsx
@@ -465,6 +539,15 @@ ERROR: Could not fetch a valid release JSON from the remote
 ```
 → Le fichier `latest.json` est corrompu ou mal formaté
 
+**4. "Missing comment in secret key"**
+→ Les secrets GitHub ne sont pas configurés ou la clé privée est incorrecte
+
+**5. "Incorrect password"**
+→ Le mot de passe dans `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` est incorrect
+
+**6. Les mises à jour ne fonctionnent pas**
+→ Vérifie que la clé publique dans `tauri.conf.json` correspond à `.tauri-keys/keys.key.pub`
+
 ---
 
 ## 📊 Monitoring
@@ -527,7 +610,7 @@ minisign -Vm ToDo.Overlay_aarch64.app.tar.gz -P <pubkey>
 
 ---
 
-## 🔗 Références
+## 🔗 Ressources
 
 - [Tauri Updater Plugin](https://v2.tauri.app/plugin/updater/)
 - [Minisign](https://jedisct1.github.io/minisign/)

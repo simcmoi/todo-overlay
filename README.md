@@ -11,7 +11,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![GitHub stars](https://img.shields.io/github/stars/simcmoi/todo-overlay?style=social)](https://github.com/simcmoi/todo-overlay/stargazers)
 
-[🌐 Website](https://simcmoi.github.io/todo-overlay) • [📥 Download](https://github.com/simcmoi/todo-overlay/releases) • [📖 Docs](DOCUMENTATION.md) • [🐛 Issues](https://github.com/simcmoi/todo-overlay/issues)
+[🌐 Website](https://simcmoi.github.io/todo-overlay) • [📥 Download](https://github.com/simcmoi/todo-overlay/releases) • [📖 Docs](docs/README.md) • [🐛 Issues](https://github.com/simcmoi/todo-overlay/issues)
 
 </div>
 
