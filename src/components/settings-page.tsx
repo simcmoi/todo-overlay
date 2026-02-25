@@ -198,7 +198,7 @@ export function SettingsPage({
 
   return (
     <div className="h-full overflow-y-auto pr-2">
-      <div className="mb-3 flex items-center justify-between">
+      <div className="mb-4 flex items-center justify-between">
         <Button type="button" variant="ghost" className="h-7 gap-1 px-2" onClick={onBack}>
           <ArrowLeft className="h-3.5 w-3.5" />
           Retour
@@ -206,13 +206,14 @@ export function SettingsPage({
         <p className="text-sm font-medium">Paramètres</p>
       </div>
 
-      <div className="space-y-4 pb-1">
-        <section className="rounded-lg border border-border bg-card/70 p-3">
-          <div className="mb-2 flex items-center gap-2">
+      <div className="space-y-5 pb-1">
+        {/* Général */}
+        <section>
+          <div className="mb-3 flex items-center gap-2">
             <SlidersHorizontal className="h-4 w-4 text-muted-foreground" />
             <p className="text-sm font-medium">Général</p>
           </div>
-          <div className="space-y-3">
+          <div className="space-y-3 pl-6">
             <div className="flex items-center justify-between gap-3">
               <span className="text-xs text-muted-foreground">Fermer si perte de focus</span>
               <Switch
@@ -231,9 +232,9 @@ export function SettingsPage({
                 }}
               />
             </div>
-            <div className="space-y-1">
+            <div className="space-y-2 pt-1">
               <p className="text-xs text-muted-foreground">Tri par défaut</p>
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-1.5">
                 <Button
                   type="button"
                   size="sm"
@@ -294,92 +295,105 @@ export function SettingsPage({
           </div>
         </section>
 
-        <section className="rounded-lg border border-border bg-card/70 p-3">
-          <div className="mb-2 flex items-center gap-2">
+        <div className="border-t border-border/50" />
+
+        {/* Apparence */}
+        <section>
+          <div className="mb-3 flex items-center gap-2">
             <Palette className="h-4 w-4 text-muted-foreground" />
             <p className="text-sm font-medium">Apparence</p>
           </div>
-          <p className="mb-2 text-xs text-muted-foreground">Thème</p>
-          <div className="flex gap-2">
-            {([
-              ['system', 'Système'],
-              ['light', 'Clair'],
-              ['dark', 'Sombre'],
-            ] as const).map(([mode, label]) => (
-              <Button
-                key={mode}
-                type="button"
-                size="sm"
-                variant={settings.themeMode === mode ? 'default' : 'outline'}
-                className="h-7 px-2 text-xs"
-                onClick={async () => {
-                  await onUpdateSettings({ themeMode: mode as ThemeMode })
-                }}
-              >
-                {label}
-              </Button>
-            ))}
+          <div className="space-y-2 pl-6">
+            <p className="text-xs text-muted-foreground">Thème</p>
+            <div className="flex gap-1.5">
+              {([
+                ['system', 'Système'],
+                ['light', 'Clair'],
+                ['dark', 'Sombre'],
+              ] as const).map(([mode, label]) => (
+                <Button
+                  key={mode}
+                  type="button"
+                  size="sm"
+                  variant={settings.themeMode === mode ? 'default' : 'outline'}
+                  className="h-7 px-2 text-xs"
+                  onClick={async () => {
+                    await onUpdateSettings({ themeMode: mode as ThemeMode })
+                  }}
+                >
+                  {label}
+                </Button>
+              ))}
+            </div>
           </div>
         </section>
 
-        <section className="rounded-lg border border-border bg-card/70 p-3">
-          <div className="mb-2 flex items-center gap-2">
+        <div className="border-t border-border/50" />
+
+        {/* Raccourci global */}
+        <section>
+          <div className="mb-3 flex items-center gap-2">
             <Keyboard className="h-4 w-4 text-muted-foreground" />
             <p className="text-sm font-medium">Raccourci global</p>
           </div>
-          <p className="mb-2 text-xs text-muted-foreground">
-            Exemple: <code>Shift+Space</code> ou <code>CmdOrCtrl+Shift+T</code>
-          </p>
-          <div className="flex gap-2">
-            <Input
-              value={shortcutDraft}
-              onChange={(event) => {
-                setShortcutDraft(event.currentTarget.value)
-                setShortcutError(null)
-              }}
-              className="h-8 text-xs"
-              placeholder="Shift+Space"
-              aria-label="Raccourci global"
-            />
-            <Button
-              type="button"
-              size="sm"
-              variant={isCapturingShortcut ? 'default' : 'outline'}
-              className="h-8 px-2 text-xs"
-              onClick={() => {
-                setShortcutError(null)
-                setIsCapturingShortcut((current) => !current)
-              }}
-            >
-              {isCapturingShortcut ? 'Écoute…' : 'Capturer'}
-            </Button>
-            <Button
-              type="button"
-              size="sm"
-              className="h-8 px-2 text-xs"
-              onClick={() => {
-                void applyShortcut()
-              }}
-              disabled={isSavingShortcut}
-            >
-              Appliquer
-            </Button>
+          <div className="space-y-2 pl-6">
+            <p className="text-xs text-muted-foreground">
+              Exemple: <code className="rounded bg-muted px-1 py-0.5 text-[10px]">Shift+Space</code> ou <code className="rounded bg-muted px-1 py-0.5 text-[10px]">CmdOrCtrl+Shift+T</code>
+            </p>
+            <div className="flex gap-2">
+              <Input
+                value={shortcutDraft}
+                onChange={(event) => {
+                  setShortcutDraft(event.currentTarget.value)
+                  setShortcutError(null)
+                }}
+                className="h-8 text-xs"
+                placeholder="Shift+Space"
+                aria-label="Raccourci global"
+              />
+              <Button
+                type="button"
+                size="sm"
+                variant={isCapturingShortcut ? 'default' : 'outline'}
+                className="h-8 px-2 text-xs"
+                onClick={() => {
+                  setShortcutError(null)
+                  setIsCapturingShortcut((current) => !current)
+                }}
+              >
+                {isCapturingShortcut ? 'Écoute…' : 'Capturer'}
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                className="h-8 px-2 text-xs"
+                onClick={() => {
+                  void applyShortcut()
+                }}
+                disabled={isSavingShortcut}
+              >
+                Appliquer
+              </Button>
+            </div>
+            {shortcutError ? <p className="text-xs text-destructive">{shortcutError}</p> : null}
           </div>
-          {shortcutError ? <p className="mt-2 text-xs text-destructive">{shortcutError}</p> : null}
         </section>
 
-        <section className="rounded-lg border border-border bg-card/70 p-3">
-          <div className="mb-2 flex items-center justify-between gap-2">
+        <div className="border-t border-border/50" />
+
+        {/* Labels */}
+        <section>
+          <div className="mb-3 flex items-center justify-between gap-2">
             <div className="flex items-center gap-2">
               <Tags className="h-4 w-4 text-muted-foreground" />
               <p className="text-sm font-medium">Labels</p>
             </div>
-            <Button type="button" variant="outline" size="sm" className="h-7 gap-1 px-2 text-xs" onClick={addLabel}>
+            <Button type="button" variant="ghost" size="sm" className="h-7 gap-1 px-2 text-xs" onClick={addLabel}>
               <Plus className="h-3.5 w-3.5" />
               Ajouter
             </Button>
           </div>
-          <div className="space-y-2">
+          <div className="space-y-2 pl-6">
             {sortedLabels.map((label) => (
               <div key={label.id} className="flex items-center gap-2">
                 <span className={cn('inline-flex h-2.5 w-2.5 rounded-full border', colorClasses(label.color))} />
@@ -438,85 +452,82 @@ export function SettingsPage({
           </div>
         </section>
 
-        <section className="rounded-lg border border-border bg-card/70 p-3">
-          <div className="mb-2 flex items-center gap-2">
+        <div className="border-t border-border/50" />
+
+        {/* Stockage */}
+        <section>
+          <div className="mb-3 flex items-center gap-2">
             <FileText className="h-4 w-4 text-muted-foreground" />
-            <p className="text-sm font-medium">Stockage des données</p>
+            <p className="text-sm font-medium">Données</p>
           </div>
-          <div className="space-y-3">
-            <div className="space-y-1">
-              <span className="text-xs text-muted-foreground">Fichier de données</span>
-              <p className="break-all rounded-md bg-muted px-2 py-1.5 text-[10px] font-mono">{dataFilePath}</p>
-            </div>
-            <div>
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                className="h-7 w-full gap-1 px-2 text-xs"
-                onClick={() => {
-                  void openDataFile()
-                }}
-              >
-                <FolderOpen className="h-3.5 w-3.5" />
-                Ouvrir avec l'éditeur de texte
-              </Button>
-            </div>
+          <div className="space-y-2 pl-6">
+            <p className="break-all text-[10px] text-muted-foreground/70">{dataFilePath}</p>
+            <Button
+              type="button"
+              size="sm"
+              variant="ghost"
+              className="h-7 gap-1 px-2 text-xs"
+              onClick={() => {
+                void openDataFile()
+              }}
+            >
+              <FolderOpen className="h-3.5 w-3.5" />
+              Ouvrir le fichier
+            </Button>
           </div>
         </section>
 
-        <section className="rounded-lg border border-border bg-card/70 p-3">
-          <div className="mb-2 flex items-center gap-2">
+        <div className="border-t border-border/50" />
+
+        {/* Logs */}
+        <section>
+          <div className="mb-3 flex items-center gap-2">
             <ScrollText className="h-4 w-4 text-muted-foreground" />
-            <p className="text-sm font-medium">Logs de débogage</p>
+            <p className="text-sm font-medium">Logs</p>
           </div>
-          <div className="space-y-3">
-            <div className="space-y-1">
-              <span className="text-xs text-muted-foreground">Fichier de log</span>
-              <p className="break-all rounded-md bg-muted px-2 py-1.5 text-[10px] font-mono">{logFilePath}</p>
-            </div>
-            <div>
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                className="h-7 w-full gap-1 px-2 text-xs"
-                onClick={() => {
-                  void openLogFile()
-                }}
-              >
-                <FolderOpen className="h-3.5 w-3.5" />
-                Ouvrir le fichier de log
-              </Button>
-            </div>
+          <div className="space-y-2 pl-6">
+            <p className="break-all text-[10px] text-muted-foreground/70">{logFilePath}</p>
+            <Button
+              type="button"
+              size="sm"
+              variant="ghost"
+              className="h-7 gap-1 px-2 text-xs"
+              onClick={() => {
+                void openLogFile()
+              }}
+            >
+              <FolderOpen className="h-3.5 w-3.5" />
+              Ouvrir le fichier
+            </Button>
           </div>
         </section>
 
-        <section className="rounded-lg border border-border bg-card/70 p-3">
-          <div className="mb-2 flex items-center gap-2">
+        <div className="border-t border-border/50" />
+
+        {/* À propos */}
+        <section>
+          <div className="mb-3 flex items-center gap-2">
             <Info className="h-4 w-4 text-muted-foreground" />
             <p className="text-sm font-medium">À propos</p>
           </div>
-          <div className="space-y-3">
+          <div className="space-y-3 pl-6">
             <div className="flex items-center justify-between gap-3">
               <span className="text-xs text-muted-foreground">Version</span>
               <span className="text-xs font-mono font-medium">{appVersion}</span>
             </div>
-            <div>
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                className="h-7 w-full gap-1 px-2 text-xs"
-                onClick={() => {
-                  void checkForUpdate()
-                }}
-                disabled={updateState === 'checking'}
-              >
-                <RefreshCw className={cn('h-3.5 w-3.5', updateState === 'checking' && 'animate-spin')} />
-                {updateState === 'checking' ? 'Vérification...' : 'Vérifier les mises à jour'}
-              </Button>
-            </div>
+            <Button
+              type="button"
+              size="sm"
+              variant="ghost"
+              className="h-7 gap-1 px-2 text-xs"
+              onClick={() => {
+                void checkForUpdate()
+              }}
+              disabled={updateState === 'checking'}
+            >
+              <RefreshCw className={cn('h-3.5 w-3.5', updateState === 'checking' && 'animate-spin')} />
+              {updateState === 'checking' ? 'Vérification...' : 'Vérifier les mises à jour'}
+            </Button>
           </div>
         </section>
       </div>
