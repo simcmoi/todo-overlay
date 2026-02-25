@@ -1154,6 +1154,7 @@ export function TodoList({
                               ) : null}
                               {label ? (
                                 <Badge
+                                  variant="ghost"
                                   className={cn(
                                     'h-5 px-1.5 py-0 rounded-md',
                                     label.color === 'slate' && 'bg-slate-500/15 text-slate-700 border-slate-700/30 dark:text-slate-300 dark:border-slate-500/30',
