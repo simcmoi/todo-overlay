@@ -4,6 +4,22 @@
 
 Les clés de signature permettent de sécuriser les mises à jour automatiques de l'application. Sans clés, les binaires de la v0.2.0 fonctionneront mais **l'auto-update ne marchera pas**.
 
+---
+
+## 🚨 AVERTISSEMENT SÉCURITÉ
+
+**⚠️ LES CLÉS PRIVÉES NE DOIVENT JAMAIS ÊTRE COMMITÉES DANS GIT ⚠️**
+
+Le dossier `.tauri-keys/` est déjà protégé par `.gitignore`, mais **vérifie toujours** avant de commit :
+
+```bash
+git status  # Ne doit JAMAIS montrer .tauri-keys/ ou *.key
+```
+
+Si tu vois ces fichiers, **N'APPUIE PAS SUR COMMIT** !
+
+---
+
 ## 🚀 Génération des Clés (À FAIRE UNE SEULE FOIS)
 
 ### Étape 1 : Génère les clés
