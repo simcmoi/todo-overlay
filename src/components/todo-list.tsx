@@ -691,7 +691,7 @@ export function TodoList({
         >
           {isExistingTodo ? (
             <Checkbox
-              className="mt-0.5"
+              className="mt-2"
               checked={false}
               onCheckedChange={async () => {
                 await onSetCompleted(targetId, true)
@@ -700,7 +700,7 @@ export function TodoList({
               aria-label="Marquer la tâche en cours d'édition comme terminée"
             />
           ) : (
-            <Checkbox className="mt-0.5" checked={false} disabled aria-label="Nouvelle tâche" />
+            <Checkbox className="mt-2" checked={false} disabled aria-label="Nouvelle tâche" />
           )}
 
           <div className="min-w-0 flex-1 space-y-1.5">
@@ -785,10 +785,18 @@ export function TodoList({
                 type="button"
                 size="sm"
                 variant="ghost"
-                className="h-6 px-2 text-xs text-muted-foreground hover:text-foreground"
+                tabIndex={0}
+                className="h-6 px-2 text-xs text-muted-foreground hover:text-foreground focus-visible:ring-1 focus-visible:ring-ring"
                 onClick={() => {
                   setSaveError(null)
                   applyReminder(getTodayAtDefaultHour())
+                }}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault()
+                    setSaveError(null)
+                    applyReminder(getTodayAtDefaultHour())
+                  }
                 }}
               >
                 Aujourd&apos;hui
@@ -798,10 +806,18 @@ export function TodoList({
                 type="button"
                 size="sm"
                 variant="ghost"
-                className="h-6 px-2 text-xs text-muted-foreground hover:text-foreground"
+                tabIndex={0}
+                className="h-6 px-2 text-xs text-muted-foreground hover:text-foreground focus-visible:ring-1 focus-visible:ring-ring"
                 onClick={() => {
                   setSaveError(null)
                   applyReminder(getTomorrowAtDefaultHour())
+                }}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault()
+                    setSaveError(null)
+                    applyReminder(getTomorrowAtDefaultHour())
+                  }
                 }}
               >
                 Demain
@@ -818,11 +834,25 @@ export function TodoList({
                     type="button"
                     size="sm"
                     variant="ghost"
-                    className="h-6 w-6 p-0"
+                    tabIndex={0}
+                    className="h-6 w-6 p-0 focus-visible:ring-1 focus-visible:ring-ring"
                     onClick={() => {
                       setSaveError(null)
                       setShowDate(true)
                       setDateMode('datetime')
+                    }}
+                    onFocus={() => {
+                      setSaveError(null)
+                      setShowDate(true)
+                      setDateMode('datetime')
+                    }}
+                    onKeyDown={(event) => {
+                      if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault()
+                        setSaveError(null)
+                        setShowDate(true)
+                        setDateMode('datetime')
+                      }
                     }}
                   >
                     <CalendarClock className="h-3.5 w-3.5 text-muted-foreground" />
@@ -851,7 +881,8 @@ export function TodoList({
                     type="button"
                     size="sm"
                     variant="ghost"
-                    className="h-6 px-2 text-xs text-muted-foreground hover:text-foreground"
+                    tabIndex={0}
+                    className="h-6 px-2 text-xs text-muted-foreground hover:text-foreground focus-visible:ring-1 focus-visible:ring-ring"
                     onClick={() => {
                       setSaveError(null)
                       applyReminder(undefined)
