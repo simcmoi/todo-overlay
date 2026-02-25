@@ -104,15 +104,15 @@ function priorityLabel(priority: TodoPriority, t: (key: string) => string): stri
 function priorityClasses(priority: TodoPriority): string {
   switch (priority) {
     case 'urgent':
-      return 'bg-destructive/15 text-destructive border-destructive/30'
+      return 'border border-destructive/30 bg-destructive/15 text-destructive'
     case 'high':
-      return 'bg-amber-500/15 text-amber-700 border-amber-700/30'
+      return 'border border-amber-700/30 bg-amber-500/15 text-amber-700'
     case 'medium':
-      return 'bg-blue-500/15 text-blue-700 border-blue-700/30'
+      return 'border border-blue-700/30 bg-blue-500/15 text-blue-700'
     case 'low':
-      return 'bg-muted text-muted-foreground border-border'
+      return 'border border-border bg-muted text-muted-foreground'
     default:
-      return 'bg-transparent text-muted-foreground border-border'
+      return 'border border-border bg-transparent text-muted-foreground'
   }
 }
 
@@ -120,19 +120,30 @@ function priorityClasses(priority: TodoPriority): string {
 function labelClasses(color: TodoLabel['color']): string {
   switch (color) {
     case 'slate':
-      return 'bg-slate-500/15 text-slate-700 border-slate-700/30'
+      return 'border border-slate-700/30 bg-slate-500/15 text-slate-700 dark:text-slate-300 dark:border-slate-500/30'
     case 'blue':
-      return 'bg-blue-500/15 text-blue-700 border-blue-700/30'
+      return 'border border-blue-700/30 bg-blue-500/15 text-blue-700 dark:text-blue-300 dark:border-blue-500/30'
     case 'green':
-      return 'bg-green-500/15 text-green-700 border-green-700/30'
+      return 'border border-green-700/30 bg-green-500/15 text-green-700 dark:text-green-300 dark:border-green-500/30'
     case 'amber':
-      return 'bg-amber-500/15 text-amber-700 border-amber-700/30'
+      return 'border border-amber-700/30 bg-amber-500/15 text-amber-700 dark:text-amber-300 dark:border-amber-500/30'
     case 'rose':
-      return 'bg-rose-500/15 text-rose-700 border-rose-700/30'
+      return 'border border-rose-700/30 bg-rose-500/15 text-rose-700 dark:text-rose-300 dark:border-rose-500/30'
     case 'violet':
-      return 'bg-violet-500/15 text-violet-700 border-violet-700/30'
+      return 'border border-violet-700/30 bg-violet-500/15 text-violet-700 dark:text-violet-300 dark:border-violet-500/30'
     default:
-      return 'bg-muted text-muted-foreground border-border'
+      return 'border border-border bg-muted text-muted-foreground'
+  }
+}
+
+function reminderBadgeClasses(variant: 'destructive' | 'blue' | 'default'): string {
+  switch (variant) {
+    case 'destructive':
+      return 'border border-red-700/50 bg-red-500/10 text-red-700 hover:bg-red-500/15 dark:border-red-500/50 dark:text-red-400'
+    case 'blue':
+      return 'border border-blue-700/50 bg-blue-500/10 text-blue-700 dark:border-blue-400/50 dark:bg-blue-400/10 dark:text-blue-400'
+    case 'default':
+      return 'border border-border bg-muted text-foreground'
   }
 }
 
@@ -1142,14 +1153,10 @@ export function TodoList({
                                   const badgeStyle = getReminderBadgeStyle(todo.reminderAt, t, i18n)
                                   return (
                                     <Badge
+                                      variant="ghost"
                                       className={cn(
                                         "h-5 px-1.5 py-0 rounded-md",
-                                        badgeStyle.variant === 'destructive' && 
-                                          "border-destructive/50 bg-destructive/10 text-destructive hover:bg-destructive/15",
-                                        badgeStyle.variant === 'blue' && 
-                                          "border-blue-500/50 bg-blue-500/10 text-blue-700 dark:border-blue-400/50 dark:bg-blue-400/10 dark:text-blue-400",
-                                        badgeStyle.variant === 'default' && 
-                                          "border-border bg-muted text-foreground"
+                                        reminderBadgeClasses(badgeStyle.variant),
                                       )}
                                     >
                                       <CalendarClock className="h-3 w-3" />
@@ -1160,6 +1167,7 @@ export function TodoList({
                               ) : null}
                               {priority !== 'none' ? (
                                 <Badge
+                                  variant="ghost"
                                   className={cn(
                                     'h-5 px-1.5 py-0 rounded-md',
                                     priorityClasses(priority),
@@ -1171,6 +1179,7 @@ export function TodoList({
                               ) : null}
                               {label ? (
                                 <Badge
+                                  variant="ghost"
                                   className={cn(
                                     'h-5 px-1.5 py-0 rounded-md',
                                     labelClasses(label.color),
