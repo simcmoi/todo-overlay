@@ -683,7 +683,7 @@ export function TodoList({
       >
         <div
           ref={editorContainerRef}
-          className="flex items-start gap-2 rounded-md bg-muted/50 px-2 py-2"
+          className="flex items-start gap-1.5 px-1 py-1"
           onPointerDownCapture={() => {
             lastPointerInsideEditorAtRef.current = window.performance.now()
           }}
@@ -691,7 +691,7 @@ export function TodoList({
         >
           {isExistingTodo ? (
             <Checkbox
-              className="mt-1"
+              className="mt-0.5"
               checked={false}
               onCheckedChange={async () => {
                 await onSetCompleted(targetId, true)
@@ -700,7 +700,7 @@ export function TodoList({
               aria-label="Marquer la tâche en cours d'édition comme terminée"
             />
           ) : (
-            <Checkbox className="mt-1" checked={false} disabled aria-label="Nouvelle tâche" />
+            <Checkbox className="mt-0.5" checked={false} disabled aria-label="Nouvelle tâche" />
           )}
 
           <div className="min-w-0 flex-1 space-y-1.5">
@@ -719,6 +719,13 @@ export function TodoList({
                 }))
               }}
               onKeyDown={(event) => {
+                if (event.key === 'Tab' && !event.shiftKey) {
+                  event.preventDefault()
+                  setShowDetails(true)
+                  setTimeout(() => detailsInputRef.current?.focus(), 0)
+                  return
+                }
+
                 if (event.key === 'Enter' && !event.shiftKey) {
                   event.preventDefault()
                   void persistAndMaybeClose(true)
@@ -913,7 +920,7 @@ export function TodoList({
                       initial={{ opacity: 0, y: 6, scale: 0.985 }}
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, x: -12, scale: 0.96 }}
-                      transition={{ type: 'spring', stiffness: 520, damping: 36, mass: 0.55 }}
+                      transition={{ type: 'spring', stiffness: 580, damping: 38, mass: 0.5 }}
                       className={cn(
                         'px-2 py-1',
                         isDropBefore && 'shadow-[inset_0_1px_0_0_hsl(var(--foreground))]',
@@ -931,7 +938,7 @@ export function TodoList({
                         layout
                         layoutId={`todo-card-${todo.id}`}
                         className={cn(
-                          'flex items-start gap-2 rounded-md px-1 py-1 hover:bg-muted/40',
+                          'flex items-start gap-1.5 rounded-md px-1 py-1 hover:bg-muted/60 transition-colors',
                           priority === 'urgent' ? 'ring-1 ring-destructive/35' : undefined,
                           draggingTodoId === todo.id ? 'opacity-55' : undefined,
                         )}
@@ -950,7 +957,7 @@ export function TodoList({
                             event.stopPropagation()
                           }}
                           className={cn(
-                            'mt-1 inline-flex h-4 w-4 items-center justify-center rounded-sm text-muted-foreground',
+                            'mt-0.5 inline-flex h-4 w-4 items-center justify-center rounded-sm text-muted-foreground',
                             canReorder
                               ? 'cursor-grab active:cursor-grabbing hover:text-foreground'
                               : 'cursor-default opacity-40',
@@ -961,7 +968,7 @@ export function TodoList({
                         </button>
 
                         <Checkbox
-                          className="mt-1"
+                          className="mt-0.5"
                           checked={Boolean(todo.completedAt)}
                           onCheckedChange={async (checked) => {
                             if (checked === true) {
@@ -1183,18 +1190,18 @@ export function TodoList({
                         initial={{ opacity: 0, y: 8, scale: 0.985 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, x: 10, scale: 0.96 }}
-                        transition={{ type: 'spring', stiffness: 460, damping: 34, mass: 0.52 }}
+                        transition={{ type: 'spring', stiffness: 580, damping: 38, mass: 0.5 }}
                         className="px-2 py-1"
                         style={leftOffset > 0 ? { paddingLeft: `${leftOffset + 8}px` } : undefined}
                       >
                         <motion.div
                           layout
                           layoutId={`todo-card-${todo.id}`}
-                          className="flex items-start gap-2 rounded-md px-1 py-1 hover:bg-muted/30"
+                          className="flex items-start gap-1.5 rounded-md px-1 py-1 hover:bg-muted/50 transition-colors"
                         >
                           <Checkbox
                             checked
-                            className="mt-1"
+                            className="mt-0.5"
                             onCheckedChange={async (checked) => {
                               if (checked === false) {
                                 await onSetCompleted(todo.id, false)

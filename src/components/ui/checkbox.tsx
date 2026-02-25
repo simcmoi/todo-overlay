@@ -30,7 +30,7 @@ const Checkbox = React.forwardRef<
         onCheckedChange?.(nextState)
       }}
       className={cn(
-        'peer h-4 w-4 shrink-0 rounded-sm border border-foreground transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:bg-foreground data-[state=checked]:text-background',
+        'peer h-4 w-4 shrink-0 rounded-sm border border-foreground transition-all duration-120 ease-out focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:bg-foreground data-[state=checked]:text-background',
         className,
       )}
       {...props}
@@ -46,7 +46,7 @@ const Checkbox = React.forwardRef<
               initial={{ scale: 0.45, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.45, opacity: 0 }}
-              transition={{ duration: 0.12, ease: [0.22, 1, 0.36, 1] }}
+              transition={{ duration: 0.11, ease: [0.22, 1, 0.36, 1] }}
               className="flex items-center justify-center"
             >
               <Check className="h-3.5 w-3.5" />
