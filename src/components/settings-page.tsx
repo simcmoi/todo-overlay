@@ -1,4 +1,4 @@
-import { ArrowLeft, FileText, FolderOpen, Info, Keyboard, Palette, Plus, RefreshCw, ScrollText, SlidersHorizontal, Tags, Trash2 } from 'lucide-react'
+import { ArrowLeft, Cloud, FileText, FolderOpen, Info, Keyboard, Palette, Plus, RefreshCw, ScrollText, SlidersHorizontal, Tags, Trash2 } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -7,6 +7,7 @@ import { useUpdateStore } from '@/store/use-update-store'
 import { getAppVersion, getDataFilePath, openDataFile, getLogFilePath, openLogFile } from '@/lib/tauri'
 import { cn } from '@/lib/utils'
 import type { Settings, ThemeMode, TodoLabel } from '@/types/todo'
+import { StorageSettings } from '@/components/storage'
 
 type SettingsPageProps = {
   settings: Settings
@@ -454,11 +455,24 @@ export function SettingsPage({
 
         <div className="border-t border-border/50" />
 
+        {/* Synchronisation Cloud */}
+        <section>
+          <div className="mb-3 flex items-center gap-2">
+            <Cloud className="h-4 w-4 text-muted-foreground" />
+            <p className="text-sm font-medium">Synchronisation</p>
+          </div>
+          <div className="pl-6">
+            <StorageSettings />
+          </div>
+        </section>
+
+        <div className="border-t border-border/50" />
+
         {/* Stockage */}
         <section>
           <div className="mb-3 flex items-center gap-2">
             <FileText className="h-4 w-4 text-muted-foreground" />
-            <p className="text-sm font-medium">Données</p>
+            <p className="text-sm font-medium">Données locales</p>
           </div>
           <div className="space-y-2 pl-6">
             <p className="break-all text-[10px] text-muted-foreground/70">{dataFilePath}</p>
