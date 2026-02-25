@@ -180,3 +180,7 @@ export async function openLogFile(): Promise<void> {
 export async function resetAllData(): Promise<void> {
   await invoke('reset_all_data')
 }
+
+export async function getChangelog(version: string): Promise<string> {
+  return invoke<string>('get_changelog', { version })
+}

@@ -4,10 +4,18 @@ import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog'
 import { useTodoStore } from '@/store/use-todo-store'
 import { AuthForm } from '@/components/auth/AuthForm'
 import { SyncStatusIndicator } from '@/components/storage/SyncStatusIndicator'
-import { Cloud, HardDrive, LogOut, AlertTriangle, Loader2 } from 'lucide-react'
+import { Cloud, HardDrive, LogOut, AlertTriangle, Loader2, Info } from 'lucide-react'
 
 export function StorageSettings() {
   const {
@@ -72,7 +80,7 @@ export function StorageSettings() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
@@ -156,6 +164,51 @@ export function StorageSettings() {
               </div>
             </div>
           )}
+          
+          <div className="pt-2">
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button variant="ghost" size="sm" className="h-8 gap-1.5 text-xs">
+                  <Info className="h-3.5 w-3.5" />
+                  Plus d'infos
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Modes de stockage</DialogTitle>
+                  <DialogDescription>
+                    Comparaison entre le mode local et le mode cloud
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4 text-sm">
+                  <div>
+                    <h4 className="font-medium mb-2 flex items-center gap-2">
+                      <HardDrive className="h-4 w-4" />
+                      Mode local
+                    </h4>
+                    <ul className="list-disc list-inside space-y-1 text-muted-foreground ml-6">
+                      <li>Données stockées uniquement sur cet appareil</li>
+                      <li>Pas de synchronisation entre appareils</li>
+                      <li>Privacité maximale</li>
+                      <li>Fonctionne sans connexion internet</li>
+                    </ul>
+                  </div>
+                  <div>
+                    <h4 className="font-medium mb-2 flex items-center gap-2">
+                      <Cloud className="h-4 w-4" />
+                      Mode cloud
+                    </h4>
+                    <ul className="list-disc list-inside space-y-1 text-muted-foreground ml-6">
+                      <li>Synchronisation automatique entre tous vos appareils</li>
+                      <li>Sauvegarde sécurisée dans le cloud (Supabase)</li>
+                      <li>Mises à jour en temps réel</li>
+                      <li>Nécessite une connexion internet</li>
+                    </ul>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
+          </div>
         </CardContent>
       </Card>
 
@@ -164,32 +217,6 @@ export function StorageSettings() {
           <AuthForm />
         </div>
       )}
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Informations</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4 text-sm">
-          <div>
-            <h4 className="font-medium mb-2">Mode local</h4>
-            <ul className="list-disc list-inside space-y-1 text-muted-foreground">
-              <li>Données stockées uniquement sur cet appareil</li>
-              <li>Pas de synchronisation entre appareils</li>
-              <li>Privacité maximale</li>
-              <li>Fonctionne sans connexion internet</li>
-            </ul>
-          </div>
-          <div>
-            <h4 className="font-medium mb-2">Mode cloud</h4>
-            <ul className="list-disc list-inside space-y-1 text-muted-foreground">
-              <li>Synchronisation automatique entre tous vos appareils</li>
-              <li>Sauvegarde sécurisée dans le cloud (Supabase)</li>
-              <li>Mises à jour en temps réel</li>
-              <li>Nécessite une connexion internet</li>
-            </ul>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   )
 }

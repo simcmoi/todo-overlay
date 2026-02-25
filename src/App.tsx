@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Check, ChevronDown, Filter, MoreHorizontal, Plus, Printer, Settings, Star, Trash2 } from 'lucide-react'
+import { Check, ChevronDown, Filter, Home, MoreHorizontal, Plus, Printer, Settings, Star, Trash2 } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { listen } from '@tauri-apps/api/event'
 import { SettingsPage } from '@/components/settings-page'
@@ -559,11 +559,15 @@ export default function App() {
             variant="ghost"
             size="icon"
             onClick={() => {
-              setSettingsPageOpen(true)
+              setSettingsPageOpen(!settingsPageOpen)
             }}
-            aria-label="Ouvrir les paramètres"
+            aria-label={settingsPageOpen ? "Retour à l'accueil" : "Ouvrir les paramètres"}
           >
-            <Settings className="h-4 w-4" />
+            {settingsPageOpen ? (
+              <Home className="h-4 w-4" />
+            ) : (
+              <Settings className="h-4 w-4" />
+            )}
           </Button>
         </div>
 

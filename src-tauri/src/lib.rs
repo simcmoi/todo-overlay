@@ -1,4 +1,5 @@
 mod commands;
+mod changelog;
 mod reminder;
 mod shortcuts;
 mod storage;
@@ -114,6 +115,7 @@ pub fn run() {
             commands::get_log_file_path,
             commands::open_log_file,
             commands::reset_all_data,
+            changelog::get_changelog,
             updater::check_for_update,
             updater::install_update
         ])

@@ -1,4 +1,4 @@
-import { AlertTriangle, ArrowLeft, Cloud, FileText, FolderOpen, Info, Keyboard, Palette, Plus, RefreshCw, ScrollText, SlidersHorizontal, Tags, Trash2 } from 'lucide-react'
+import { AlertTriangle, ArrowLeft, Cloud, ExternalLink, FileText, Info, Keyboard, Palette, Plus, RefreshCw, ScrollText, SlidersHorizontal, Tags, Trash2 } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -11,6 +11,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -218,55 +224,85 @@ export function SettingsPage({
   }
 
   return (
-    <div className="h-full overflow-y-auto pr-2">
-      <div className="mb-4 flex items-center justify-between">
-        <Button type="button" variant="ghost" className="h-7 gap-1 px-2" onClick={onBack}>
-          <ArrowLeft className="h-3.5 w-3.5" />
-          Retour
-        </Button>
-        <p className="text-sm font-medium">Paramètres</p>
-      </div>
+    <TooltipProvider>
+      <div className="h-full overflow-y-auto pr-2">
+        <div className="mb-4 flex items-center justify-between">
+          <Button type="button" variant="ghost" className="h-7 gap-1 px-2" onClick={onBack}>
+            <ArrowLeft className="h-3.5 w-3.5" />
+            Retour
+          </Button>
+          <p className="text-sm font-medium">Paramètres</p>
+          <div className="w-7" /> {/* Spacer pour centrer le titre */}
+        </div>
 
-      <div className="space-y-5 pb-1">
-        {/* Général */}
-        <section>
-          <div className="mb-3 flex items-center gap-2">
-            <SlidersHorizontal className="h-4 w-4 text-muted-foreground" />
-            <p className="text-sm font-medium">Général</p>
-          </div>
-          <div className="space-y-3 pl-6">
-            <div className="flex items-center justify-between gap-3">
-              <span className="text-xs text-muted-foreground">Fermer si perte de focus</span>
-              <Switch
-                checked={settings.autoCloseOnBlur}
-                onCheckedChange={async (checked) => {
-                  await onUpdateSettings({ autoCloseOnBlur: checked })
-                }}
-              />
+        <div className="space-y-5 pb-1">
+          {/* Général */}
+          <section>
+            <div className="mb-3 flex items-center gap-2">
+              <SlidersHorizontal className="h-4 w-4 text-muted-foreground" />
+              <p className="text-sm font-medium">Général</p>
             </div>
-            <div className="flex items-center justify-between gap-3">
-              <span className="text-xs text-muted-foreground">Démarrer au lancement du système</span>
-              <Switch
-                checked={settings.enableAutostart}
-                onCheckedChange={async (checked) => {
-                  await onSetAutostartEnabled(checked)
-                }}
-              />
-            </div>
-            <div className="flex items-center justify-between gap-3">
-              <span className="text-xs text-muted-foreground">Activer les effets sonores</span>
-              <Switch
-                checked={settings.enableSoundEffects}
-                onCheckedChange={async (checked) => {
-                  await onUpdateSettings({ enableSoundEffects: checked })
-                }}
-              />
-            </div>
-            <div className="flex items-center justify-between gap-3">
-              <span className="text-xs text-muted-foreground">Tri par défaut</span>
-              <Select
-                value={settings.sortMode}
-                onValueChange={async (value) => {
+            <div className="space-y-3 pl-6">
+              <div className="flex items-center justify-between gap-3">
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span className="text-xs text-muted-foreground cursor-help">Fermer si perte de focus</span>
+                  </TooltipTrigger>
+                  <TooltipContent side="left" className="max-w-xs">
+                    <p>Ferme automatiquement la fenêtre overlay lorsque vous cliquez en dehors. Pratique pour garder votre espace de travail dégagé.</p>
+                  </TooltipContent>
+                </Tooltip>
+                <Switch
+                  checked={settings.autoCloseOnBlur}
+                  onCheckedChange={async (checked) => {
+                    await onUpdateSettings({ autoCloseOnBlur: checked })
+                  }}
+                />
+              </div>
+              <div className="flex items-center justify-between gap-3">
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span className="text-xs text-muted-foreground cursor-help">Démarrer au lancement du système</span>
+                  </TooltipTrigger>
+                  <TooltipContent side="left" className="max-w-xs">
+                    <p>Lance automatiquement l'application en arrière-plan au démarrage de votre ordinateur. L'overlay reste accessible via le raccourci clavier.</p>
+                  </TooltipContent>
+                </Tooltip>
+                <Switch
+                  checked={settings.enableAutostart}
+                  onCheckedChange={async (checked) => {
+                    await onSetAutostartEnabled(checked)
+                  }}
+                />
+              </div>
+              <div className="flex items-center justify-between gap-3">
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span className="text-xs text-muted-foreground cursor-help">Activer les effets sonores</span>
+                  </TooltipTrigger>
+                  <TooltipContent side="left" className="max-w-xs">
+                    <p>Joue des sons discrets lors de la création, complétion ou suppression de tâches pour un retour audio agréable.</p>
+                  </TooltipContent>
+                </Tooltip>
+                <Switch
+                  checked={settings.enableSoundEffects}
+                  onCheckedChange={async (checked) => {
+                    await onUpdateSettings({ enableSoundEffects: checked })
+                  }}
+                />
+              </div>
+              <div className="flex items-center justify-between gap-3">
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span className="text-xs text-muted-foreground cursor-help">Tri par défaut</span>
+                  </TooltipTrigger>
+                  <TooltipContent side="left" className="max-w-xs">
+                    <p>Ordre d'affichage des tâches : par date d'ajout, alphabétique, date limite, ou manuel (drag & drop).</p>
+                  </TooltipContent>
+                </Tooltip>
+                <Select
+                  value={settings.sortMode}
+                  onValueChange={async (value) => {
                   await onUpdateSettings({ sortMode: value as typeof settings.sortMode })
                 }}
               >
@@ -294,7 +330,14 @@ export function SettingsPage({
             <p className="text-sm font-medium">Apparence</p>
           </div>
           <div className="flex items-center justify-between gap-3 pl-6">
-            <span className="text-xs text-muted-foreground">Thème</span>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span className="text-xs text-muted-foreground cursor-help">Thème</span>
+              </TooltipTrigger>
+              <TooltipContent side="left" className="max-w-xs">
+                <p>Choisissez le thème de l'application : Système (suit les préférences de votre OS), Clair ou Sombre.</p>
+              </TooltipContent>
+            </Tooltip>
             <Select
               value={settings.themeMode}
               onValueChange={async (value) => {
@@ -319,7 +362,14 @@ export function SettingsPage({
         <section>
           <div className="mb-3 flex items-center gap-2">
             <Keyboard className="h-4 w-4 text-muted-foreground" />
-            <p className="text-sm font-medium">Raccourci global</p>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <p className="text-sm font-medium cursor-help">Raccourci global</p>
+              </TooltipTrigger>
+              <TooltipContent side="right" className="max-w-xs">
+                <p>Définissez une combinaison de touches pour afficher/masquer l'overlay depuis n'importe où. Fonctionne même quand l'application est en arrière-plan.</p>
+              </TooltipContent>
+            </Tooltip>
           </div>
           <div className="space-y-2 pl-6">
             <p className="text-xs text-muted-foreground">
@@ -336,18 +386,25 @@ export function SettingsPage({
                 placeholder="Shift+Space"
                 aria-label="Raccourci global"
               />
-              <Button
-                type="button"
-                size="sm"
-                variant={isCapturingShortcut ? 'default' : 'outline'}
-                className="h-8 px-2 text-xs"
-                onClick={() => {
-                  setShortcutError(null)
-                  setIsCapturingShortcut((current) => !current)
-                }}
-              >
-                {isCapturingShortcut ? 'Écoute…' : 'Capturer'}
-              </Button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant={isCapturingShortcut ? 'default' : 'outline'}
+                    className="h-8 px-2 text-xs"
+                    onClick={() => {
+                      setShortcutError(null)
+                      setIsCapturingShortcut((current) => !current)
+                    }}
+                  >
+                    {isCapturingShortcut ? 'Écoute…' : 'Capturer'}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="top" className="max-w-xs">
+                  <p>Cliquez et appuyez sur votre combinaison de touches pour l'enregistrer automatiquement.</p>
+                </TooltipContent>
+              </Tooltip>
               <Button
                 type="button"
                 size="sm"
@@ -371,12 +428,26 @@ export function SettingsPage({
           <div className="mb-3 flex items-center justify-between gap-2">
             <div className="flex items-center gap-2">
               <Tags className="h-4 w-4 text-muted-foreground" />
-              <p className="text-sm font-medium">Labels</p>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <p className="text-sm font-medium cursor-help">Labels</p>
+                </TooltipTrigger>
+                <TooltipContent side="right" className="max-w-xs">
+                  <p>Les labels vous permettent de catégoriser et filtrer vos tâches par couleur. Créez des labels pour organiser votre travail (ex: Urgent, Personnel, Travail).</p>
+                </TooltipContent>
+              </Tooltip>
             </div>
-            <Button type="button" variant="ghost" size="sm" className="h-7 gap-1 px-2 text-xs" onClick={addLabel}>
-              <Plus className="h-3.5 w-3.5" />
-              Ajouter
-            </Button>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button type="button" variant="ghost" size="sm" className="h-7 gap-1 px-2 text-xs" onClick={addLabel}>
+                  <Plus className="h-3.5 w-3.5" />
+                  Ajouter
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="left" className="max-w-xs">
+                <p>Crée un nouveau label personnalisé avec un nom et une couleur au choix.</p>
+              </TooltipContent>
+            </Tooltip>
           </div>
           <div className="space-y-2 pl-6">
             {sortedLabels.map((label) => (
@@ -446,7 +517,14 @@ export function SettingsPage({
         <section>
           <div className="mb-3 flex items-center gap-2">
             <Cloud className="h-4 w-4 text-muted-foreground" />
-            <p className="text-sm font-medium">Synchronisation</p>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <p className="text-sm font-medium cursor-help">Synchronisation</p>
+              </TooltipTrigger>
+              <TooltipContent side="right" className="max-w-xs">
+                <p>Synchronisez vos tâches sur plusieurs appareils via le cloud. Vos données restent chiffrées et accessibles depuis n'importe où.</p>
+              </TooltipContent>
+            </Tooltip>
           </div>
           <div className="pl-6">
             <StorageSettings />
@@ -459,22 +537,37 @@ export function SettingsPage({
         <section>
           <div className="mb-3 flex items-center gap-2">
             <FileText className="h-4 w-4 text-muted-foreground" />
-            <p className="text-sm font-medium">Données locales</p>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <p className="text-sm font-medium cursor-help">Données locales</p>
+              </TooltipTrigger>
+              <TooltipContent side="right" className="max-w-xs">
+                <p>Emplacement du fichier JSON contenant toutes vos tâches et paramètres sur cet appareil. Utile pour les sauvegardes manuelles.</p>
+              </TooltipContent>
+            </Tooltip>
           </div>
-          <div className="space-y-2 pl-6">
-            <p className="break-all text-[10px] text-muted-foreground/70">{dataFilePath}</p>
-            <Button
-              type="button"
-              size="sm"
-              variant="ghost"
-              className="h-7 gap-1 px-2 text-xs"
-              onClick={() => {
-                void openDataFile()
-              }}
-            >
-              <FolderOpen className="h-3.5 w-3.5" />
-              Ouvrir le fichier
-            </Button>
+          <div className="pl-6">
+            <div className="flex items-center gap-2">
+              <p className="break-all text-[10px] text-muted-foreground/70 flex-1">{dataFilePath}</p>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    type="button"
+                    size="icon"
+                    variant="ghost"
+                    className="h-6 w-6 shrink-0"
+                    onClick={() => {
+                      void openDataFile()
+                    }}
+                  >
+                    <ExternalLink className="h-3.5 w-3.5" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="left" className="max-w-xs">
+                  <p>Ouvre le fichier de données dans votre explorateur de fichiers ou éditeur par défaut.</p>
+                </TooltipContent>
+              </Tooltip>
+            </div>
           </div>
         </section>
 
@@ -484,22 +577,37 @@ export function SettingsPage({
         <section>
           <div className="mb-3 flex items-center gap-2">
             <ScrollText className="h-4 w-4 text-muted-foreground" />
-            <p className="text-sm font-medium">Logs</p>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <p className="text-sm font-medium cursor-help">Logs</p>
+              </TooltipTrigger>
+              <TooltipContent side="right" className="max-w-xs">
+                <p>Fichier journal technique contenant les événements et erreurs de l'application. Utile pour le débogage et le support technique.</p>
+              </TooltipContent>
+            </Tooltip>
           </div>
-          <div className="space-y-2 pl-6">
-            <p className="break-all text-[10px] text-muted-foreground/70">{logFilePath}</p>
-            <Button
-              type="button"
-              size="sm"
-              variant="ghost"
-              className="h-7 gap-1 px-2 text-xs"
-              onClick={() => {
-                void openLogFile()
-              }}
-            >
-              <FolderOpen className="h-3.5 w-3.5" />
-              Ouvrir le fichier
-            </Button>
+          <div className="pl-6">
+            <div className="flex items-center gap-2">
+              <p className="break-all text-[10px] text-muted-foreground/70 flex-1">{logFilePath}</p>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    type="button"
+                    size="icon"
+                    variant="ghost"
+                    className="h-6 w-6 shrink-0"
+                    onClick={() => {
+                      void openLogFile()
+                    }}
+                  >
+                    <ExternalLink className="h-3.5 w-3.5" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="left" className="max-w-xs">
+                  <p>Ouvre le fichier de logs dans votre explorateur de fichiers ou éditeur par défaut.</p>
+                </TooltipContent>
+              </Tooltip>
+            </div>
           </div>
         </section>
 
@@ -513,7 +621,14 @@ export function SettingsPage({
           </div>
           <div className="space-y-3 pl-6">
             <div className="flex items-center justify-between gap-3">
-              <span className="text-xs text-muted-foreground">Version</span>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span className="text-xs text-muted-foreground cursor-help">Version</span>
+                </TooltipTrigger>
+                <TooltipContent side="left" className="max-w-xs">
+                  <p>Numéro de version actuel de l'application. Format : majeur.mineur.patch (ex: 0.2.3).</p>
+                </TooltipContent>
+              </Tooltip>
               <span className="text-xs font-mono font-medium">{appVersion}</span>
             </div>
             {lastChecked && (
@@ -527,38 +642,45 @@ export function SettingsPage({
                 </span>
               </div>
             )}
-            <Button
-              type="button"
-              size="sm"
-              variant="ghost"
-              className="h-7 gap-1 px-2 text-xs"
-              onClick={async () => {
-                await checkForUpdate()
-                
-                // Show feedback toast based on result
-                if (updateState === 'available') {
-                  toast({
-                    title: 'Mise à jour disponible',
-                    description: 'Une nouvelle version est disponible !',
-                  })
-                } else if (updateState === 'error') {
-                  toast({
-                    title: 'Erreur',
-                    description: 'Impossible de vérifier les mises à jour.',
-                    variant: 'destructive',
-                  })
-                } else {
-                  toast({
-                    title: 'Aucune mise à jour',
-                    description: 'Vous utilisez la dernière version.',
-                  })
-                }
-              }}
-              disabled={updateState === 'checking'}
-            >
-              <RefreshCw className={cn('h-3.5 w-3.5', updateState === 'checking' && 'animate-spin')} />
-              {updateState === 'checking' ? 'Vérification...' : 'Vérifier les mises à jour'}
-            </Button>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="ghost"
+                  className="h-7 gap-1 px-2 text-xs"
+                  onClick={async () => {
+                    await checkForUpdate()
+                    
+                    // Show feedback toast based on result
+                    if (updateState === 'available') {
+                      toast({
+                        title: 'Mise à jour disponible',
+                        description: 'Une nouvelle version est disponible !',
+                      })
+                    } else if (updateState === 'error') {
+                      toast({
+                        title: 'Erreur',
+                        description: 'Impossible de vérifier les mises à jour.',
+                        variant: 'destructive',
+                      })
+                    } else {
+                      toast({
+                        title: 'Aucune mise à jour',
+                        description: 'Vous utilisez la dernière version.',
+                      })
+                    }
+                  }}
+                  disabled={updateState === 'checking'}
+                >
+                  <RefreshCw className={cn('h-3.5 w-3.5', updateState === 'checking' && 'animate-spin')} />
+                  {updateState === 'checking' ? 'Vérification...' : 'Vérifier les mises à jour'}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="left" className="max-w-xs">
+                <p>Vérifie si une nouvelle version de l'application est disponible sur GitHub. Vous serez notifié si une mise à jour existe.</p>
+              </TooltipContent>
+            </Tooltip>
           </div>
         </section>
 
@@ -575,17 +697,24 @@ export function SettingsPage({
               Cette action supprimera toutes vos données et réinitialisera l'application à son état initial. Cette action est irréversible.
             </p>
             <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  className="h-7 gap-1 px-2 text-xs border-red-500/50 text-red-600 hover:bg-red-500/10 hover:text-red-700"
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                  Supprimer toutes les données
-                </Button>
-              </AlertDialogTrigger>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <AlertDialogTrigger asChild>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      className="h-7 gap-1 px-2 text-xs border-red-500/50 text-red-600 hover:bg-red-500/10 hover:text-red-700"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                      Supprimer toutes les données
+                    </Button>
+                  </AlertDialogTrigger>
+                </TooltipTrigger>
+                <TooltipContent side="right" className="max-w-xs">
+                  <p>⚠️ ATTENTION : Supprime définitivement toutes vos tâches, listes, labels et paramètres. Aucune sauvegarde automatique n'est créée. Cette action est irréversible !</p>
+                </TooltipContent>
+              </Tooltip>
               <AlertDialogContent>
                 <AlertDialogHeader>
                   <AlertDialogTitle>Êtes-vous absolument sûr ?</AlertDialogTitle>
@@ -618,5 +747,6 @@ export function SettingsPage({
         </section>
       </div>
     </div>
+    </TooltipProvider>
   )
 }

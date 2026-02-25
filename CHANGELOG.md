@@ -1,5 +1,28 @@
 # Changelog
 
+Toutes les modifications notables de ce projet seront documentées dans ce fichier.
+
+Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/),
+et ce projet adhère au [Semantic Versioning](https://semver.org/lang/fr/).
+
+## [Non publié]
+
+### Ajouté
+- Tooltips détaillés sur tous les paramètres de l'application pour une meilleure compréhension
+- Système automatique de changelog lors des releases GitHub
+- Dialog "Nouveautés" affichant le changelog formaté en Markdown
+- Bouton "Nouveautés" dans le banner de mise à jour
+- Commande Tauri `get_changelog` pour récupérer le changelog depuis GitHub ou localement
+- Script `.github/scripts/extract-changelog.sh` pour extraire automatiquement les sections de version
+- Support react-markdown pour afficher le changelog formaté
+
+### Modifié
+- GitHub Action `release.yml` : intègre désormais le changelog dans le corps de la release
+- UpdateBanner : ajout d'un bouton "Nouveautés" avant le bouton "Installer"
+
+### Corrigé
+- Variables CSS `--popover` et `--popover-foreground` manquantes causant des tooltips transparents
+- Tooltips désormais opaques avec fond adapté au thème (clair/sombre)
 
 ## [0.2.2] - 2026-02-25
 
@@ -12,11 +35,6 @@
 ### Fixed
 - App now properly hides from macOS Dock (menu bar only)
 - Fixed updater signing key configuration
-
-Toutes les modifications notables de ce projet seront documentées dans ce fichier.
-
-Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/),
-et ce projet adhère au [Semantic Versioning](https://semver.org/lang/fr/).
 
 ## [0.2.0] - 2026-02-25
 
