@@ -1330,13 +1330,13 @@ export function TodoList({
               }}
             >
               {completedExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-              <span>{`Tâches terminées (${completedTodos.length})`}</span>
+              <span>{t('todo.completedTasks', { count: completedTodos.length })}</span>
             </button>
           </li>
 
           {completedExpanded ? (
             completedTodos.length === 0 ? (
-              <li className="px-4 py-3 text-sm text-muted-foreground">Aucune tâche terminée</li>
+              <li className="px-4 py-3 text-sm text-muted-foreground">{t('todo.noCompletedTasks')}</li>
             ) : (
               <>
                 <AnimatePresence initial={false}>

@@ -379,10 +379,10 @@ export default function App() {
         </head>
         <body>
           <h1>${escapeHtml(activeList.name)}</h1>
-          <h2>Tâches actives</h2>
-          <ul>${activeRows || '<li>Aucune tâche active</li>'}</ul>
-          <h2>Tâches terminées</h2>
-          <ul>${completedRows || '<li>Aucune tâche terminée</li>'}</ul>
+          <h2>${t('todo.activeTasks')}</h2>
+          <ul>${activeRows || `<li>${t('app.noActiveTasks')}</li>`}</ul>
+          <h2>${t('todo.completedTasks')}</h2>
+          <ul>${completedRows || `<li>${t('todo.noCompletedTasks')}</li>`}</ul>
         </body>
       </html>
     `)

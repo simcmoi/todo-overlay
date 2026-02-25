@@ -394,9 +394,10 @@ export function SettingsPage({
               <SelectTrigger className="h-8 w-[160px] text-xs">
                 <SelectValue>
                   {LANGUAGE_OPTIONS.find((lang) => lang.value === settings.language) ? (
-                    <span className="flex items-center gap-2">
-                      <span>{LANGUAGE_OPTIONS.find((lang) => lang.value === settings.language)?.flag}</span>
-                      <span>{LANGUAGE_OPTIONS.find((lang) => lang.value === settings.language)?.label}</span>
+                    <span className="flex items-center gap-1.5">
+                      {LANGUAGE_OPTIONS.find((lang) => lang.value === settings.language)?.flag}
+                      {' '}
+                      {LANGUAGE_OPTIONS.find((lang) => lang.value === settings.language)?.label}
                     </span>
                   ) : (
                     'Select language'
@@ -406,7 +407,9 @@ export function SettingsPage({
               <SelectContent>
                 {LANGUAGE_OPTIONS.map((lang) => (
                   <SelectItem key={lang.value} value={lang.value}>
-                    {lang.label}
+                    <span className="flex items-center gap-1.5">
+                      {lang.flag} {lang.label}
+                    </span>
                   </SelectItem>
                 ))}
               </SelectContent>
