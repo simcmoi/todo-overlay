@@ -232,6 +232,33 @@ export class CloudStorageProvider implements StorageProvider {
         throw listsError
       }
       
+      // Si aucune liste n'existe, créer la liste par défaut
+      let finalLists = lists || []
+      if (finalLists.length === 0) {
+        console.log('[CloudStorage] No lists found, creating default list')
+        const defaultList: DbList = {
+          id: 'default',
+          user_id: userId,
+          name: 'Mes tâches',
+          created_at: Date.now(),
+          updated_at: Date.now(),
+          deleted_at: null,
+          device_id: this.getDeviceId(),
+          version: 1
+        }
+        
+        const { error: insertListError } = await this.client
+          .from('lists')
+          .insert(defaultList)
+        
+        if (insertListError) {
+          console.error('[CloudStorage] Failed to create default list:', insertListError)
+          throw insertListError
+        }
+        
+        finalLists = [defaultList]
+      }
+      
       // Charger tous les labels
       const { data: labels, error: labelsError } = await this.client
         .from('labels')
@@ -244,6 +271,34 @@ export class CloudStorageProvider implements StorageProvider {
           throw new Error('Votre session a expiré. Veuillez vous reconnecter.')
         }
         throw labelsError
+      }
+      
+      // Si aucun label n'existe, créer le label par défaut
+      let finalLabels = labels || []
+      if (finalLabels.length === 0) {
+        console.log('[CloudStorage] No labels found, creating default label')
+        const defaultLabel: DbLabel = {
+          id: 'general',
+          user_id: userId,
+          name: 'Général',
+          color: 'slate',
+          created_at: Date.now(),
+          updated_at: Date.now(),
+          deleted_at: null,
+          device_id: this.getDeviceId(),
+          version: 1
+        }
+        
+        const { error: insertLabelError } = await this.client
+          .from('labels')
+          .insert(defaultLabel)
+        
+        if (insertLabelError) {
+          console.error('[CloudStorage] Failed to create default label:', insertLabelError)
+          throw insertLabelError
+        }
+        
+        finalLabels = [defaultLabel]
       }
       
       // Charger les settings
@@ -265,7 +320,7 @@ export class CloudStorageProvider implements StorageProvider {
       
       const appData: AppData = {
         todos: (todos || []).map(this.dbTodoToTodo),
-        settings: settings ? this.dbSettingsToSettings(settings, lists || [], labels || []) : this.getDefaultSettings(lists || [], labels || [])
+        settings: settings ? this.dbSettingsToSettings(settings, finalLists, finalLabels) : this.getDefaultSettings(finalLists, finalLabels)
       }
       
       // Stocker les données actuelles pour les updates incrémentales
@@ -301,49 +356,14 @@ export class CloudStorageProvider implements StorageProvider {
       const deviceId = this.getDeviceId()
       const now = Date.now()
       
-      // Upsert todos
-      const dbTodos: DbTodo[] = data.todos.map(todo => ({
-        id: todo.id,
-        user_id: userId,
-        title: todo.title,
-        details: todo.details || null,
-        parent_id: todo.parentId || null,
-        list_id: todo.listId || null,
-        starred: todo.starred ?? false,
-        priority: todo.priority || 'none',
-        label_id: todo.labelId || null,
-        sort_index: todo.sortIndex || null,
-        created_at: todo.createdAt,
-        completed_at: todo.completedAt || null,
-        reminder_at: todo.reminderAt || null,
-        updated_at: now,
-        deleted_at: null,
-        device_id: deviceId,
-        version: 1
-      }))
+      // IMPORTANT: Upsert dans l'ordre correct pour respecter les foreign keys
+      // 1. Lists (pas de dépendances)
+      // 2. Labels (pas de dépendances)
+      // 3. Settings (référence active_list_id)
+      // 4. Todos (référence list_id, label_id, parent_id)
       
-      if (dbTodos.length > 0) {
-        console.log('[CloudStorage] Upserting todos:', JSON.stringify(dbTodos, null, 2))
-        const { error: todosError } = await this.client
-          .from('todos')
-          .upsert(dbTodos, { onConflict: 'id' })
-        
-        if (todosError) {
-          console.error('[CloudStorage] Todos upsert error:', {
-            message: todosError.message,
-            details: todosError.details,
-            hint: todosError.hint,
-            code: todosError.code
-          })
-          if (todosError.message.includes('JWT') || todosError.message.includes('expired')) {
-            throw new Error('Votre session a expiré. Veuillez vous reconnecter.')
-          }
-          throw todosError
-        }
-        console.log('[CloudStorage] Todos upserted successfully')
-      }
-      
-      // Upsert lists
+      // Upsert lists FIRST
+      console.log('[CloudStorage] data.settings.lists:', JSON.stringify(data.settings.lists, null, 2))
       const dbLists: DbList[] = data.settings.lists.map(list => ({
         id: list.id,
         user_id: userId,
@@ -354,6 +374,9 @@ export class CloudStorageProvider implements StorageProvider {
         device_id: deviceId,
         version: 1
       }))
+      
+      console.log('[CloudStorage] dbLists.length:', dbLists.length)
+      console.log('[CloudStorage] dbLists:', JSON.stringify(dbLists, null, 2))
       
       if (dbLists.length > 0) {
         console.log('[CloudStorage] Upserting lists:', JSON.stringify(dbLists, null, 2))
@@ -377,6 +400,7 @@ export class CloudStorageProvider implements StorageProvider {
       }
       
       // Upsert labels
+      console.log('[CloudStorage] data.settings.labels:', JSON.stringify(data.settings.labels, null, 2))
       const dbLabels: DbLabel[] = data.settings.labels.map(label => ({
         id: label.id,
         user_id: userId,
@@ -443,6 +467,49 @@ export class CloudStorageProvider implements StorageProvider {
         throw settingsError
       }
       console.log('[CloudStorage] Settings upserted successfully')
+      
+      // Upsert todos LAST (après lists et labels pour respecter les foreign keys)
+      console.log('[CloudStorage] data.todos.length:', data.todos.length)
+      const dbTodos: DbTodo[] = data.todos.map(todo => ({
+        id: todo.id,
+        user_id: userId,
+        title: todo.title,
+        details: todo.details || null,
+        parent_id: todo.parentId || null,
+        list_id: todo.listId || null,
+        starred: todo.starred ?? false,
+        priority: todo.priority || 'none',
+        label_id: todo.labelId || null,
+        sort_index: todo.sortIndex || null,
+        created_at: todo.createdAt,
+        completed_at: todo.completedAt || null,
+        reminder_at: todo.reminderAt || null,
+        updated_at: now,
+        deleted_at: null,
+        device_id: deviceId,
+        version: 1
+      }))
+      
+      if (dbTodos.length > 0) {
+        console.log('[CloudStorage] Upserting todos:', JSON.stringify(dbTodos, null, 2))
+        const { error: todosError } = await this.client
+          .from('todos')
+          .upsert(dbTodos, { onConflict: 'id' })
+        
+        if (todosError) {
+          console.error('[CloudStorage] Todos upsert error:', {
+            message: todosError.message,
+            details: todosError.details,
+            hint: todosError.hint,
+            code: todosError.code
+          })
+          if (todosError.message.includes('JWT') || todosError.message.includes('expired')) {
+            throw new Error('Votre session a expiré. Veuillez vous reconnecter.')
+          }
+          throw todosError
+        }
+        console.log('[CloudStorage] Todos upserted successfully')
+      }
       
       // Mettre à jour les données actuelles
       this.currentData = data
