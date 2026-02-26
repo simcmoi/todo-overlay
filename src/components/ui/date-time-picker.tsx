@@ -147,7 +147,7 @@ export function DateTimePicker({ date, onDateTimeChange, onClose }: DateTimePick
       <div className="border-t px-3 py-2 flex gap-2 bg-popover">
         <Button
           type="button"
-          variant="outline"
+          variant="destructive"
           size="sm"
           className="flex-1"
           onClick={handleCancel}
@@ -156,6 +156,7 @@ export function DateTimePicker({ date, onDateTimeChange, onClose }: DateTimePick
         </Button>
         <Button
           type="button"
+          variant="outline"
           size="sm"
           className="flex-1"
           onClick={handleConfirm}
