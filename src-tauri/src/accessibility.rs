@@ -9,7 +9,7 @@ pub fn open_accessibility_settings() -> Result<(), String> {
             .map_err(|e| format!("Failed to open System Preferences: {}", e))?;
         Ok(())
     }
-    
+
     #[cfg(not(target_os = "macos"))]
     {
         Ok(())
