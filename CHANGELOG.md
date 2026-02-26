@@ -7,6 +7,22 @@ et ce projet adhère au [Semantic Versioning](https://semver.org/lang/fr/).
 
 ## [Non publié]
 
+## [0.2.6] - 2026-02-26
+
+### Ajouté
+- Lien "Star on GitHub" en bas de l'application pour encourager le soutien du projet
+- Plugin shell Tauri pour ouvrir les liens externes dans le navigateur par défaut
+
+### Modifié
+- Upgrade vers Tailwind CSS v4 avec le nouveau thème Nova Yellow
+- Contour de l'overlay renforcé (bordure 2px grise) pour meilleure visibilité sur fond blanc
+- Padding de l'overlay augmenté pour que les coins arrondis soient bien visibles
+
+### Corrigé
+- Test unitaire "should update settings" qui échouait dans la CI
+- Problème d'ouverture des liens externes dans l'application Tauri
+- Configuration des permissions shell pour les fenêtres "main" et "overlay"
+
 ## [0.2.5] - 2026-02-25
 
 ### Ajouté
