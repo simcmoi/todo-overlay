@@ -2,9 +2,11 @@
 
 # 📝 BlinkDo
 
-**Instant overlay todo list with global hotkey**
+**Your todos appear in the blink of an eye** ⚡👁️
 
 *Press `Shift+Space` anywhere to capture tasks. Built with Rust + Tauri + React.*
+
+> **Why "BlinkDo"?** Because your todo list appears faster than you can blink — instant access with a single keystroke, no switching windows, no breaking flow.
 
 [![CI](https://github.com/simcmoi/blinkdo/actions/workflows/ci.yml/badge.svg)](https://github.com/simcmoi/blinkdo/actions/workflows/ci.yml)
 [![GitHub release](https://img.shields.io/github/v/release/simcmoi/blinkdo?color=blue&label=version)](https://github.com/simcmoi/blinkdo/releases/latest)
@@ -21,10 +23,12 @@
 
 ## ✨ Features
 
-BlinkDo is a **cross-platform desktop app** that appears instantly over any window with a single keyboard shortcut. Built with **Rust** and **React** for native performance and modern UI.
+BlinkDo is a **cross-platform desktop app** that appears instantly over any window with a single keyboard shortcut. The name says it all: your tasks appear **in the blink of an eye** — faster than you can think.
+
+Built with **Rust** and **React** for native performance and modern UI.
 
 **Core Features:**
-- ⚡ **Global hotkey overlay** - Press `Shift+Space` anywhere, anytime
+- ⚡ **Blink-fast overlay** - Press `Shift+Space`, and it's there. Instantly.
 - 🔒 **100% offline & private** - Local JSON storage, no cloud, no tracking
 - 🪶 **Ultra-lightweight** - ~10MB download, <50MB RAM usage
 - 🚀 **Native performance** - Built with Rust + Tauri (not Electron)
@@ -40,7 +44,8 @@ BlinkDo is a **cross-platform desktop app** that appears instantly over any wind
 - 🗑️ Archive & history
 - 🔍 Search & filter across all tasks
 
-> Perfect for developers, designers, and anyone who needs quick task capture without breaking flow.
+> **Perfect for developers, designers, and anyone who needs instant task capture without breaking flow.**  
+> Blink and your todos are there. Blink again and you're back to work.
 
 ---
 

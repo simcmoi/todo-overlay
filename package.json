@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.3.0",
   "type": "module",
-  "description": "Fast, privacy-first todo app with global hotkey overlay. Built with Rust + Tauri + React. Cross-platform desktop task manager.",
+  "description": "Your todos appear in the blink of an eye. Lightning-fast todo app with global hotkey overlay. Built with Rust + Tauri + React.",
   "author": "Simon Fessy",
   "license": "MIT",
   "repository": {
