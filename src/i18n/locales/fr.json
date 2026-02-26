@@ -107,14 +107,17 @@
     "status": {
       "downloading": "Téléchargement de la mise à jour",
       "installing": "Installation de la mise à jour",
-      "restarting": "Redémarrage de l'application"
+      "restarting": "Redémarrage de l'application",
+      "error": "Échec de la mise à jour"
     },
     "downloadingVersion": "Téléchargement de la version {{version}}...",
     "installingVersion": "Installation de la version {{version}}...",
     "restartingVersion": "Redémarrage vers la version {{version}}...",
+    "errorVersion": "Échec de la mise à jour vers la version {{version}}",
     "downloadingMessage": "Veuillez patienter pendant le téléchargement de la mise à jour. Cela peut prendre quelques instants.",
     "installingMessage": "La mise à jour est en cours d'installation. L'application va redémarrer automatiquement.",
-    "restartingMessage": "L'application redémarre avec la nouvelle version..."
+    "restartingMessage": "L'application redémarre avec la nouvelle version...",
+    "errorMessage": "Une erreur s'est produite lors de la mise à jour de l'application. Veuillez réessayer plus tard ou télécharger la mise à jour manuellement depuis GitHub."
   },
   "sync": {
     "local": "Local",

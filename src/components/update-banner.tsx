@@ -31,7 +31,7 @@ export function UpdateBanner() {
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -10 }}
           transition={{ duration: 0.2, ease: 'easeOut' }}
-          className="mb-2 flex items-center justify-between gap-2 rounded-lg border border-blue-200/50 bg-blue-50/50 px-2.5 py-1.5 text-xs dark:border-blue-800/30 dark:bg-blue-950/30"
+          className="mb-2 flex items-center justify-between gap-2 rounded-lg border border-blue-200 bg-blue-50 px-2.5 py-1.5 text-xs dark:border-blue-800 dark:bg-blue-950"
         >
           <div className="flex items-center gap-1.5 text-blue-700 dark:text-blue-300">
             <div className={cn(

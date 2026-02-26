@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Download, CheckCircle2 } from 'lucide-react'
+import { Download, CheckCircle2, AlertCircle, X } from 'lucide-react'
 import {
   Dialog,
   DialogContent,
@@ -9,7 +9,8 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Progress } from '@/components/ui/progress'
-import { listen } from '@tauri-apps/api/event'
+import { Button } from '@/components/ui/button'
+import { listen, type UnlistenFn } from '@tauri-apps/api/event'
 
 type UpdateDownloadDialogProps = {
   version: string
@@ -23,121 +24,162 @@ type ProgressPayload = {
   contentLength: number
 }
 
+type Status = 'downloading' | 'installing' | 'restarting' | 'error'
+
 export function UpdateDownloadDialog({ version, open, onOpenChange }: UpdateDownloadDialogProps) {
   const { t } = useTranslation()
   const [progress, setProgress] = useState(0)
   const [downloadSpeed, setDownloadSpeed] = useState(0)
   const [downloadedBytes, setDownloadedBytes] = useState(0)
   const [totalBytes, setTotalBytes] = useState(0)
-  const [status, setStatus] = useState<'downloading' | 'installing' | 'restarting'>('downloading')
+  const [status, setStatus] = useState<Status>('downloading')
+  const [errorMessage, setErrorMessage] = useState<string>('')
   
-  // Pour calculer la vitesse de téléchargement
-  const [lastUpdate, setLastUpdate] = useState(() => Date.now())
-  const [lastBytes, setLastBytes] = useState(0)
+  // Utiliser des refs pour le tracking du download speed
+  const speedTrackingRef = useRef({
+    lastUpdate: 0,
+    lastBytes: 0
+  })
 
-  // Reset state when dialog closes
-  useEffect(() => {
-    if (!open) {
-      return () => {
-        setProgress(0)
-        setDownloadSpeed(0)
-        setDownloadedBytes(0)
-        setTotalBytes(0)
-        setStatus('downloading')
-        setLastUpdate(Date.now())
-        setLastBytes(0)
-      }
-    }
-  }, [open])
-
-  useEffect(() => {
-    if (!open) return
-
-    // Listen to download progress events
-    const unlistenProgress = listen<ProgressPayload>('update-download-progress', (event) => {
-      const { progress: progressPercent, chunkLength, contentLength } = event.payload
-      setProgress(progressPercent)
-      
-      // Set total bytes on first event
-      if (totalBytes === 0 && contentLength > 0) {
-        setTotalBytes(contentLength)
-      }
-      
-      // Calculate download speed
-      const now = Date.now()
-      const timeDiff = (now - lastUpdate) / 1000 // seconds
-      
-      if (timeDiff > 0.5) {
-        const bytesDiff = chunkLength - lastBytes
-        const speed = bytesDiff / timeDiff // bytes per second
-        
-        setDownloadSpeed(speed)
-        setDownloadedBytes(chunkLength)
-        setLastUpdate(now)
-        setLastBytes(chunkLength)
-      }
-    })
-
-    // Listen to status change events
-    const unlistenStatus = listen<string>('update-progress', (event) => {
-      const newStatus = event.payload as 'downloading' | 'installing' | 'restarting'
-      setStatus(newStatus)
-      
-      if (newStatus === 'installing') {
-        setProgress(100)
-      }
-    })
-
-    return () => {
-      void unlistenProgress.then(fn => fn())
-      void unlistenStatus.then(fn => fn())
-    }
-  }, [open, lastUpdate, lastBytes, totalBytes])
-
-  const formatBytes = (bytes: number): string => {
+  const formatBytes = useCallback((bytes: number): string => {
     if (bytes === 0) return '0 B'
     const k = 1024
     const sizes = ['B', 'KB', 'MB', 'GB']
     const i = Math.floor(Math.log(bytes) / Math.log(k))
     return `${(bytes / Math.pow(k, i)).toFixed(2)} ${sizes[i]}`
-  }
+  }, [])
 
-  const formatSpeed = (bytesPerSecond: number): string => {
+  const formatSpeed = useCallback((bytesPerSecond: number): string => {
     return `${formatBytes(bytesPerSecond)}/s`
+  }, [formatBytes])
+
+  const formatETA = useCallback((speed: number, remaining: number): string => {
+    if (speed <= 0 || remaining <= 0) return '—'
+    const seconds = Math.round(remaining / speed)
+    if (seconds < 60) return `${seconds}s`
+    if (seconds < 3600) return `${Math.round(seconds / 60)}min`
+    return `${Math.round(seconds / 3600)}h`
+  }, [])
+
+  useEffect(() => {
+    if (!open) return
+
+    // Initialize tracking when dialog opens
+    speedTrackingRef.current = {
+      lastUpdate: Date.now(),
+      lastBytes: 0
+    }
+
+    let unlistenProgress: UnlistenFn | null = null
+    let unlistenStatus: UnlistenFn | null = null
+    let unlistenError: UnlistenFn | null = null
+
+    const setupListeners = async () => {
+      // Listen to download progress events
+      unlistenProgress = await listen<ProgressPayload>('update-download-progress', (event) => {
+        const { progress: progressPercent, chunkLength, contentLength } = event.payload
+        setProgress(progressPercent)
+        
+        // Set total bytes
+        if (contentLength > 0) {
+          setTotalBytes(contentLength)
+        }
+        
+        // Calculate download speed
+        const now = Date.now()
+        const timeDiff = (now - speedTrackingRef.current.lastUpdate) / 1000 // seconds
+        
+        if (timeDiff > 0.5) {
+          const bytesDiff = chunkLength - speedTrackingRef.current.lastBytes
+          const speed = bytesDiff / timeDiff // bytes per second
+          
+          // Only update if speed is positive
+          if (speed > 0) {
+            setDownloadSpeed(speed)
+          }
+          setDownloadedBytes(chunkLength)
+          speedTrackingRef.current.lastUpdate = now
+          speedTrackingRef.current.lastBytes = chunkLength
+        }
+      })
+
+      // Listen to status change events
+      unlistenStatus = await listen<string>('update-progress', (event) => {
+        const newStatus = event.payload as Status
+        setStatus(newStatus)
+        
+        if (newStatus === 'installing') {
+          setProgress(100)
+        }
+      })
+
+      // Listen to error events
+      unlistenError = await listen<string>('update-error', (event) => {
+        setStatus('error')
+        setErrorMessage(event.payload)
+      })
+    }
+
+    void setupListeners()
+
+    return () => {
+      if (unlistenProgress) unlistenProgress()
+      if (unlistenStatus) unlistenStatus()
+      if (unlistenError) unlistenError()
+    }
+  }, [open])
+
+  // Empêcher la fermeture pendant le téléchargement ou l'installation
+  const canClose = status === 'error' || status === 'restarting'
+
+  const handleOpenChange = (newOpen: boolean) => {
+    if (!newOpen && !canClose) {
+      // Empêcher la fermeture
+      return
+    }
+    onOpenChange(newOpen)
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      <DialogContent 
+        className="sm:max-w-md" 
+        onPointerDownOutside={(e) => !canClose && e.preventDefault()} 
+        onEscapeKeyDown={(e) => !canClose && e.preventDefault()}
+      >
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             {status === 'downloading' && <Download className="h-5 w-5 animate-bounce" />}
             {status === 'installing' && <CheckCircle2 className="h-5 w-5 text-green-500" />}
             {status === 'restarting' && <CheckCircle2 className="h-5 w-5 text-green-500" />}
+            {status === 'error' && <AlertCircle className="h-5 w-5 text-red-500" />}
             {t(`update.status.${status}`)}
           </DialogTitle>
           <DialogDescription>
             {status === 'downloading' && t('update.downloadingVersion', { version })}
             {status === 'installing' && t('update.installingVersion', { version })}
             {status === 'restarting' && t('update.restartingVersion', { version })}
+            {status === 'error' && t('update.errorVersion', { version })}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-4">
           {/* Progress bar */}
-          <div className="space-y-2">
-            <Progress value={progress} className="h-2" />
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">
-                {progress.toFixed(1)}%
-              </span>
-              {status === 'downloading' && downloadSpeed > 0 && (
-                <span className="font-mono text-muted-foreground">
-                  {formatSpeed(downloadSpeed)}
+          {status !== 'error' && (
+            <div className="space-y-2">
+              <Progress value={progress} className="h-2" />
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">
+                  {progress.toFixed(1)}%
                 </span>
-              )}
+                {status === 'downloading' && downloadSpeed > 0 && (
+                  <span className="font-mono text-muted-foreground">
+                    {formatSpeed(downloadSpeed)}
+                  </span>
+                )}
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Download info */}
           {status === 'downloading' && totalBytes > 0 && (
@@ -147,14 +189,14 @@ export function UpdateDownloadDialog({ version, open, onOpenChange }: UpdateDown
               </span>
               {downloadSpeed > 0 && (
                 <span>
-                  ETA: {Math.round((totalBytes - downloadedBytes) / downloadSpeed)}s
+                  ETA: {formatETA(downloadSpeed, totalBytes - downloadedBytes)}
                 </span>
               )}
             </div>
           )}
 
           {/* Status messages */}
-          <div className="rounded-md bg-muted p-3 text-sm">
+          <div className={`rounded-md p-3 text-sm ${status === 'error' ? 'bg-red-50 dark:bg-red-950' : 'bg-muted'}`}>
             {status === 'downloading' && (
               <p className="text-muted-foreground">
                 {t('update.downloadingMessage')}
@@ -170,7 +212,33 @@ export function UpdateDownloadDialog({ version, open, onOpenChange }: UpdateDown
                 {t('update.restartingMessage')}
               </p>
             )}
+            {status === 'error' && (
+              <div className="space-y-2">
+                <p className="font-medium text-red-700 dark:text-red-400">
+                  {t('update.errorMessage')}
+                </p>
+                {errorMessage && (
+                  <p className="text-xs text-red-600/80 dark:text-red-400/80">
+                    {errorMessage}
+                  </p>
+                )}
+              </div>
+            )}
           </div>
+
+          {/* Close button for error state */}
+          {status === 'error' && (
+            <div className="flex justify-end">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onOpenChange(false)}
+              >
+                <X className="mr-2 h-4 w-4" />
+                {t('common.close')}
+              </Button>
+            </div>
+          )}
         </div>
       </DialogContent>
     </Dialog>

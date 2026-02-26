@@ -203,14 +203,17 @@
     "status": {
       "downloading": "Downloading Update",
       "installing": "Installing Update",
-      "restarting": "Restarting Application"
+      "restarting": "Restarting Application",
+      "error": "Update Failed"
     },
     "downloadingVersion": "Downloading version {{version}}...",
     "installingVersion": "Installing version {{version}}...",
     "restartingVersion": "Restarting to version {{version}}...",
+    "errorVersion": "Failed to update to version {{version}}",
     "downloadingMessage": "Please wait while we download the update. This may take a few moments.",
     "installingMessage": "The update is being installed. The app will restart automatically.",
-    "restartingMessage": "The application is restarting with the new version..."
+    "restartingMessage": "The application is restarting with the new version...",
+    "errorMessage": "An error occurred while updating the application. Please try again later or download the update manually from GitHub."
   },
   "sync": {
     "local": "Local",

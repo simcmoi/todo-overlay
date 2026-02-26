@@ -72,40 +72,53 @@ pub async fn install_update(app: AppHandle) -> Result<(), String> {
                 log::info!("Téléchargement de la version {}...", update.version);
 
                 // Émettre des événements de progression
-                let _ = app.emit("update-progress", "downloading");
+                if let Err(e) = app.emit("update-progress", "downloading") {
+                    log::warn!("Échec de l'émission de l'événement update-progress: {}", e);
+                }
 
                 match update
                     .download_and_install(
                         |chunk_length, content_length| {
                             if let Some(total) = content_length {
                                 let progress = (chunk_length as f64 / total as f64) * 100.0;
-                                log::debug!("Progression du téléchargement : {:.1}%", progress);
-                                
+                                log::debug!("Progression du téléchargement : {:.1}% ({}/{})", progress, chunk_length, total);
+
                                 // Émettre la progression avec les détails
-                                let _ = app.emit("update-download-progress", serde_json::json!({
+                                if let Err(e) = app.emit("update-download-progress", serde_json::json!({
                                     "progress": progress,
                                     "chunkLength": chunk_length,
                                     "contentLength": total
-                                }));
+                                })) {
+                                    log::warn!("Échec de l'émission de l'événement update-download-progress: {}", e);
+                                }
                             }
                         },
                         || {
                             log::info!("Téléchargement terminé, installation en cours...");
-                            let _ = app.emit("update-progress", "installing");
+                            if let Err(e) = app.emit("update-progress", "installing") {
+                                log::warn!("Échec de l'émission de l'événement update-progress: {}", e);
+                            }
                         },
                     )
                     .await
                 {
                     Ok(()) => {
                         log::info!("Mise à jour installée avec succès, redémarrage...");
-                        let _ = app.emit("update-progress", "restarting");
+                        if let Err(e) = app.emit("update-progress", "restarting") {
+                            log::warn!("Échec de l'émission de l'événement update-progress: {}", e);
+                        }
                         app.restart();
                         #[allow(unreachable_code)]
                         Ok(())
                     }
                     Err(error) => {
                         log::error!("Échec de l'installation de la mise à jour : {error}");
-                        Err(format!("Échec de l'installation : {error}"))
+                        let error_msg = format!("Échec de l'installation : {error}");
+                        // Émettre un événement d'erreur
+                        if let Err(e) = app.emit("update-error", &error_msg) {
+                            log::warn!("Échec de l'émission de l'événement update-error: {}", e);
+                        }
+                        Err(error_msg)
                     }
                 }
             }
@@ -115,12 +128,20 @@ pub async fn install_update(app: AppHandle) -> Result<(), String> {
             }
             Err(error) => {
                 log::error!("Erreur lors de la vérification des mises à jour : {error}");
-                Err(format!("Échec de la vérification : {error}"))
+                let error_msg = format!("Échec de la vérification : {error}");
+                if let Err(e) = app.emit("update-error", &error_msg) {
+                    log::warn!("Échec de l'émission de l'événement update-error: {}", e);
+                }
+                Err(error_msg)
             }
         },
         Err(error) => {
             log::error!("Échec de l'initialisation de l'updater : {error}");
-            Err(format!("Échec de l'initialisation de l'updater : {error}"))
+            let error_msg = format!("Échec de l'initialisation de l'updater : {error}");
+            if let Err(e) = app.emit("update-error", &error_msg) {
+                log::warn!("Échec de l'émission de l'événement update-error: {}", e);
+            }
+            Err(error_msg)
         }
     }
 }
