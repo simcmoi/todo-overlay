@@ -8,7 +8,7 @@ import {
   useRef,
   useState,
 } from 'react'
-import { AlertTriangle, CalendarClock, Check, ChevronDown, ChevronRight, Ellipsis, FileText, GripVertical, Plus, Star, Tags, X } from 'lucide-react'
+import { AlertTriangle, CalendarClock, Check, ChevronDown, ChevronRight, Ellipsis, FileText, Plus, Star, Tags, X } from 'lucide-react'
 import { AnimatePresence, LayoutGroup, motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 import { Badge } from '@/components/ui/badge'
@@ -1096,49 +1096,35 @@ export function TodoList({
                         void onRowDrop(event, todo.id)
                       }}
                     >
-                      <motion.div
-                        layout
-                        layoutId={`todo-card-${todo.id}`}
-                        className={cn(
-                          'flex items-start gap-1.5 rounded-md px-1 py-1 hover:bg-muted/60 transition-colors',
-                          priority === 'urgent' ? 'ring-1 ring-destructive/35' : undefined,
-                          draggingTodoId === todo.id ? 'opacity-55' : undefined,
-                        )}
+                      <div
+                        draggable={canReorder && editingId === null}
+                        onDragStart={(event) => {
+                          onRowDragStart(event, todo.id)
+                        }}
+                        onDragEnd={() => {
+                          clearDragState()
+                        }}
                       >
-                        <button
-                          type="button"
-                          draggable={canReorder && editingId === null}
-                          onDragStart={(event) => {
-                            onRowDragStart(event, todo.id)
-                          }}
-                          onDragEnd={() => {
-                            clearDragState()
-                          }}
-                          onClick={(event) => {
-                            event.preventDefault()
-                            event.stopPropagation()
-                          }}
+                        <motion.div
+                          layout
+                          layoutId={`todo-card-${todo.id}`}
                           className={cn(
-                            'mt-0.5 inline-flex h-4 w-4 items-center justify-center rounded-sm text-muted-foreground',
-                            canReorder
-                              ? 'cursor-grab active:cursor-grabbing hover:text-foreground'
-                              : 'cursor-default opacity-40',
+                            'flex items-start gap-1.5 rounded-md px-1 py-1 hover:bg-muted/60 transition-colors',
+                            priority === 'urgent' ? 'ring-1 ring-destructive/35' : undefined,
+                            draggingTodoId === todo.id ? 'opacity-55' : undefined,
+                            canReorder && editingId === null ? 'cursor-grab active:cursor-grabbing' : undefined,
                           )}
-                          aria-label={t('todo.moveTask')}
                         >
-                          <GripVertical className="h-3.5 w-3.5" />
-                        </button>
-
-                        <Checkbox
-                          className="mt-0.5"
-                          checked={Boolean(todo.completedAt)}
-                          onCheckedChange={async (checked) => {
-                            if (checked === true) {
-                              await onSetCompleted(todo.id, true)
-                            }
-                          }}
-                          aria-label={t('todo.markCompleted', { title: todo.title })}
-                        />
+                          <Checkbox
+                            className="mt-0.5"
+                            checked={Boolean(todo.completedAt)}
+                            onCheckedChange={async (checked) => {
+                              if (checked === true) {
+                                await onSetCompleted(todo.id, true)
+                              }
+                            }}
+                            aria-label={t('todo.markCompleted', { title: todo.title })}
+                          />
 
                         <button
                           type="button"
@@ -1321,6 +1307,7 @@ export function TodoList({
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </motion.div>
+                    </div>
                     </motion.li>,
                   )
                 }
