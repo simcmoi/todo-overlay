@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { Check, ChevronDown, Filter, Home, MoreHorizontal, Plus, Printer, Settings, Star, Trash2 } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { listen } from '@tauri-apps/api/event'
+import { open } from '@tauri-apps/plugin-shell'
 import { useTranslation } from 'react-i18next'
 import { SettingsPage } from '@/components/settings-page'
 import { TodoList } from '@/components/todo-list'
@@ -816,9 +817,20 @@ export default function App() {
           )}
         </div>
 
-        <p className="mt-2 text-[11px] text-muted-foreground">
-          {error ? `Erreur: ${error}` : `${settings.globalShortcut} pour afficher/masquer · Tri: ${selectedSortModeLabel}`}
-        </p>
+        <div className="mt-2 flex items-center justify-between gap-2 text-[11px] text-muted-foreground">
+          <p>
+            {error ? `Erreur: ${error}` : `${settings.globalShortcut} pour afficher/masquer · Tri: ${selectedSortModeLabel}`}
+          </p>
+          <button
+            onClick={() => {
+              void open('https://github.com/simcmoi/todo-overlay')
+            }}
+            className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+          >
+            <Star className="h-3 w-3" />
+            <span>Star on GitHub</span>
+          </button>
+        </div>
       </motion.section>
       <Toaster />
     </main>
