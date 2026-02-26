@@ -1,7 +1,7 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
   "productName": "ToDo Overlay",
-  "version": "0.2.7",
+  "version": "0.2.8",
   "identifier": "com.simon.todooverlay",
   "build": {
     "frontendDist": "../dist",
