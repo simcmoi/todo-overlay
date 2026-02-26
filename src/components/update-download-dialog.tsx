@@ -32,21 +32,26 @@ export function UpdateDownloadDialog({ version, open, onOpenChange }: UpdateDown
   const [status, setStatus] = useState<'downloading' | 'installing' | 'restarting'>('downloading')
   
   // Pour calculer la vitesse de téléchargement
-  const [lastUpdate, setLastUpdate] = useState(Date.now())
+  const [lastUpdate, setLastUpdate] = useState(() => Date.now())
   const [lastBytes, setLastBytes] = useState(0)
 
+  // Reset state when dialog closes
   useEffect(() => {
     if (!open) {
-      // Reset state when dialog closes
-      setProgress(0)
-      setDownloadSpeed(0)
-      setDownloadedBytes(0)
-      setTotalBytes(0)
-      setStatus('downloading')
-      setLastUpdate(Date.now())
-      setLastBytes(0)
-      return
+      return () => {
+        setProgress(0)
+        setDownloadSpeed(0)
+        setDownloadedBytes(0)
+        setTotalBytes(0)
+        setStatus('downloading')
+        setLastUpdate(Date.now())
+        setLastBytes(0)
+      }
     }
+  }, [open])
+
+  useEffect(() => {
+    if (!open) return
 
     // Listen to download progress events
     const unlistenProgress = listen<ProgressPayload>('update-download-progress', (event) => {
