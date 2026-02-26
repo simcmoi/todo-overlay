@@ -16,6 +16,7 @@ import { useTodoStore } from '@/store/use-todo-store'
 import { AuthForm } from '@/components/auth/AuthForm'
 import { SyncStatusIndicator } from '@/components/storage/SyncStatusIndicator'
 import { Cloud, HardDrive, LogOut, AlertTriangle, Loader2, Info } from 'lucide-react'
+import { ENABLE_CLOUD_FEATURES } from '@/config/features'
 
 export function StorageSettings() {
   const {
@@ -32,6 +33,11 @@ export function StorageSettings() {
 
   const isCloudMode = storageMode === 'cloud'
   const userEmail = getCurrentUserEmail()
+
+  // Si les fonctionnalités cloud sont désactivées, ne rien afficher
+  if (!ENABLE_CLOUD_FEATURES) {
+    return null
+  }
 
   const handleStorageModeToggle = async (checked: boolean) => {
     const targetMode = checked ? 'cloud' : 'local'

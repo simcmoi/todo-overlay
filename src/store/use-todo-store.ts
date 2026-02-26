@@ -21,6 +21,7 @@ import {
 } from '@/lib/tauri'
 import { createStorageProvider, type StorageProvider, type StorageMode, type SyncStatus } from '@/lib/storage'
 import type { Settings, Todo, TodoPriority, ViewMode } from '@/types/todo'
+import { ENABLE_CLOUD_FEATURES } from '@/config/features'
 
 type TodoStore = {
   hydrated: boolean
@@ -95,6 +96,11 @@ const defaultSettings: Settings = {
 
 // Récupérer le mode de stockage depuis localStorage (par défaut: local)
 const getStoredStorageMode = (): StorageMode => {
+  // Si les fonctionnalités cloud sont désactivées, forcer le mode local
+  if (!ENABLE_CLOUD_FEATURES) {
+    return 'local'
+  }
+
   try {
     const stored = localStorage.getItem('todo-overlay-storage-mode')
     return (stored === 'cloud' ? 'cloud' : 'local') as StorageMode
@@ -124,6 +130,9 @@ export const useTodoStore = create<TodoStore>((set, get) => ({
 
   // Storage management
   setStorageMode: async (mode: StorageMode) => {
+    // Si les fonctionnalités cloud sont désactivées, forcer le mode local
+    const targetMode = !ENABLE_CLOUD_FEATURES ? 'local' : mode
+
     const currentProvider = get().storageProvider
 
     // Cleanup old provider
@@ -132,18 +141,18 @@ export const useTodoStore = create<TodoStore>((set, get) => ({
     }
 
     // Create and initialize new provider
-    const newProvider = createStorageProvider(mode)
+    const newProvider = createStorageProvider(targetMode)
     await newProvider.initialize()
 
     // Update state
     set({
-      storageMode: mode,
+      storageMode: targetMode,
       storageProvider: newProvider,
       syncStatus: newProvider.getSyncStatus(),
     })
 
     // Persist mode
-    setStoredStorageMode(mode)
+    setStoredStorageMode(targetMode)
 
     // Reload data with new provider
     await get().hydrate()

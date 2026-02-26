@@ -9,6 +9,7 @@ import { useTodoStore } from '@/store/use-todo-store'
 import type { StorageMode } from '@/lib/storage/types'
 import { cn } from '@/lib/utils'
 import { useTranslation } from 'react-i18next'
+import { ENABLE_CLOUD_FEATURES } from '@/config/features'
 
 type OnboardingStep = 'welcome' | 'storage-choice' | 'cloud-setup'
 type CloudMode = 'signup' | 'signin'
@@ -86,7 +87,12 @@ export function Onboarding({ onComplete }: OnboardingProps) {
     if (mode === 'local') {
       handleLocalSetup()
     } else {
-      setStep('cloud-setup')
+      // Si le cloud est désactivé, forcer le mode local
+      if (!ENABLE_CLOUD_FEATURES) {
+        handleLocalSetup()
+      } else {
+        setStep('cloud-setup')
+      }
     }
   }
 
@@ -254,35 +260,38 @@ export function Onboarding({ onComplete }: OnboardingProps) {
                 </div>
               </button>
 
-              <button
-                onClick={() => handleStorageChoice('cloud')}
-                disabled={isLoading}
-                className="p-6 border-2 rounded-lg hover:border-blue-500 hover:bg-blue-500/5 transition-all text-left disabled:opacity-50 disabled:cursor-not-allowed h-full"
-              >
-                <div className="flex flex-col h-full">
-                  <div className="p-3 rounded-lg bg-blue-500/10 w-fit mb-4">
-                    <Cloud className="h-8 w-8 text-blue-500" />
+              {/* Masquer l'option cloud si désactivée */}
+              {ENABLE_CLOUD_FEATURES && (
+                <button
+                  onClick={() => handleStorageChoice('cloud')}
+                  disabled={isLoading}
+                  className="p-6 border-2 rounded-lg hover:border-blue-500 hover:bg-blue-500/5 transition-all text-left disabled:opacity-50 disabled:cursor-not-allowed h-full"
+                >
+                  <div className="flex flex-col h-full">
+                    <div className="p-3 rounded-lg bg-blue-500/10 w-fit mb-4">
+                      <Cloud className="h-8 w-8 text-blue-500" />
+                    </div>
+                    <h3 className="font-semibold text-xl mb-2">{t('onboarding.cloudStorageTitle')}</h3>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      {t('onboarding.cloudStorageDesc')}
+                    </p>
+                    <ul className="text-sm text-muted-foreground space-y-2 mt-auto">
+                      <li className="flex items-center gap-2">
+                        <Check className="h-4 w-4 text-blue-500 flex-shrink-0" />
+                        {t('onboarding.cloudRealtime')}
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <Check className="h-4 w-4 text-blue-500 flex-shrink-0" />
+                        {t('onboarding.cloudAllDevices')}
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <Check className="h-4 w-4 text-blue-500 flex-shrink-0" />
+                        {t('onboarding.cloudBackup')}
+                      </li>
+                    </ul>
                   </div>
-                  <h3 className="font-semibold text-xl mb-2">{t('onboarding.cloudStorageTitle')}</h3>
-                  <p className="text-sm text-muted-foreground mb-4">
-                    {t('onboarding.cloudStorageDesc')}
-                  </p>
-                  <ul className="text-sm text-muted-foreground space-y-2 mt-auto">
-                    <li className="flex items-center gap-2">
-                      <Check className="h-4 w-4 text-blue-500 flex-shrink-0" />
-                      {t('onboarding.cloudRealtime')}
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <Check className="h-4 w-4 text-blue-500 flex-shrink-0" />
-                      {t('onboarding.cloudAllDevices')}
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <Check className="h-4 w-4 text-blue-500 flex-shrink-0" />
-                      {t('onboarding.cloudBackup')}
-                    </li>
-                  </ul>
-                </div>
-              </button>
+                </button>
+              )}
             </div>
 
             <Button
