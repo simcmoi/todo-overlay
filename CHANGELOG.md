@@ -7,6 +7,26 @@ et ce projet adhère au [Semantic Versioning](https://semver.org/lang/fr/).
 
 ## [Non publié]
 
+## [0.2.7] - 2026-02-26
+
+### Ajouté
+- Dialog de téléchargement de mise à jour avec barre de progression en temps réel
+- Affichage du débit réseau (KB/s, MB/s) pendant le téléchargement
+- Affichage des octets téléchargés / total
+- Calcul du temps restant estimé (ETA)
+- Indicateurs visuels pour les états : téléchargement → installation → redémarrage
+- Icônes animées pour chaque état du processus de mise à jour
+
+### Modifié
+- `src-tauri/src/updater.rs` : événements de progression améliorés avec `chunkLength` et `contentLength`
+- `src/components/update-banner.tsx` : intégration du nouveau dialog de téléchargement
+- Traductions FR/EN ajoutées pour les nouveaux états de mise à jour
+
+### Technique
+- Communication Rust → Frontend via événements Tauri avec payload JSON détaillé
+- Calcul du débit réseau en temps réel côté frontend
+- Utilisation du composant shadcn/ui `<Progress>` pour la barre de progression
+
 ## [0.2.6] - 2026-02-26
 
 ### Ajouté
