@@ -1055,7 +1055,7 @@ export function TodoList({
           ) : null}
 
           {editingId === 'new' && newParentId === null ? (
-            <li className="rounded-lg border-2 border-primary/30 bg-primary/5 px-2 py-2">
+            <li className="rounded-lg border border-border bg-muted/40 px-2 py-2">
               {renderEditorRow('new', 0)}
             </li>
           ) : null}
