@@ -1,4 +1,4 @@
-import { createClient, type SupabaseClient, type RealtimeChannel, type AuthError } from '@supabase/supabase-js'
+import { createClient, type SupabaseClient, type RealtimeChannel, type AuthError, type RealtimePostgresChangesPayload } from '@supabase/supabase-js'
 import type { AppData, Todo, TodoLabel, Settings } from '@/types/todo'
 import type { StorageProvider, StorageMode, SyncStatus, AuthUser } from './types'
 
@@ -723,7 +723,7 @@ export class CloudStorageProvider implements StorageProvider {
     this.subscriptions = []
   }
   
-  private handleTodoChange(payload: any, callback: (data: AppData) => void): void {
+  private handleTodoChange(payload: RealtimePostgresChangesPayload<Record<string, unknown>>, callback: (data: AppData) => void): void {
     if (!this.currentData) {
       // Si pas de données en cache, recharger tout
       void this.load().then(callback).catch(console.error)
@@ -765,7 +765,7 @@ export class CloudStorageProvider implements StorageProvider {
     callback(this.currentData)
   }
   
-  private handleListChange(payload: any, callback: (data: AppData) => void): void {
+  private handleListChange(payload: RealtimePostgresChangesPayload<Record<string, unknown>>, callback: (data: AppData) => void): void {
     if (!this.currentData) {
       void this.load().then(callback).catch(console.error)
       return
@@ -813,7 +813,7 @@ export class CloudStorageProvider implements StorageProvider {
     callback(this.currentData)
   }
   
-  private handleLabelChange(payload: any, callback: (data: AppData) => void): void {
+  private handleLabelChange(payload: RealtimePostgresChangesPayload<Record<string, unknown>>, callback: (data: AppData) => void): void {
     if (!this.currentData) {
       void this.load().then(callback).catch(console.error)
       return

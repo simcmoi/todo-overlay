@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Check, ChevronDown, Filter, Home, MoreHorizontal, Plus, Printer, Settings, Star, Trash2 } from 'lucide-react'
+import { BarChart3, Check, ChevronDown, Filter, Home, MoreHorizontal, Plus, Printer, Settings, Star, Trash2 } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { listen } from '@tauri-apps/api/event'
 import { open } from '@tauri-apps/plugin-shell'
 import { useTranslation } from 'react-i18next'
 import { SettingsPage } from '@/components/settings-page'
+import { StatisticsPage } from '@/components/statistics-page'
 import { TodoList } from '@/components/todo-list'
 import { UpdateBanner } from '@/components/update-banner'
 import { Onboarding } from '@/components/onboarding/Onboarding'
@@ -99,27 +100,28 @@ export default function App() {
   const [priorityFilter, setPriorityFilter] = useState<TodoPriority | 'all'>('all')
   const [labelFilterId, setLabelFilterId] = useState<string | 'all'>('all')
   const [settingsPageOpen, setSettingsPageOpen] = useState(false)
+  const [statisticsPageOpen, setStatisticsPageOpen] = useState(false)
 
   const { toast } = useToast()
   const { playAdd, playDelete, playComplete } = useSoundEffects()
   const { t, i18n } = useTranslation()
 
-  const PRIORITY_FILTERS: Array<{ id: TodoPriority | 'all'; label: string }> = [
+  const PRIORITY_FILTERS: Array<{ id: TodoPriority | 'all'; label: string }> = useMemo(() => [
     { id: 'all', label: t('filter.allPriorities') },
     { id: 'urgent', label: t('filter.urgent') },
     { id: 'high', label: t('filter.high') },
     { id: 'medium', label: t('filter.medium') },
     { id: 'low', label: t('filter.low') },
     { id: 'none', label: t('filter.none') },
-  ]
+  ], [t])
 
-  const SORT_MODE_OPTIONS: Array<{ id: SortMode; label: string }> = [
+  const SORT_MODE_OPTIONS: Array<{ id: SortMode; label: string }> = useMemo(() => [
     { id: 'manual', label: t('sort.manual') },
     { id: 'recent', label: t('sort.recent') },
     { id: 'oldest', label: t('sort.oldest') },
     { id: 'title', label: t('sort.title') },
     { id: 'dueDate', label: t('sort.dueDate') },
-  ]
+  ], [t])
 
   const {
     hydrated,
@@ -231,7 +233,7 @@ export default function App() {
     return () => {
       void unlisten.then(fn => fn())
     }
-  }, [hydrate, toast])
+  }, [hydrate, toast, t])
 
   // Vérifier les mises à jour au démarrage
   useEffect(() => {
@@ -333,7 +335,7 @@ export default function App() {
 
   const selectedSortModeLabel = useMemo(
     () => SORT_MODE_OPTIONS.find((option) => option.id === settings.sortMode)?.label ?? 'Récemment ajoutées',
-    [settings.sortMode],
+    [settings.sortMode, SORT_MODE_OPTIONS],
   )
 
   const printCurrentList = () => {
@@ -395,7 +397,7 @@ export default function App() {
 
   const selectedPriorityFilterLabel = useMemo(
     () => PRIORITY_FILTERS.find((option) => option.id === priorityFilter)?.label ?? t('filter.allPriorities'),
-    [priorityFilter, t],
+    [priorityFilter, t, PRIORITY_FILTERS],
   )
 
   const selectedLabelFilterName = useMemo(() => {
@@ -618,6 +620,14 @@ export default function App() {
                   <Printer className="mr-2 h-3.5 w-3.5" />
                   {t('list.printList')}
                 </DropdownMenuItem>
+                <DropdownMenuItem
+                  onSelect={() => {
+                    setStatisticsPageOpen(true)
+                  }}
+                >
+                  <BarChart3 className="mr-2 h-3.5 w-3.5" />
+                  {t('statistics.title')}
+                </DropdownMenuItem>
                 {activeList ? (
                   <DropdownMenuItem
                     onSelect={() => {
@@ -655,7 +665,7 @@ export default function App() {
         </Tooltip>
         </div>
 
-        {!settingsPageOpen ? (
+        {!settingsPageOpen && !statisticsPageOpen ? (
           <div className="mb-2 flex items-center gap-2">
             <DropdownMenu>
               <Tooltip>
@@ -761,6 +771,13 @@ export default function App() {
                 }}
                 onSetAutostartEnabled={async (enabled) => {
                   await setAutostartEnabled(enabled)
+                }}
+              />
+            ) : statisticsPageOpen ? (
+              <StatisticsPage
+                todos={todos}
+                onBack={() => {
+                  setStatisticsPageOpen(false)
                 }}
               />
             ) : (

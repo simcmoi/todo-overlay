@@ -144,6 +144,9 @@
     "confirmDeleteTitle": "¿Estás absolutamente seguro?",
     "confirmDeleteDesc": "Esta acción es irreversible. Todas tus tareas, listas, etiquetas y configuraciones serán eliminadas permanentemente.",
     "confirmDelete": "Sí, eliminar todo",
+    "fullscreenLimitationTitle": "Limitación del modo de pantalla completa",
+    "fullscreenLimitationDescription": "En macOS, los atajos globales no funcionan en modo de pantalla completa nativo debido a restricciones de seguridad. Habilita los permisos de accesibilidad y evita el modo de pantalla completa para usar atajos en todas partes.",
+    "openAccessibilitySettings": "Abrir configuración de accesibilidad",
     "colors": {
       "slate": "Pizarra",
       "blue": "Azul",
@@ -296,5 +299,21 @@
     "moon": "luna noche",
     "cloud": "nube clima",
     "umbrella": "paraguas lluvia"
+  },
+  "statistics": {
+    "title": "Estadísticas",
+    "totalTasks": "Total de tareas",
+    "completedTasks": "Tareas completadas",
+    "allTime": "Todo el tiempo",
+    "completed": "completadas",
+    "createdLast7Days": "Creadas (7 días)",
+    "completedLast7Days": "Completadas (7 días)",
+    "lastWeek": "Última semana",
+    "tasksCreatedPerDay": "Tareas creadas por día",
+    "tasksCompletedPerDay": "Tareas completadas por día",
+    "last30Days": "Últimos 30 días",
+    "created": "Creadas",
+    "overview": "Resumen",
+    "createdVsCompleted": "Tareas creadas vs completadas a lo largo del tiempo"
   }
 }

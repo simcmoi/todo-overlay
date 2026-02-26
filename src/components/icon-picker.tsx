@@ -57,6 +57,7 @@ const ICONS: Array<{ name: string; Icon: LucideIcon; labelFr: string; labelEn: s
   { name: 'umbrella', Icon: Umbrella, labelFr: 'parapluie pluie', labelEn: 'umbrella rain' },
 ]
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function getIconComponent(iconName?: string): LucideIcon {
   const found = ICONS.find((icon) => icon.name === iconName)
   return found?.Icon ?? Home
@@ -71,7 +72,6 @@ export function IconPicker({ value, onValueChange }: IconPickerProps) {
   const { t } = useTranslation()
   const [open, setOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
-  const SelectedIcon = getIconComponent(value)
 
   // Filtrer les icônes en fonction de la recherche (FR + EN)
   const filteredIcons = useMemo(() => {
@@ -86,6 +86,12 @@ export function IconPicker({ value, onValueChange }: IconPickerProps) {
         labelEn.toLowerCase().includes(query)
     )
   }, [searchQuery])
+
+  // Render the selected icon
+  const renderSelectedIcon = () => {
+    const IconComponent = getIconComponent(value)
+    return <IconComponent className="h-3.5 w-3.5" />
+  }
 
   return (
     <Popover open={open} onOpenChange={(newOpen) => {
@@ -107,7 +113,7 @@ export function IconPicker({ value, onValueChange }: IconPickerProps) {
             e.preventDefault()
           }}
         >
-          <SelectedIcon className="h-3.5 w-3.5" />
+          {renderSelectedIcon()}
         </Button>
       </PopoverTrigger>
       <PopoverContent 

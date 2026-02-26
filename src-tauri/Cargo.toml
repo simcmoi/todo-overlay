@@ -36,3 +36,4 @@ reqwest = { version = "0.13", features = ["json"] }
 
 [target.'cfg(target_os = "macos")'.dependencies]
 cocoa = "0.25"
+core-foundation = "0.10"

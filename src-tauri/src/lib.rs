@@ -1,3 +1,4 @@
+mod accessibility;
 mod changelog;
 mod commands;
 mod reminder;
@@ -118,7 +119,8 @@ pub fn run() {
             commands::reset_all_data,
             changelog::get_changelog,
             updater::check_for_update,
-            updater::install_update
+            updater::install_update,
+            accessibility::open_accessibility_settings
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

@@ -24,22 +24,36 @@ export function ChangelogDialog({ version, open, onOpenChange }: ChangelogDialog
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    if (!open) return
+    if (!open) {
+      // Reset state when dialog closes
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setChangelog('')
+      setLoading(true)
+      setError(null)
+      return
+    }
 
-    // Reset state when dialog opens
-    setLoading(true)
-    setError(null)
+    // Load changelog when dialog opens
+    let cancelled = false
 
     void getChangelog(version)
       .then((content) => {
-        setChangelog(content)
-        setLoading(false)
+        if (!cancelled) {
+          setChangelog(content)
+          setLoading(false)
+        }
       })
       .catch((err) => {
-        console.error('Failed to load changelog:', err)
-        setError('Impossible de charger le changelog.')
-        setLoading(false)
+        if (!cancelled) {
+          console.error('Failed to load changelog:', err)
+          setError('Impossible de charger le changelog.')
+          setLoading(false)
+        }
       })
+
+    return () => {
+      cancelled = true
+    }
   }, [version, open])
 
   return (

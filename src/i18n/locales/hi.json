@@ -143,6 +143,9 @@
     "confirmDeleteTitle": "क्या आप सुनिश्चित हैं?",
     "confirmDeleteDesc": "यह क्रिया अपरिवर्तनीय है। सभी कार्य, सूचियां, लेबल और सेटिंग्स स्थायी रूप से हटा दी जाएंगी।",
     "confirmDelete": "हां, सभी हटाएं",
+    "fullscreenLimitationTitle": "पूर्ण स्क्रीन मोड सीमा",
+    "fullscreenLimitationDescription": "macOS पर, सुरक्षा प्रतिबंधों के कारण वैश्विक शॉर्टकट मूल पूर्ण स्क्रीन मोड में काम नहीं करते हैं। एक्सेसिबिलिटी अनुमतियां सक्षम करें और हर जगह शॉर्टकट का उपयोग करने के लिए पूर्ण स्क्रीन से बचें।",
+    "openAccessibilitySettings": "एक्सेसिबिलिटी सेटिंग्स खोलें",
     "colors": {
       "slate": "स्लेट",
       "blue": "नीला",
@@ -295,5 +298,21 @@
     "moon": "चांद रात",
     "cloud": "बादल मौसम",
     "umbrella": "छाता बारिश"
+  },
+  "statistics": {
+    "title": "सांख्यिकी",
+    "totalTasks": "कुल कार्य",
+    "completedTasks": "पूर्ण कार्य",
+    "allTime": "सभी समय",
+    "completed": "पूर्ण",
+    "createdLast7Days": "बनाए गए (7 दिन)",
+    "completedLast7Days": "पूर्ण (7 दिन)",
+    "lastWeek": "पिछला सप्ताह",
+    "tasksCreatedPerDay": "प्रति दिन बनाए गए कार्य",
+    "tasksCompletedPerDay": "प्रति दिन पूर्ण कार्य",
+    "last30Days": "पिछले 30 दिन",
+    "created": "बनाए गए",
+    "overview": "सारांश",
+    "createdVsCompleted": "समय के साथ बनाए गए बनाम पूर्ण कार्य"
   }
 }

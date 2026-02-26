@@ -158,6 +158,9 @@
     "confirmDeleteTitle": "Are you absolutely sure?",
     "confirmDeleteDesc": "This action is irreversible. All your tasks, lists, labels and settings will be permanently deleted.",
     "confirmDelete": "Yes, delete everything",
+    "fullscreenLimitationTitle": "Fullscreen Mode Limitation",
+    "fullscreenLimitationDescription": "On macOS, global shortcuts don't work in native fullscreen mode due to security restrictions. Enable accessibility permissions and avoid fullscreen to use shortcuts everywhere.",
+    "openAccessibilitySettings": "Open Accessibility Settings",
     "colors": {
       "slate": "Slate",
       "blue": "Blue",
@@ -324,5 +327,21 @@
   },
   "labels": {
     "deleteLabel": "Delete label {{name}}"
+  },
+  "statistics": {
+    "title": "Statistics",
+    "totalTasks": "Total tasks",
+    "completedTasks": "Completed tasks",
+    "allTime": "All time",
+    "completed": "completed",
+    "createdLast7Days": "Created (7 days)",
+    "completedLast7Days": "Completed (7 days)",
+    "lastWeek": "Last week",
+    "tasksCreatedPerDay": "Tasks created per day",
+    "tasksCompletedPerDay": "Tasks completed per day",
+    "last30Days": "Last 30 days",
+    "created": "Created",
+    "overview": "Overview",
+    "createdVsCompleted": "Created vs completed tasks over time"
   }
 }

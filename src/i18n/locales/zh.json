@@ -140,9 +140,12 @@
     "deleteAllDataTooltip": "⚠️ 警告：永久删除所有任务、列表、标签和设置。不会创建自动备份。此操作不可逆！",
     "deleteAllDataConfirm": "您确定吗？",
     "deleteAllDataDescription": "此操作不可逆，将删除所有任务和设置。",
-    "confirmDeleteTitle": "您确定吗？",
+    "confirmDeleteTitle": "您确定吗?",
     "confirmDeleteDesc": "此操作不可逆。所有任务、列表、标签和设置将被永久删除。",
     "confirmDelete": "是的，全部删除",
+    "fullscreenLimitationTitle": "全屏模式限制",
+    "fullscreenLimitationDescription": "在 macOS 上，由于安全限制，全局快捷键在原生全屏模式下不起作用。启用辅助功能权限并避免全屏模式以便在任何地方使用快捷键。",
+    "openAccessibilitySettings": "打开辅助功能设置",
     "colors": {
       "slate": "石板色",
       "blue": "蓝色",
@@ -295,5 +298,21 @@
     "moon": "月亮 夜晚",
     "cloud": "云 天气",
     "umbrella": "雨伞 雨"
+  },
+  "statistics": {
+    "title": "统计",
+    "totalTasks": "总任务数",
+    "completedTasks": "已完成任务",
+    "allTime": "所有时间",
+    "completed": "已完成",
+    "createdLast7Days": "创建（7天）",
+    "completedLast7Days": "完成（7天）",
+    "lastWeek": "上周",
+    "tasksCreatedPerDay": "每日创建的任务",
+    "tasksCompletedPerDay": "每日完成的任务",
+    "last30Days": "过去30天",
+    "created": "已创建",
+    "overview": "概览",
+    "createdVsCompleted": "随时间推移创建与完成的任务"
   }
 }

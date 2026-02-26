@@ -75,6 +75,11 @@
     "medium": "Moyenne",
     "low": "Basse"
   },
+  "settings": {
+    "fullscreenLimitationTitle": "Limitation en mode plein écran",
+    "fullscreenLimitationDescription": "Sur macOS, les raccourcis globaux ne fonctionnent pas en mode plein écran natif pour des raisons de sécurité. Activez les permissions d'accessibilité et évitez le mode plein écran pour utiliser les raccourcis partout.",
+    "openAccessibilitySettings": "Ouvrir les permissions d'accessibilité"
+  },
   "time": {
     "today": "Aujourd'hui",
     "tomorrow": "Demain",
@@ -226,5 +231,21 @@
   },
   "labels": {
     "deleteLabel": "Supprimer le label {{name}}"
+  },
+  "statistics": {
+    "title": "Statistiques",
+    "totalTasks": "Total de tâches",
+    "completedTasks": "Tâches terminées",
+    "allTime": "Depuis toujours",
+    "completed": "terminées",
+    "createdLast7Days": "Créées (7 jours)",
+    "completedLast7Days": "Terminées (7 jours)",
+    "lastWeek": "Dernière semaine",
+    "tasksCreatedPerDay": "Tâches créées par jour",
+    "tasksCompletedPerDay": "Tâches terminées par jour",
+    "last30Days": "30 derniers jours",
+    "created": "Créées",
+    "overview": "Vue d'ensemble",
+    "createdVsCompleted": "Tâches créées vs terminées au fil du temps"
   }
 }

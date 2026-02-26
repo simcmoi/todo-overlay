@@ -188,3 +188,7 @@ export async function resetAllData(): Promise<void> {
 export async function getChangelog(version: string): Promise<string> {
   return invoke<string>('get_changelog', { version })
 }
+
+export async function openAccessibilitySettings(): Promise<void> {
+  await invoke('open_accessibility_settings')
+}

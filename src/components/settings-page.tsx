@@ -30,7 +30,7 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
 import { useUpdateStore } from '@/store/use-update-store'
-import { getAppVersion, getDataFilePath, openDataFile, getLogFilePath, openLogFile, resetAllData } from '@/lib/tauri'
+import { getAppVersion, getDataFilePath, openDataFile, getLogFilePath, openLogFile, resetAllData, openAccessibilitySettings } from '@/lib/tauri'
 import { cn } from '@/lib/utils'
 import type { Settings, ThemeMode, TodoLabel } from '@/types/todo'
 import { StorageSettings } from '@/components/storage'
@@ -180,7 +180,7 @@ export function SettingsPage({
     return () => {
       window.removeEventListener('keydown', onKeyDown, { capture: true })
     }
-  }, [isCapturingShortcut])
+  }, [isCapturingShortcut, t])
 
   const sortedLabels = useMemo(
     () => [...settings.labels].sort((a, b) => a.name.localeCompare(b.name, 'fr-FR')),
@@ -464,6 +464,33 @@ export function SettingsPage({
             </Button>
             </div>
             {shortcutError ? <p className="text-xs text-destructive">{shortcutError}</p> : null}
+            
+            {/* Info sur la limitation macOS plein écran */}
+            <div className="mt-3 flex flex-col gap-2 rounded-md border border-yellow-500/30 bg-yellow-500/5 p-3">
+              <div className="flex items-start gap-2">
+                <Info className="h-4 w-4 shrink-0 text-yellow-600 dark:text-yellow-500 mt-0.5" />
+                <div className="flex-1 space-y-1 text-xs">
+                  <p className="font-medium text-yellow-700 dark:text-yellow-400">
+                    {t('settings.fullscreenLimitationTitle')}
+                  </p>
+                  <p className="text-muted-foreground">
+                    {t('settings.fullscreenLimitationDescription')}
+                  </p>
+                </div>
+              </div>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                className="h-7 w-full text-xs border-yellow-500/30 hover:bg-yellow-500/10"
+                onClick={() => {
+                  void openAccessibilitySettings()
+                }}
+              >
+                <ExternalLink className="h-3 w-3 mr-1.5" />
+                {t('settings.openAccessibilitySettings')}
+              </Button>
+            </div>
           </div>
         </section>
 
