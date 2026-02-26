@@ -431,10 +431,11 @@ export default function App() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.12 }}
-          className="mx-auto flex h-full w-full flex-col overflow-hidden rounded-2xl border-2 border-gray-400/80 bg-card px-4 pb-4 pt-3"
+          className="mx-auto flex h-full w-full flex-col overflow-hidden rounded-2xl border-2 border-gray-400/80 bg-card"
         >
         <UpdateBanner />
-        <div className="mb-2 flex items-center justify-between gap-2">
+        {/* Header: Logo + Liste + Paramètres - Background distinct */}
+        <div className="flex items-center justify-between gap-2 border-b border-border bg-muted/30 px-4 py-2.5">
           <div className="flex min-w-0 items-center gap-2">
             <img src="/app-icon.png" alt="BlinkDo" className="h-4 w-4 rounded-sm" />
             {activeList && renamingListId === activeList.id ? (
@@ -665,8 +666,9 @@ export default function App() {
         </Tooltip>
         </div>
 
+        {/* Filtres - Background distinct, visible seulement si pas dans settings */}
         {!settingsPageOpen && !statisticsPageOpen ? (
-          <div className="mb-2 flex items-center gap-2">
+          <div className="flex items-center gap-2 border-b border-border bg-muted/20 px-4 py-2">
             <DropdownMenu>
               <Tooltip>
                 <DropdownMenuTrigger asChild>
@@ -751,7 +753,8 @@ export default function App() {
           </div>
         ) : null}
 
-        <div className="min-h-0 flex-1">
+        {/* Zone principale - Liste des tâches avec background blanc/card */}
+        <div className="min-h-0 flex-1 bg-background px-4 py-3">
           {loading && !hydrated ? (
             <div className="flex h-full items-center justify-center rounded-md border border-border text-sm text-muted-foreground">
               Chargement...
@@ -834,7 +837,8 @@ export default function App() {
           )}
         </div>
 
-        <div className="mt-2 flex items-center justify-between gap-2 text-[11px] text-muted-foreground">
+        {/* Footer - Background distinct */}
+        <div className="flex items-center justify-between gap-2 border-t border-border bg-muted/30 px-4 py-2 text-[11px] text-muted-foreground">
           <p>
             {error ? `Erreur: ${error}` : `${settings.globalShortcut} pour afficher/masquer · Tri: ${selectedSortModeLabel}`}
           </p>

@@ -755,12 +755,12 @@ export function TodoList({
     return (
       <li
         key={targetId === 'new' ? 'new-editor' : `editor-${targetId}`}
-        className="px-2 py-2"
+        className="py-1"
         style={leftOffset > 0 ? { paddingLeft: `${leftOffset + 8}px` } : undefined}
       >
         <div
           ref={editorContainerRef}
-          className="flex items-start gap-1.5 px-2 py-2 rounded-md bg-muted/70"
+          className="flex items-start gap-1.5 rounded-md bg-background px-2 py-2"
           onPointerDownCapture={() => {
             lastPointerInsideEditorAtRef.current = window.performance.now()
           }}
@@ -1037,24 +1037,28 @@ export function TodoList({
   return (
     <ScrollArea className="h-full rounded-md">
       <LayoutGroup id="todo-items">
-        <ul className="py-1 pr-2">
+        <ul className="space-y-2 py-1 pr-2">
           {editingId !== 'new' || newParentId !== null ? (
-            <li className="px-2 py-1">
+            <li className="px-2">
               <Button
                 type="button"
-                variant="ghost"
-                className="h-8 w-full justify-start px-2 text-sm text-muted-foreground hover:text-foreground"
+                variant="outline"
+                className="h-10 w-full justify-start gap-2 border-dashed bg-muted/40 px-3 text-sm font-medium text-foreground hover:border-solid hover:bg-muted/70"
                 onClick={() => {
                   void openCreateEditor()
                 }}
               >
-                <Plus className="mr-1 h-4 w-4" />
+                <Plus className="h-4 w-4" />
                 {t('todo.addTask')}
               </Button>
             </li>
           ) : null}
 
-          {editingId === 'new' && newParentId === null ? renderEditorRow('new', 0) : null}
+          {editingId === 'new' && newParentId === null ? (
+            <li className="rounded-lg border-2 border-primary/30 bg-primary/5 px-2 py-2">
+              {renderEditorRow('new', 0)}
+            </li>
+          ) : null}
 
           {activeTodos.length === 0 ? (
             <li className="px-4 py-4 text-center text-sm text-muted-foreground">{emptyLabel}</li>
