@@ -12,6 +12,10 @@ et ce projet adhère au [Semantic Versioning](https://semver.org/lang/fr/).
 ### Ajouté
 - Lien "Star on GitHub" en bas de l'application pour encourager le soutien du projet
 - Plugin shell Tauri pour ouvrir les liens externes dans le navigateur par défaut
+- Page de statistiques avec graphiques interactifs (recharts)
+  - Cartes récapitulatives : total des tâches, taux de complétion, statistiques 7 jours et total
+  - Graphique en barres : création/complétion quotidienne (30 derniers jours)
+  - Graphique en ligne : tendances créées vs complétées
 
 ### Modifié
 - Upgrade vers Tailwind CSS v4 avec le nouveau thème Nova Yellow
@@ -22,6 +26,9 @@ et ce projet adhère au [Semantic Versioning](https://semver.org/lang/fr/).
 - Test unitaire "should update settings" qui échouait dans la CI
 - Problème d'ouverture des liens externes dans l'application Tauri
 - Configuration des permissions shell pour les fenêtres "main" et "overlay"
+- 13 erreurs ESLint/React Compiler corrigées dans divers composants
+- Erreur Clippy dans le code Rust (doc comment)
+- Erreur de formatage Rust (trailing whitespace)
 
 ## [0.2.5] - 2026-02-25
 

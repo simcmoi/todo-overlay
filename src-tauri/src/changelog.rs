@@ -15,7 +15,7 @@ pub async fn get_changelog(version: String) -> Result<String, String> {
 /// Récupère le changelog depuis une release GitHub
 async fn fetch_changelog_from_github(version: &str) -> Result<String, String> {
     let url = format!(
-        "https://api.github.com/repos/simonfessy/todo-overlay/releases/tags/v{}",
+        "https://api.github.com/repos/simcmoi/todo-overlay/releases/tags/v{}",
         version
     );
 
