@@ -1,5 +1,3 @@
-/// Module pour gérer les permissions d'accessibilité sur macOS
-
 /// Ouvre les préférences système de macOS pour les permissions d'accessibilité
 #[tauri::command]
 pub fn open_accessibility_settings() -> Result<(), String> {
