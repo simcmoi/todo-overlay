@@ -104,11 +104,11 @@ function priorityLabel(priority: TodoPriority, t: (key: string) => string): stri
 function priorityClasses(priority: TodoPriority): string {
   switch (priority) {
     case 'urgent':
-      return 'border border-destructive/30 bg-destructive/15 text-destructive'
+      return 'border border-red-700/30 bg-red-500/15 text-red-700 dark:text-red-400 dark:border-red-500/30'
     case 'high':
-      return 'border border-amber-700/30 bg-amber-500/15 text-amber-700'
+      return 'border border-amber-700/30 bg-amber-500/15 text-amber-700 dark:text-amber-300 dark:border-amber-500/30'
     case 'medium':
-      return 'border border-blue-700/30 bg-blue-500/15 text-blue-700'
+      return 'border border-blue-700/30 bg-blue-500/15 text-blue-700 dark:text-blue-300 dark:border-blue-500/30'
     case 'low':
       return 'border border-border bg-muted text-muted-foreground'
     default:
@@ -139,9 +139,9 @@ function labelClasses(color: TodoLabel['color']): string {
 function reminderBadgeClasses(variant: 'destructive' | 'blue' | 'default'): string {
   switch (variant) {
     case 'destructive':
-      return 'border border-red-700/50 bg-red-500/10 text-red-700 hover:bg-red-500/15 dark:border-red-500/50 dark:text-red-400'
+      return 'border border-red-700/30 bg-red-500/15 text-red-700 hover:bg-red-500/20 dark:border-red-500/30 dark:text-red-400'
     case 'blue':
-      return 'border border-blue-700/50 bg-blue-500/10 text-blue-700 dark:border-blue-400/50 dark:bg-blue-400/10 dark:text-blue-400'
+      return 'border border-blue-700/30 bg-blue-500/15 text-blue-700 dark:border-blue-500/30 dark:text-blue-400'
     case 'default':
       return 'border border-border bg-muted text-foreground'
   }
@@ -883,12 +883,10 @@ export function TodoList({
                         variant="ghost"
                         className={cn(
                           "cursor-pointer rounded-md h-6 px-2 gap-1.5",
-                          reminderBadgeStyle?.variant === 'destructive' && 
-                            "border-destructive/50 bg-destructive/10 text-destructive hover:bg-destructive/15",
-                          reminderBadgeStyle?.variant === 'blue' && 
-                            "border-blue-500/50 bg-blue-500/10 text-blue-700 dark:border-blue-400/50 dark:bg-blue-400/10 dark:text-blue-400 hover:bg-blue-500/15 dark:hover:bg-blue-400/15",
-                          reminderBadgeStyle?.variant === 'default' && 
-                            "border-border bg-background text-foreground hover:bg-muted/60"
+                          reminderBadgeStyle && reminderBadgeClasses(reminderBadgeStyle.variant),
+                          reminderBadgeStyle?.variant === 'destructive' && "hover:bg-red-500/20",
+                          reminderBadgeStyle?.variant === 'blue' && "hover:bg-blue-500/20",
+                          reminderBadgeStyle?.variant === 'default' && "hover:bg-muted/60"
                         )}
                       >
                         <button
