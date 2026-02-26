@@ -199,7 +199,18 @@
     "installing": "Installing",
     "installingDesc": "The app will restart in a moment...",
     "whatsNew": "What's new",
-    "install": "Install"
+    "install": "Install",
+    "status": {
+      "downloading": "Downloading Update",
+      "installing": "Installing Update",
+      "restarting": "Restarting Application"
+    },
+    "downloadingVersion": "Downloading version {{version}}...",
+    "installingVersion": "Installing version {{version}}...",
+    "restartingVersion": "Restarting to version {{version}}...",
+    "downloadingMessage": "Please wait while we download the update. This may take a few moments.",
+    "installingMessage": "The update is being installed. The app will restart automatically.",
+    "restartingMessage": "The application is restarting with the new version..."
   },
   "sync": {
     "local": "Local",

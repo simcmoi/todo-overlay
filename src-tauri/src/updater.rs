@@ -80,7 +80,13 @@ pub async fn install_update(app: AppHandle) -> Result<(), String> {
                             if let Some(total) = content_length {
                                 let progress = (chunk_length as f64 / total as f64) * 100.0;
                                 log::debug!("Progression du téléchargement : {:.1}%", progress);
-                                let _ = app.emit("update-download-progress", progress);
+                                
+                                // Émettre la progression avec les détails
+                                let _ = app.emit("update-download-progress", serde_json::json!({
+                                    "progress": progress,
+                                    "chunkLength": chunk_length,
+                                    "contentLength": total
+                                }));
                             }
                         },
                         || {

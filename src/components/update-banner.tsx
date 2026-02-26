@@ -2,38 +2,25 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { Download, FileText, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useUpdateStore } from '@/store/use-update-store'
-import { useToast } from '@/hooks/use-toast'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { cn } from '@/lib/utils'
 import { ChangelogDialog } from '@/components/changelog-dialog'
+import { UpdateDownloadDialog } from '@/components/update-download-dialog'
 import { useTranslation } from 'react-i18next'
 
 export function UpdateBanner() {
-  const { state, updateInfo, downloadProgress, installUpdate, dismissUpdate } = useUpdateStore()
-  const { toast } = useToast()
+  const { state, updateInfo, installUpdate, dismissUpdate } = useUpdateStore()
   const { t } = useTranslation()
   const [showChangelog, setShowChangelog] = useState(false)
-
-  // Show toast notification for download/install progress
-  useEffect(() => {
-    if (state === 'downloading') {
-      toast({
-        title: t('update.downloading'),
-        description: t('update.downloadingDesc', { 
-          version: updateInfo?.latestVersion,
-          progress: downloadProgress 
-        }),
-      })
-    } else if (state === 'installing') {
-      toast({
-        title: t('update.installing'),
-        description: t('update.installingDesc'),
-      })
-    }
-  }, [state, downloadProgress, toast, updateInfo?.latestVersion, t])
+  const [showDownload, setShowDownload] = useState(false)
 
   if (state !== 'available') {
     return null
+  }
+
+  const handleInstall = () => {
+    setShowDownload(true)
+    void installUpdate()
   }
 
   return (
@@ -68,9 +55,7 @@ export function UpdateBanner() {
               size="sm"
               variant="ghost"
               className="h-5 px-2 text-[10px] font-medium text-blue-700 hover:bg-blue-100 dark:text-blue-300 dark:hover:bg-blue-900/50"
-              onClick={() => {
-                void installUpdate()
-              }}
+              onClick={handleInstall}
             >
               <Download className="mr-1 h-2.5 w-2.5" />
               {t('update.install')}
@@ -89,11 +74,18 @@ export function UpdateBanner() {
       </AnimatePresence>
 
       {updateInfo?.latestVersion && (
-        <ChangelogDialog
-          version={updateInfo.latestVersion}
-          open={showChangelog}
-          onOpenChange={setShowChangelog}
-        />
+        <>
+          <ChangelogDialog
+            version={updateInfo.latestVersion}
+            open={showChangelog}
+            onOpenChange={setShowChangelog}
+          />
+          <UpdateDownloadDialog
+            version={updateInfo.latestVersion}
+            open={showDownload}
+            onOpenChange={setShowDownload}
+          />
+        </>
       )}
     </>
   )

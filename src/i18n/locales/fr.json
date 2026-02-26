@@ -103,7 +103,18 @@
     "installing": "Installation en cours",
     "installingDesc": "L'application va redémarrer dans un instant...",
     "whatsNew": "Nouveautés",
-    "install": "Installer"
+    "install": "Installer",
+    "status": {
+      "downloading": "Téléchargement de la mise à jour",
+      "installing": "Installation de la mise à jour",
+      "restarting": "Redémarrage de l'application"
+    },
+    "downloadingVersion": "Téléchargement de la version {{version}}...",
+    "installingVersion": "Installation de la version {{version}}...",
+    "restartingVersion": "Redémarrage vers la version {{version}}...",
+    "downloadingMessage": "Veuillez patienter pendant le téléchargement de la mise à jour. Cela peut prendre quelques instants.",
+    "installingMessage": "La mise à jour est en cours d'installation. L'application va redémarrer automatiquement.",
+    "restartingMessage": "L'application redémarre avec la nouvelle version..."
   },
   "sync": {
     "local": "Local",
