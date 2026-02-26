@@ -1,7 +1,7 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
   "productName": "ToDo Overlay",
-  "version": "0.2.6",
+  "version": "0.2.7",
   "identifier": "com.simon.todooverlay",
   "build": {
     "frontendDist": "../dist",
@@ -34,7 +34,7 @@
       }
     ],
     "security": {
-      "csp": null
+      "csp": "default-src 'self'; img-src 'self' data: https:; style-src 'self' 'unsafe-inline'; font-src 'self' data:"
     }
   },
   "bundle": {

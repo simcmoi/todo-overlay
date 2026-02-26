@@ -22,7 +22,7 @@ pub fn run() {
                         file_name: Some("todo-overlay.log".to_string()),
                     },
                 ))
-                .rotation_strategy(tauri_plugin_log::RotationStrategy::KeepAll)
+                .rotation_strategy(tauri_plugin_log::RotationStrategy::KeepOne)
                 .max_file_size(5_000_000) // 5MB max
                 .build(),
         )

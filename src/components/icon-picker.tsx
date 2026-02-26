@@ -57,8 +57,18 @@ const ICONS: Array<{ name: string; Icon: LucideIcon; labelFr: string; labelEn: s
   { name: 'umbrella', Icon: Umbrella, labelFr: 'parapluie pluie', labelEn: 'umbrella rain' },
 ]
 
+const VALID_ICON_NAMES = ICONS.map(icon => icon.name)
+
+// eslint-disable-next-line react-refresh/only-export-components
+export function isValidIconName(iconName: string | undefined): boolean {
+  return iconName !== undefined && VALID_ICON_NAMES.includes(iconName)
+}
+
 // eslint-disable-next-line react-refresh/only-export-components
 export function getIconComponent(iconName?: string): LucideIcon {
+  if (!isValidIconName(iconName)) {
+    return Home // Fallback sécurisé
+  }
   const found = ICONS.find((icon) => icon.name === iconName)
   return found?.Icon ?? Home
 }

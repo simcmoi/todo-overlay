@@ -298,9 +298,9 @@ export const useTodoStore = create<TodoStore>((set, get) => ({
         const currentTodos = get().todos
         set({ todos: [...currentTodos, newTodo], error: null })
 
-        // Sauvegarder dans le cloud
+        // Sauvegarder dans le cloud avec le state le plus récent
         await provider.save({
-          todos: [...currentTodos, newTodo],
+          todos: get().todos,
           settings: get().settings,
         })
 

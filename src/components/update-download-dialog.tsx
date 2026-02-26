@@ -70,13 +70,16 @@ export function UpdateDownloadDialog({ version, open, onOpenChange }: UpdateDown
       lastBytes: 0
     }
 
+    let mounted = true
     let unlistenProgress: UnlistenFn | null = null
     let unlistenStatus: UnlistenFn | null = null
     let unlistenError: UnlistenFn | null = null
 
     const setupListeners = async () => {
       // Listen to download progress events
+      if (!mounted) return
       unlistenProgress = await listen<ProgressPayload>('update-download-progress', (event) => {
+        if (!mounted) return
         const { progress: progressPercent, chunkLength, contentLength } = event.payload
         setProgress(progressPercent)
         
@@ -103,8 +106,14 @@ export function UpdateDownloadDialog({ version, open, onOpenChange }: UpdateDown
         }
       })
 
+      if (!mounted) {
+        if (unlistenProgress) unlistenProgress()
+        return
+      }
+
       // Listen to status change events
       unlistenStatus = await listen<string>('update-progress', (event) => {
+        if (!mounted) return
         const newStatus = event.payload as Status
         setStatus(newStatus)
         
@@ -113,8 +122,15 @@ export function UpdateDownloadDialog({ version, open, onOpenChange }: UpdateDown
         }
       })
 
+      if (!mounted) {
+        if (unlistenProgress) unlistenProgress()
+        if (unlistenStatus) unlistenStatus()
+        return
+      }
+
       // Listen to error events
       unlistenError = await listen<string>('update-error', (event) => {
+        if (!mounted) return
         setStatus('error')
         setErrorMessage(event.payload)
       })
@@ -123,6 +139,7 @@ export function UpdateDownloadDialog({ version, open, onOpenChange }: UpdateDown
     void setupListeners()
 
     return () => {
+      mounted = false
       if (unlistenProgress) unlistenProgress()
       if (unlistenStatus) unlistenStatus()
       if (unlistenError) unlistenError()
