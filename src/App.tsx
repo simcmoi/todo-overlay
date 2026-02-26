@@ -423,12 +423,12 @@ export default function App() {
 
   return (
     <TooltipProvider delayDuration={300}>
-      <main className="h-screen w-screen bg-transparent p-1 text-foreground">
+      <main className="h-screen w-screen bg-transparent p-2 text-foreground">
         <motion.section
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.12 }}
-          className="mx-auto flex h-full w-full flex-col overflow-hidden rounded-2xl border border-border bg-card px-4 pb-4 pt-3"
+          className="mx-auto flex h-full w-full flex-col overflow-hidden rounded-2xl border-2 border-gray-400/80 bg-card px-4 pb-4 pt-3"
         >
         <UpdateBanner />
         <div className="mb-2 flex items-center justify-between gap-2">
