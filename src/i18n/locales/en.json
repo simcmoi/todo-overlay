@@ -1,6 +1,6 @@
 {
   "app": {
-    "title": "ToDo Overlay",
+    "title": "BlinkDo",
     "settings": "Settings",
     "changelog": "Changelog",
     "backToHome": "Back to home",
@@ -227,7 +227,7 @@
     "stepWelcome": "Welcome",
     "stepStorage": "Storage",
     "stepConfiguration": "Setup",
-    "welcomeTitle": "Welcome to Todo Overlay",
+    "welcomeTitle": "Welcome to BlinkDo",
     "welcomeDescription": "Your minimalist and powerful task manager",
     "featureMinimalist": "Minimalist interface",
     "featureMinimalistDesc": "Focus on your tasks without distraction",

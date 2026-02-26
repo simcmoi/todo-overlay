@@ -1,8 +1,8 @@
-# Contributing to Todo Overlay
+# Contributing to BlinkDo
 
-First off, thank you for considering contributing to Todo Overlay! 🎉
+First off, thank you for considering contributing to BlinkDo! 🎉
 
-It's people like you that make Todo Overlay such a great tool. We welcome contributions from everyone, whether you're fixing a typo, adding a feature, or improving documentation.
+It's people like you that make BlinkDo such a great tool. We welcome contributions from everyone, whether you're fixing a typo, adding a feature, or improving documentation.
 
 ## 📋 Table of Contents
 
@@ -32,8 +32,8 @@ This project and everyone participating in it is governed by our commitment to c
 1. **Fork the repository** on GitHub
 2. **Clone your fork** locally:
    ```bash
-   git clone https://github.com/YOUR_USERNAME/todo-overlay.git
-   cd todo-overlay
+   git clone https://github.com/YOUR_USERNAME/blinkdo.git
+   cd blinkdo
    ```
 
 3. **Install dependencies**:
@@ -56,7 +56,7 @@ This project and everyone participating in it is governed by our commitment to c
 
 ### Reporting Bugs
 
-Found a bug? Please [open an issue](https://github.com/simcmoi/todo-overlay/issues/new) with:
+Found a bug? Please [open an issue](https://github.com/simcmoi/blinkdo/issues/new) with:
 
 - **Clear title** - Brief description of the issue
 - **Description** - Detailed explanation of the problem
@@ -87,7 +87,7 @@ Environment: macOS 14.2, App version 0.2.1
 
 ### Suggesting Features
 
-Have an idea? Please [open a feature request](https://github.com/simcmoi/todo-overlay/issues/new) with:
+Have an idea? Please [open a feature request](https://github.com/simcmoi/blinkdo/issues/new) with:
 
 - **Clear title** - Brief description of the feature
 - **Problem statement** - What problem does this solve?
@@ -444,7 +444,7 @@ By contributing, you agree that your contributions will be licensed under the MI
 
 ## 🙏 Thank You!
 
-Your contributions make Todo Overlay better for everyone. Every bug report, feature request, and pull request is appreciated! 
+Your contributions make BlinkDo better for everyone. Every bug report, feature request, and pull request is appreciated! 
 
 **Happy coding!** 🚀
 

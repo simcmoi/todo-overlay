@@ -13,7 +13,7 @@ Complete these steps to optimize your GitHub repository for maximum discoverabil
 
 **Website:**
 ```
-https://simcmoi.github.io/todo-overlay
+https://simcmoi.github.io/blinkdo
 ```
 
 **Topics:** (See [TOPICS.md](TOPICS.md) for full list)
@@ -55,10 +55,10 @@ Go to **Settings** → **General** → **Social preview**:
 Go to **Settings** → **Pages**:
 
 - ✅ Source: `gh-pages` branch
-- ✅ Custom domain (optional): `todo-overlay.yourdomain.com`
+- ✅ Custom domain (optional): `blinkdo.yourdomain.com`
 - ✅ Enforce HTTPS
 
-**Current URL:** https://simcmoi.github.io/todo-overlay
+**Current URL:** https://simcmoi.github.io/blinkdo
 
 ### 5. Security
 
@@ -93,13 +93,13 @@ Go to **Settings** → **Security**:
 Already added to README.md:
 
 ```markdown
-[![GitHub release](https://img.shields.io/github/v/release/simcmoi/todo-overlay?color=blue&label=version)](https://github.com/simcmoi/todo-overlay/releases/latest)
-[![GitHub downloads](https://img.shields.io/github/downloads/simcmoi/todo-overlay/total?color=success)](https://github.com/simcmoi/todo-overlay/releases)
+[![GitHub release](https://img.shields.io/github/v/release/simcmoi/blinkdo?color=blue&label=version)](https://github.com/simcmoi/blinkdo/releases/latest)
+[![GitHub downloads](https://img.shields.io/github/downloads/simcmoi/blinkdo/total?color=success)](https://github.com/simcmoi/blinkdo/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Tauri](https://img.shields.io/badge/Tauri-2.10-FFC131?logo=tauri)](https://tauri.app)
 [![React](https://img.shields.io/badge/React-19-61DAFB?logo=react)](https://react.dev)
 [![Rust](https://img.shields.io/badge/Rust-1.70+-orange?logo=rust)](https://www.rust-lang.org)
-[![GitHub stars](https://img.shields.io/github/stars/simcmoi/todo-overlay?style=social)](https://github.com/simcmoi/todo-overlay/stargazers)
+[![GitHub stars](https://img.shields.io/github/stars/simcmoi/blinkdo?style=social)](https://github.com/simcmoi/blinkdo/stargazers)
 ```
 
 ## ✅ SEO Keywords
@@ -163,7 +163,7 @@ After launch, consider posting on:
 
 ### GitHub Search Ranking Factors
 
-1. **Repository name** - Contains keywords ✅ "todo-overlay"
+1. **Repository name** - Contains keywords ✅ "blinkdo"
 2. **Description** - Clear, keyword-rich ✅
 3. **Topics** - Relevant tags ✅
 4. **README content** - Comprehensive ✅
@@ -190,7 +190,7 @@ Monitor these metrics:
 - **Referring sites** - Where traffic comes from
 - **Popular content** - Most viewed files
 
-Access at: `https://github.com/simcmoi/todo-overlay/graphs/traffic`
+Access at: `https://github.com/simcmoi/blinkdo/graphs/traffic`
 
 ### Landing Page Analytics
 

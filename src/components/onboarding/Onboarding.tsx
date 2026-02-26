@@ -161,7 +161,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
             <div className="flex justify-center mb-4">
               <img 
                 src="/app-icon.png" 
-                alt="Todo Overlay Logo" 
+                alt="BlinkDo Logo" 
                 className="h-20 w-20 rounded-2xl shadow-lg"
               />
             </div>

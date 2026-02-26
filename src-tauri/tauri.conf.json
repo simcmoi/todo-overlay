@@ -1,8 +1,8 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
-  "productName": "ToDo Overlay",
-  "version": "0.2.8",
-  "identifier": "com.simon.todooverlay",
+  "productName": "BlinkDo",
+  "version": "0.3.0",
+  "identifier": "com.simon.blinkdo",
   "build": {
     "frontendDist": "../dist",
     "devUrl": "http://localhost:5173",
@@ -14,7 +14,7 @@
     "windows": [
       {
         "label": "main",
-        "title": "ToDo Overlay",
+        "title": "BlinkDo",
         "width": 800,
         "height": 600,
         "minWidth": 600,
@@ -55,7 +55,7 @@
   "plugins": {
     "updater": {
       "endpoints": [
-        "https://github.com/simcmoi/todo-overlay/releases/latest/download/latest.json"
+        "https://github.com/simcmoi/blinkdo/releases/latest/download/latest.json"
       ],
       "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDBEQUE4NjAwMTFGMDcyMjUKUldRbGN2QVJBSWFxRGVqelNHYVJuRnFZalNZSDkzaHlPNWZHclF6Rkd1NU9nZWNXeXlLbG9jRzYK",
       "windows": {

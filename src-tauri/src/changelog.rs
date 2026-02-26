@@ -15,14 +15,14 @@ pub async fn get_changelog(version: String) -> Result<String, String> {
 /// Récupère le changelog depuis une release GitHub
 async fn fetch_changelog_from_github(version: &str) -> Result<String, String> {
     let url = format!(
-        "https://api.github.com/repos/simcmoi/todo-overlay/releases/tags/v{}",
+        "https://api.github.com/repos/simcmoi/blinkdo/releases/tags/v{}",
         version
     );
 
     let client = reqwest::Client::new();
     let response = client
         .get(&url)
-        .header("User-Agent", "todo-overlay")
+        .header("User-Agent", "blinkdo")
         .header("Accept", "application/vnd.github.v3+json")
         .send()
         .await

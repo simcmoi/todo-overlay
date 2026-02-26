@@ -19,7 +19,7 @@ pub fn run() {
                 .level(log::LevelFilter::Info)
                 .target(tauri_plugin_log::Target::new(
                     tauri_plugin_log::TargetKind::LogDir {
-                        file_name: Some("todo-overlay.log".to_string()),
+                        file_name: Some("blinkdo.log".to_string()),
                     },
                 ))
                 .rotation_strategy(tauri_plugin_log::RotationStrategy::KeepOne)

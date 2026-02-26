@@ -1,6 +1,6 @@
 {
   "app": {
-    "title": "待办事项叠加层",
+    "title": "BlinkDo",
     "settings": "设置",
     "changelog": "更新日志",
     "backToHome": "返回主页",
@@ -198,7 +198,7 @@
     "stepWelcome": "欢迎",
     "stepStorage": "存储",
     "stepConfiguration": "配置",
-    "welcomeTitle": "欢迎使用 Todo Overlay",
+    "welcomeTitle": "欢迎使用 BlinkDo",
     "welcomeDescription": "您的极简而强大的任务管理器",
     "featureMinimalist": "极简界面",
     "featureMinimalistDesc": "专注于任务而不分心",

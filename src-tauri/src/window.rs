@@ -14,7 +14,7 @@ fn get_overlay_window(app: &AppHandle) -> Option<WebviewWindow> {
 
 fn create_overlay_window(app: &AppHandle) -> tauri::Result<WebviewWindow> {
     let window = WebviewWindowBuilder::new(app, OVERLAY_WINDOW_LABEL, WebviewUrl::default())
-        .title("ToDo Overlay")
+        .title("BlinkDo")
         .inner_size(500.0, 700.0)
         .min_inner_size(500.0, 700.0)
         .max_inner_size(500.0, 700.0)

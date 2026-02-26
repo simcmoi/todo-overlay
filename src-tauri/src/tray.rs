@@ -18,7 +18,7 @@ pub fn create_tray(app: &tauri::AppHandle) -> tauri::Result<()> {
 
     let mut tray_builder = TrayIconBuilder::new()
         .icon_as_template(cfg!(target_os = "macos"))
-        .tooltip("ToDo Overlay")
+        .tooltip("BlinkDo")
         .menu(&menu)
         .show_menu_on_left_click(false)
         .on_menu_event(|app, event| match event.id.as_ref() {

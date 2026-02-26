@@ -1,6 +1,6 @@
 {
   "app": {
-    "title": "टूडू ओवरले",
+    "title": "BlinkDo",
     "settings": "सेटिंग्स",
     "changelog": "परिवर्तन लॉग",
     "backToHome": "होम पर वापस जाएं",
@@ -198,7 +198,7 @@
     "stepWelcome": "स्वागत",
     "stepStorage": "भंडारण",
     "stepConfiguration": "कॉन्फ़िगरेशन",
-    "welcomeTitle": "Todo Overlay में आपका स्वागत है",
+    "welcomeTitle": "BlinkDo में आपका स्वागत है",
     "welcomeDescription": "आपका न्यूनतम और शक्तिशाली कार्य प्रबंधक",
     "featureMinimalist": "न्यूनतम इंटरफ़ेस",
     "featureMinimalistDesc": "बिना किसी विचलन के कार्यों पर ध्यान केंद्रित करें",

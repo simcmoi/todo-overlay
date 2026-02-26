@@ -178,7 +178,7 @@ export default function App() {
   // Détection du premier lancement
   const [showOnboarding, setShowOnboarding] = useState(() => {
     try {
-      const hasCompletedOnboarding = localStorage.getItem('todo-overlay-onboarding-completed')
+      const hasCompletedOnboarding = localStorage.getItem('blinkdo-onboarding-completed')
       return hasCompletedOnboarding !== 'true'
     } catch {
       return false
@@ -187,7 +187,7 @@ export default function App() {
 
   const handleOnboardingComplete = () => {
     try {
-      localStorage.setItem('todo-overlay-onboarding-completed', 'true')
+      localStorage.setItem('blinkdo-onboarding-completed', 'true')
       setShowOnboarding(false)
     } catch (error) {
       console.error('Failed to save onboarding completion:', error)
@@ -206,7 +206,7 @@ export default function App() {
       
       // Clear onboarding flag to show it again
       try {
-        localStorage.removeItem('todo-overlay-onboarding-completed')
+        localStorage.removeItem('blinkdo-onboarding-completed')
         console.log('✅ Onboarding flag cleared from localStorage')
         setShowOnboarding(true)
         console.log('✅ showOnboarding set to true')
@@ -436,7 +436,7 @@ export default function App() {
         <UpdateBanner />
         <div className="mb-2 flex items-center justify-between gap-2">
           <div className="flex min-w-0 items-center gap-2">
-            <img src="/app-icon.png" alt="ToDo Overlay" className="h-4 w-4 rounded-sm" />
+            <img src="/app-icon.png" alt="BlinkDo" className="h-4 w-4 rounded-sm" />
             {activeList && renamingListId === activeList.id ? (
               <div className="flex items-center gap-1">
                 <IconPicker
@@ -840,7 +840,7 @@ export default function App() {
           </p>
           <button
             onClick={() => {
-              void open('https://github.com/simcmoi/todo-overlay')
+              void open('https://github.com/simcmoi/blinkdo')
             }}
             className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
           >

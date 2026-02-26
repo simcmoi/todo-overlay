@@ -123,7 +123,7 @@ export class CloudStorageProvider implements StorageProvider {
       auth: {
         persistSession: true,
         autoRefreshToken: true,
-        storageKey: 'todo-overlay-auth',
+        storageKey: 'blinkdo-auth',
       },
       realtime: {
         params: {
@@ -928,7 +928,7 @@ export class CloudStorageProvider implements StorageProvider {
   
   private getDeviceId(): string {
     // Générer un ID d'appareil unique et le persister
-    const storageKey = 'todo-overlay-device-id'
+    const storageKey = 'blinkdo-device-id'
     let deviceId = localStorage.getItem(storageKey)
     
     if (!deviceId) {

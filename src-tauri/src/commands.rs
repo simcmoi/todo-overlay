@@ -226,7 +226,7 @@ pub fn get_log_file_path(app: AppHandle) -> Result<String, String> {
         .app_log_dir()
         .map_err(|error| format!("failed to resolve log directory: {error}"))?;
 
-    let path = log_dir.join("todo-overlay.log");
+    let path = log_dir.join("blinkdo.log");
 
     path.to_str()
         .ok_or_else(|| "invalid path".to_string())
@@ -242,7 +242,7 @@ pub fn open_log_file(app: AppHandle) -> Result<(), String> {
         .app_log_dir()
         .map_err(|error| format!("failed to resolve log directory: {error}"))?;
 
-    let path = log_dir.join("todo-overlay.log");
+    let path = log_dir.join("blinkdo.log");
 
     // Vérifier si le fichier existe
     if !path.exists() {

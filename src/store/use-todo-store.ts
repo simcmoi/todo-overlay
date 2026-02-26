@@ -102,7 +102,7 @@ const getStoredStorageMode = (): StorageMode => {
   }
 
   try {
-    const stored = localStorage.getItem('todo-overlay-storage-mode')
+    const stored = localStorage.getItem('blinkdo-storage-mode')
     return (stored === 'cloud' ? 'cloud' : 'local') as StorageMode
   } catch {
     return 'local'
@@ -111,7 +111,7 @@ const getStoredStorageMode = (): StorageMode => {
 
 const setStoredStorageMode = (mode: StorageMode) => {
   try {
-    localStorage.setItem('todo-overlay-storage-mode', mode)
+    localStorage.setItem('blinkdo-storage-mode', mode)
   } catch (error) {
     console.error('Failed to store storage mode:', error)
   }

@@ -1,6 +1,6 @@
-# Setup Supabase pour Todo Overlay
+# Setup Supabase pour BlinkDo
 
-Ce guide vous explique comment configurer Supabase Cloud pour activer le mode cloud dans Todo Overlay.
+Ce guide vous explique comment configurer Supabase Cloud pour activer le mode cloud dans BlinkDo.
 
 ## 📋 Étape 1: Créer un Projet Supabase
 
@@ -9,7 +9,7 @@ Ce guide vous explique comment configurer Supabase Cloud pour activer le mode cl
 3. Créez un compte (ou connectez-vous)
 4. Cliquez sur "New Project"
 5. Remplissez les informations:
-   - **Name**: `todo-overlay` (ou ce que vous voulez)
+   - **Name**: `blinkdo` (ou ce que vous voulez)
    - **Database Password**: Choisissez un mot de passe fort (notez-le!)
    - **Region**: Choisissez la région la plus proche de vous
    - **Pricing Plan**: Free (suffisant pour commencer)

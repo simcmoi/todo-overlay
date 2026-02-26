@@ -3,7 +3,7 @@ services:
     build:
       context: ./web/landing
       dockerfile: Dockerfile
-    container_name: todo-overlay-web
+    container_name: blinkdo-web
     ports:
       - "80:80"
       - "443:443"
@@ -11,7 +11,7 @@ services:
       - ./web/updates:/usr/share/nginx/html/updates:ro
     restart: unless-stopped
     networks:
-      - todo-overlay
+      - blinkdo
 
   # Supabase Services
   postgres:
@@ -29,7 +29,7 @@ services:
       - ./supabase/init:/docker-entrypoint-initdb.d:ro
     restart: unless-stopped
     networks:
-      - todo-overlay
+      - blinkdo
     healthcheck:
       test: pg_isready -U postgres -h localhost
       interval: 5s
@@ -51,7 +51,7 @@ services:
     ports:
       - "3000:3000"
     networks:
-      - todo-overlay
+      - blinkdo
     depends_on:
       - meta
       - kong
@@ -72,7 +72,7 @@ services:
     volumes:
       - ./supabase/kong.yml:/var/lib/kong/kong.yml:ro
     networks:
-      - todo-overlay
+      - blinkdo
     restart: unless-stopped
     depends_on:
       postgres:
@@ -108,7 +108,7 @@ services:
       GOTRUE_MAILER_URLPATHS_RECOVERY: ${MAILER_URLPATHS_RECOVERY}
       GOTRUE_MAILER_URLPATHS_EMAIL_CHANGE: ${MAILER_URLPATHS_EMAIL_CHANGE}
     networks:
-      - todo-overlay
+      - blinkdo
     depends_on:
       postgres:
         condition: service_healthy
@@ -126,7 +126,7 @@ services:
       PGRST_APP_SETTINGS_JWT_SECRET: ${JWT_SECRET}
       PGRST_APP_SETTINGS_JWT_EXP: ${JWT_EXPIRY:-3600}
     networks:
-      - todo-overlay
+      - blinkdo
     depends_on:
       postgres:
         condition: service_healthy
@@ -152,7 +152,7 @@ services:
       ENABLE_TAILSCALE: "false"
       DNS_NODES: "''"
     networks:
-      - todo-overlay
+      - blinkdo
     depends_on:
       postgres:
         condition: service_healthy
@@ -178,7 +178,7 @@ services:
     volumes:
       - storage-data:/var/lib/storage
     networks:
-      - todo-overlay
+      - blinkdo
     depends_on:
       postgres:
         condition: service_healthy
@@ -197,7 +197,7 @@ services:
     volumes:
       - storage-data:/var/lib/storage
     networks:
-      - todo-overlay
+      - blinkdo
     restart: unless-stopped
 
   meta:
@@ -211,7 +211,7 @@ services:
       PG_META_DB_USER: supabase_admin
       PG_META_DB_PASSWORD: ${POSTGRES_PASSWORD:-your-super-secret-and-long-postgres-password}
     networks:
-      - todo-overlay
+      - blinkdo
     depends_on:
       postgres:
         condition: service_healthy
@@ -222,5 +222,5 @@ volumes:
   storage-data:
 
 networks:
-  todo-overlay:
+  blinkdo:
     driver: bridge

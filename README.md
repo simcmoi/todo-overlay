@@ -1,19 +1,19 @@
 <div align="center">
 
-# 📝 Todo Overlay
+# 📝 BlinkDo
 
 **Instant overlay todo list with global hotkey**
 
 *Press `Shift+Space` anywhere to capture tasks. Built with Rust + Tauri + React.*
 
-[![CI](https://github.com/simcmoi/todo-overlay/actions/workflows/ci.yml/badge.svg)](https://github.com/simcmoi/todo-overlay/actions/workflows/ci.yml)
-[![GitHub release](https://img.shields.io/github/v/release/simcmoi/todo-overlay?color=blue&label=version)](https://github.com/simcmoi/todo-overlay/releases/latest)
-[![GitHub downloads](https://img.shields.io/github/downloads/simcmoi/todo-overlay/total?color=success)](https://github.com/simcmoi/todo-overlay/releases)
-[![codecov](https://codecov.io/gh/simcmoi/todo-overlay/branch/main/graph/badge.svg)](https://codecov.io/gh/simcmoi/todo-overlay)
+[![CI](https://github.com/simcmoi/blinkdo/actions/workflows/ci.yml/badge.svg)](https://github.com/simcmoi/blinkdo/actions/workflows/ci.yml)
+[![GitHub release](https://img.shields.io/github/v/release/simcmoi/blinkdo?color=blue&label=version)](https://github.com/simcmoi/blinkdo/releases/latest)
+[![GitHub downloads](https://img.shields.io/github/downloads/simcmoi/blinkdo/total?color=success)](https://github.com/simcmoi/blinkdo/releases)
+[![codecov](https://codecov.io/gh/simcmoi/blinkdo/branch/main/graph/badge.svg)](https://codecov.io/gh/simcmoi/blinkdo)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![GitHub stars](https://img.shields.io/github/stars/simcmoi/todo-overlay?style=social)](https://github.com/simcmoi/todo-overlay/stargazers)
+[![GitHub stars](https://img.shields.io/github/stars/simcmoi/blinkdo?style=social)](https://github.com/simcmoi/blinkdo/stargazers)
 
-[🌐 Website](https://simcmoi.github.io/todo-overlay) • [📥 Download](https://github.com/simcmoi/todo-overlay/releases) • [📖 Docs](docs/README.md) • [🐛 Issues](https://github.com/simcmoi/todo-overlay/issues)
+[🌐 Website](https://simcmoi.github.io/blinkdo) • [📥 Download](https://github.com/simcmoi/blinkdo/releases) • [📖 Docs](docs/README.md) • [🐛 Issues](https://github.com/simcmoi/blinkdo/issues)
 
 </div>
 
@@ -21,7 +21,7 @@
 
 ## ✨ Features
 
-Todo Overlay is a **cross-platform desktop app** that appears instantly over any window with a single keyboard shortcut. Built with **Rust** and **React** for native performance and modern UI.
+BlinkDo is a **cross-platform desktop app** that appears instantly over any window with a single keyboard shortcut. Built with **Rust** and **React** for native performance and modern UI.
 
 **Core Features:**
 - ⚡ **Global hotkey overlay** - Press `Shift+Space` anywhere, anytime
@@ -54,11 +54,11 @@ Todo Overlay is a **cross-platform desktop app** that appears instantly over any
 
 ### Download
 
-- 🍎 **[macOS (.dmg)](https://github.com/simcmoi/todo-overlay/releases/latest)** - Universal (Intel + Apple Silicon)
-- 🪟 **[Windows (.msi)](https://github.com/simcmoi/todo-overlay/releases/latest)** - Recommended installer
-- 🐧 **[Linux (.AppImage)](https://github.com/simcmoi/todo-overlay/releases/latest)** - Universal (all distros)
+- 🍎 **[macOS (.dmg)](https://github.com/simcmoi/blinkdo/releases/latest)** - Universal (Intel + Apple Silicon)
+- 🪟 **[Windows (.msi)](https://github.com/simcmoi/blinkdo/releases/latest)** - Recommended installer
+- 🐧 **[Linux (.AppImage)](https://github.com/simcmoi/blinkdo/releases/latest)** - Universal (all distros)
 
-Or visit **[Releases](https://github.com/simcmoi/todo-overlay/releases)** for all versions (.exe, .deb, older versions).
+Or visit **[Releases](https://github.com/simcmoi/blinkdo/releases)** for all versions (.exe, .deb, older versions).
 
 ### Usage
 
@@ -84,8 +84,8 @@ That's it! The app runs in the background and can be summoned anytime with `Shif
 
 ```bash
 # Clone and install
-git clone https://github.com/simcmoi/todo-overlay.git
-cd todo-overlay
+git clone https://github.com/simcmoi/blinkdo.git
+cd blinkdo
 npm install
 
 # Run in dev mode (with hot reload)
@@ -140,6 +140,6 @@ See [LICENSE](LICENSE) for details.
 
 ### Made with ❤️ using Rust and React
 
-**[⭐ Star this project](https://github.com/simcmoi/todo-overlay)** • **[📥 Download](https://github.com/simcmoi/todo-overlay/releases)** • **[📖 Read the docs](DOCUMENTATION.md)**
+**[⭐ Star this project](https://github.com/simcmoi/blinkdo)** • **[📥 Download](https://github.com/simcmoi/blinkdo/releases)** • **[📖 Read the docs](DOCUMENTATION.md)**
 
 </div>

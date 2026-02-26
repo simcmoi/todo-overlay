@@ -4,7 +4,7 @@ To improve discoverability and SEO, add these topics to your GitHub repository.
 
 ## How to Add Topics
 
-1. Go to https://github.com/simcmoi/todo-overlay
+1. Go to https://github.com/simcmoi/blinkdo
 2. Click the **⚙️ Settings** gear icon next to "About" (top right of the repository page)
 3. In the "Topics" field, add the topics below
 4. Click "Save changes"

@@ -57,7 +57,7 @@ Reference images in README.md like this:
 Or use HTML for more control:
 
 ```html
-<img src=".github/assets/app-main-window.png" alt="Todo Overlay Main Window" width="800">
+<img src=".github/assets/app-main-window.png" alt="BlinkDo Main Window" width="800">
 ```
 
 ## Current Assets
