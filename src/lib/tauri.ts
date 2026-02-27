@@ -1,4 +1,5 @@
 import { invoke } from '@tauri-apps/api/core'
+import { getCurrentWindow } from '@tauri-apps/api/window'
 import type { AppData, Settings, TodoPriority } from '@/types/todo'
 
 export type UpdateInfo = {
@@ -191,4 +192,13 @@ export async function getChangelog(version: string): Promise<string> {
 
 export async function openAccessibilitySettings(): Promise<void> {
   await invoke('open_accessibility_settings')
+}
+
+export async function setWindowWidth(width: number): Promise<void> {
+  await invoke('set_window_width', { width })
+}
+
+export function isOverlayWindow(): boolean {
+  const currentWindow = getCurrentWindow()
+  return currentWindow.label === 'overlay'
 }

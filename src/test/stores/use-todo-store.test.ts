@@ -35,6 +35,12 @@ describe('useTodoStore', () => {
         labels: [],
         enableAutostart: false,
         enableSoundEffects: true,
+        soundSettings: {
+          enabled: true,
+          onCreate: true,
+          onComplete: true,
+          onDelete: true,
+        },
         language: 'auto',
       },
     }
@@ -86,6 +92,12 @@ describe('useTodoStore', () => {
         labels: [],
         enableAutostart: false,
         enableSoundEffects: true,
+        soundSettings: {
+          enabled: true,
+          onCreate: true,
+          onComplete: true,
+          onDelete: true,
+        },
         language: 'auto',
       },
     }
@@ -120,6 +132,12 @@ describe('useTodoStore', () => {
         labels: [],
         enableAutostart: false,
         enableSoundEffects: true,
+        soundSettings: {
+          enabled: true,
+          onCreate: true,
+          onComplete: true,
+          onDelete: true,
+        },
         language: 'auto',
       },
     }
@@ -149,6 +167,12 @@ describe('useTodoStore', () => {
         labels: [],
         enableAutostart: true,
         enableSoundEffects: true,
+        soundSettings: {
+          enabled: true,
+          onCreate: true,
+          onComplete: true,
+          onDelete: true,
+        },
         language: 'auto',
       },
     }
@@ -184,6 +208,12 @@ describe('useTodoStore', () => {
         labels: [],
         enableAutostart: false,
         enableSoundEffects: true,
+        soundSettings: {
+          enabled: true,
+          onCreate: true,
+          onComplete: true,
+          onDelete: true,
+        },
         language: 'auto',
       },
     }

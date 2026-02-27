@@ -5,7 +5,10 @@
     "changelog": "Changelog",
     "backToHome": "Back to home",
     "openSettings": "Open settings",
-    "noActiveTasks": "No active tasks"
+    "noActiveTasks": "No active tasks",
+    "errors": {
+      "windowResize": "Failed to resize window"
+    }
   },
   "todo": {
     "placeholder": "Add a task...",
@@ -116,6 +119,9 @@
     "enableAutostartTooltip": "Automatically launches the app in the background when your computer starts. The overlay remains accessible via the keyboard shortcut.",
     "enableSoundEffects": "Enable sound effects",
     "enableSoundEffectsTooltip": "Plays subtle sounds when creating, completing or deleting tasks for pleasant audio feedback.",
+    "soundOnCreate": "Sound on create",
+    "soundOnComplete": "Sound on complete",
+    "soundOnDelete": "Sound on delete",
     "sortMode": "Default sort",
     "sortModeTooltip": "Task display order: by date added, alphabetical, due date, or manual (drag & drop).",
     "sortRecent": "Recent",

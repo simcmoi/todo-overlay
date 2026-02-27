@@ -32,6 +32,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { DateTimePicker } from '@/components/ui/date-time-picker'
 import { cn } from '@/lib/utils'
 import type { Todo, TodoLabel, TodoListMeta, TodoPriority } from '@/types/todo'
+import { useSoundEffects } from '@/hooks/useSoundEffects'
 
 type TodoListProps = {
   composeInputRef: MutableRefObject<HTMLInputElement | HTMLTextAreaElement | null>
@@ -308,6 +309,7 @@ export function TodoList({
   emptyLabel,
 }: TodoListProps) {
   const { t, i18n } = useTranslation()
+  const { playAdd } = useSoundEffects()
   const [editingId, setEditingId] = useState<string | 'new' | null>(null)
   const [newParentId, setNewParentId] = useState<string | null>(null)
   const [draft, setDraft] = useState<TodoDraft>({ title: '', details: '' })
@@ -467,6 +469,7 @@ export function TodoList({
             reminderAt: draft.reminderAt,
             parentId: newParentIdAtStart ?? undefined,
           })
+          playAdd()
         }
       } else if (title) {
         await onUpdate({

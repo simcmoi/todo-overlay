@@ -31,6 +31,13 @@ export type Todo = {
   reminderAt?: number
 }
 
+export type SoundSettings = {
+  enabled: boolean // Master toggle pour tous les sons
+  onCreate: boolean // Son lors de la création d'une tâche
+  onComplete: boolean // Son lors de la complétion d'une tâche
+  onDelete: boolean // Son lors de la suppression d'une tâche
+}
+
 export type Settings = {
   sortMode: SortMode
   sortOrder: SortOrder
@@ -41,7 +48,8 @@ export type Settings = {
   lists: TodoListMeta[]
   labels: TodoLabel[]
   enableAutostart: boolean
-  enableSoundEffects: boolean
+  enableSoundEffects: boolean // Deprecated - kept for backward compatibility
+  soundSettings: SoundSettings
   language: string
 }
 

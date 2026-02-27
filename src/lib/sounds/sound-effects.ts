@@ -2,11 +2,18 @@
  * Générateur de sons synthétiques pour les effets sonores de l'app
  */
 
+import type { SoundSettings } from '@/types/todo'
+
 export type SoundType = 'add' | 'delete' | 'complete' | 'toggle'
 
 class SoundEffects {
   private audioContext: AudioContext | null = null
-  private enabled: boolean = true
+  private settings: SoundSettings = {
+    enabled: true,
+    onCreate: true,
+    onComplete: true,
+    onDelete: true,
+  }
 
   constructor() {
     // Initialiser AudioContext de manière lazy
@@ -20,12 +27,17 @@ class SoundEffects {
     }
   }
 
+  setSettings(settings: SoundSettings): void {
+    this.settings = settings
+  }
+
+  /** @deprecated Use setSettings instead */
   setEnabled(enabled: boolean): void {
-    this.enabled = enabled
+    this.settings.enabled = enabled
   }
 
   private playTone(frequency: number, duration: number, type: OscillatorType = 'sine', volume: number = 0.3): void {
-    if (!this.enabled || !this.audioContext) return
+    if (!this.settings.enabled || !this.audioContext) return
 
     try {
       const oscillator = this.audioContext.createOscillator()
@@ -54,7 +66,7 @@ class SoundEffects {
    * Son pour l'ajout d'une tâche - petit clic doux montant
    */
   playAdd(): void {
-    if (!this.enabled || !this.audioContext) return
+    if (!this.settings.enabled || !this.settings.onCreate || !this.audioContext) return
     
     // Deux tons rapides ascendants pour un effet "pop"
     this.playTone(440, 0.05, 'sine', 0.15) // La
@@ -65,7 +77,7 @@ class SoundEffects {
    * Son pour la suppression - petit clic descendant
    */
   playDelete(): void {
-    if (!this.enabled || !this.audioContext) return
+    if (!this.settings.enabled || !this.settings.onDelete || !this.audioContext) return
     
     // Ton descendant pour un effet "whoosh"
     this.playTone(660, 0.06, 'sine', 0.2) // Mi
@@ -76,7 +88,7 @@ class SoundEffects {
    * Son pour compléter une tâche - son satisfaisant
    */
   playComplete(): void {
-    if (!this.enabled || !this.audioContext) return
+    if (!this.settings.enabled || !this.settings.onComplete || !this.audioContext) return
     
     // Trois tons montants pour un effet "success"
     this.playTone(523, 0.06, 'sine', 0.15) // Do
@@ -88,7 +100,7 @@ class SoundEffects {
    * Son pour toggle (marquer comme incomplet) - petit bip simple
    */
   playToggle(): void {
-    if (!this.enabled || !this.audioContext) return
+    if (!this.settings.enabled || !this.settings.onComplete || !this.audioContext) return
     
     this.playTone(440, 0.08, 'sine', 0.15) // La simple
   }

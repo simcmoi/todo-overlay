@@ -29,6 +29,30 @@ pub enum SortMode {
     DueDate,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SoundSettings {
+    #[serde(default = "default_true")]
+    pub enabled: bool,
+    #[serde(default = "default_true")]
+    pub on_create: bool,
+    #[serde(default = "default_true")]
+    pub on_complete: bool,
+    #[serde(default = "default_true")]
+    pub on_delete: bool,
+}
+
+impl Default for SoundSettings {
+    fn default() -> Self {
+        Self {
+            enabled: true,
+            on_create: true,
+            on_complete: true,
+            on_delete: true,
+        }
+    }
+}
+
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Default)]
 #[serde(rename_all = "lowercase")]
 pub enum ThemeMode {
@@ -115,6 +139,8 @@ pub struct Settings {
     pub enable_autostart: bool,
     #[serde(default = "default_enable_sound_effects")]
     pub enable_sound_effects: bool,
+    #[serde(default = "default_sound_settings")]
+    pub sound_settings: SoundSettings,
     #[serde(default = "default_language")]
     pub language: String,
     #[serde(default, alias = "listName", alias = "list_name", skip_serializing)]
@@ -134,6 +160,7 @@ impl Default for Settings {
             labels: default_labels(),
             enable_autostart: true,
             enable_sound_effects: true,
+            sound_settings: SoundSettings::default(),
             language: default_language(),
             legacy_list_name: None,
         }
@@ -206,6 +233,14 @@ fn default_enable_autostart() -> bool {
 
 fn default_enable_sound_effects() -> bool {
     true
+}
+
+fn default_true() -> bool {
+    true
+}
+
+fn default_sound_settings() -> SoundSettings {
+    SoundSettings::default()
 }
 
 fn default_language() -> String {

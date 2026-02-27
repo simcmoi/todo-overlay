@@ -1,833 +1,141 @@
-import { AlertTriangle, ArrowLeft, Cloud, ExternalLink, FileText, Info, Keyboard, Languages, Palette, Plus, RefreshCw, ScrollText, SlidersHorizontal, Tags, Trash2 } from 'lucide-react'
-import { useEffect, useMemo, useState } from 'react'
+import { AlertTriangle, Cloud, FileText, Info, Keyboard, Languages, Palette, SlidersHorizontal, Tags } from 'lucide-react'
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Switch } from '@/components/ui/switch'
-import { useToast } from '@/hooks/use-toast'
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import {
-  Tooltip,
-  TooltipContent,
   TooltipProvider,
-  TooltipTrigger,
 } from '@/components/ui/tooltip'
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from '@/components/ui/alert-dialog'
-import { useUpdateStore } from '@/store/use-update-store'
-import { getAppVersion, getDataFilePath, openDataFile, getLogFilePath, openLogFile, resetAllData, openAccessibilitySettings } from '@/lib/tauri'
 import { cn } from '@/lib/utils'
-import type { Settings, ThemeMode, TodoLabel } from '@/types/todo'
-import { StorageSettings } from '@/components/storage'
+import type { Settings } from '@/types/todo'
+import { GeneralSettings } from './settings/general-settings'
+import { AppearanceSettings } from './settings/appearance-settings'
+import { LanguageSettings } from './settings/language-settings'
+import { ShortcutsSettings } from './settings/shortcuts-settings'
+import { LabelsSettings } from './settings/labels-settings'
+import { SyncSettings } from './settings/sync-settings'
+import { DataSettings } from './settings/data-settings'
+import { AboutSettings } from './settings/about-settings'
+import { DangerSettings } from './settings/danger-settings'
 
 type SettingsPageProps = {
   settings: Settings
-  onBack: () => void
   onUpdateSettings: (partial: Partial<Settings>) => Promise<void>
   onSetGlobalShortcut: (shortcut: string) => Promise<void>
   onSetAutostartEnabled: (enabled: boolean) => Promise<void>
 }
 
-const LANGUAGE_OPTIONS: Array<{ value: string; label: string; flag: string }> = [
-  { value: 'auto', label: 'Auto (Système)', flag: '🌐' },
-  { value: 'en', label: 'English', flag: '🇺🇸' },
-  { value: 'fr', label: 'Français', flag: '🇫🇷' },
-  { value: 'es', label: 'Español', flag: '🇪🇸' },
-  { value: 'zh', label: '中文', flag: '🇨🇳' },
-  { value: 'hi', label: 'हिन्दी', flag: '🇮🇳' },
-]
-
-function keyFromKeyboardEvent(event: KeyboardEvent): string | null {
-  if (/^[a-z]$/i.test(event.key)) {
-    return event.key.toUpperCase()
-  }
-  if (/^\d$/.test(event.key)) {
-    return event.key
-  }
-  if (/^F\d{1,2}$/i.test(event.key)) {
-    return event.key.toUpperCase()
-  }
-
-  switch (event.key) {
-    case ' ':
-      return 'Space'
-    case 'Enter':
-      return 'Enter'
-    case 'Tab':
-      return 'Tab'
-    case 'Escape':
-      return 'Escape'
-    case 'Backspace':
-      return 'Backspace'
-    case 'Delete':
-      return 'Delete'
-    case 'ArrowUp':
-      return 'Up'
-    case 'ArrowDown':
-      return 'Down'
-    case 'ArrowLeft':
-      return 'Left'
-    case 'ArrowRight':
-      return 'Right'
-    default:
-      return null
-  }
-}
-
-// Removed colorClasses function - colors now applied directly with cn() to avoid Tailwind purging
+type SettingsSection = 'general' | 'appearance' | 'language' | 'shortcuts' | 'labels' | 'sync' | 'data' | 'about' | 'danger'
 
 export function SettingsPage({
   settings,
-  onBack,
   onUpdateSettings,
   onSetGlobalShortcut,
   onSetAutostartEnabled,
 }: SettingsPageProps) {
   const { t } = useTranslation()
-  
-  const COLOR_OPTIONS: Array<{ value: TodoLabel['color']; label: string }> = [
-    { value: 'slate', label: t('settings.colors.slate') },
-    { value: 'blue', label: t('settings.colors.blue') },
-    { value: 'green', label: t('settings.colors.green') },
-    { value: 'amber', label: t('settings.colors.amber') },
-    { value: 'rose', label: t('settings.colors.rose') },
-    { value: 'violet', label: t('settings.colors.violet') },
+  const [activeSection, setActiveSection] = useState<SettingsSection>('general')
+
+  const sections = [
+    { id: 'general' as const, label: t('settings.general'), icon: SlidersHorizontal },
+    { id: 'appearance' as const, label: t('settings.appearance'), icon: Palette },
+    { id: 'language' as const, label: t('settings.language'), icon: Languages },
+    { id: 'shortcuts' as const, label: t('settings.globalShortcut'), icon: Keyboard },
+    { id: 'labels' as const, label: t('settings.labels'), icon: Tags },
+    { id: 'sync' as const, label: t('settings.synchronization'), icon: Cloud },
+    { id: 'data' as const, label: t('settings.localData'), icon: FileText },
+    { id: 'about' as const, label: t('settings.about'), icon: Info },
+    { id: 'danger' as const, label: t('settings.dangerZone'), icon: AlertTriangle },
   ]
-  
-  const [shortcutDraft, setShortcutDraft] = useState(settings.globalShortcut)
-  const [shortcutError, setShortcutError] = useState<string | null>(null)
-  const [isCapturingShortcut, setIsCapturingShortcut] = useState(false)
-  const [isSavingShortcut, setIsSavingShortcut] = useState(false)
-  const [labelDrafts, setLabelDrafts] = useState<Record<string, string>>({})
-  const [appVersion, setAppVersion] = useState<string>('')
-  const [dataFilePath, setDataFilePath] = useState<string>('')
-  const [logFilePath, setLogFilePath] = useState<string>('')
-  const { checkForUpdate, state: updateState, lastChecked } = useUpdateStore()
-  const { toast } = useToast()
 
-  useEffect(() => {
-    void getAppVersion().then(setAppVersion)
-    void getDataFilePath().then(setDataFilePath)
-    void getLogFilePath().then(setLogFilePath)
-  }, [])
-
-  useEffect(() => {
-    setShortcutDraft(settings.globalShortcut)
-  }, [settings.globalShortcut])
-
-  useEffect(() => {
-    setLabelDrafts(
-      Object.fromEntries(settings.labels.map((label) => [label.id, label.name])),
-    )
-  }, [settings.labels])
-
-  useEffect(() => {
-    if (!isCapturingShortcut) {
-      return
+  function renderContent() {
+    switch (activeSection) {
+      case 'general':
+        return (
+          <GeneralSettings
+            settings={settings}
+            onUpdateSettings={onUpdateSettings}
+            onSetAutostartEnabled={onSetAutostartEnabled}
+          />
+        )
+      case 'appearance':
+        return (
+          <AppearanceSettings
+            settings={settings}
+            onUpdateSettings={onUpdateSettings}
+          />
+        )
+      case 'language':
+        return (
+          <LanguageSettings
+            settings={settings}
+            onUpdateSettings={onUpdateSettings}
+          />
+        )
+      case 'shortcuts':
+        return (
+          <ShortcutsSettings
+            settings={settings}
+            onSetGlobalShortcut={onSetGlobalShortcut}
+          />
+        )
+      case 'labels':
+        return (
+          <LabelsSettings
+            settings={settings}
+            onUpdateSettings={onUpdateSettings}
+          />
+        )
+      case 'sync':
+        return <SyncSettings />
+      case 'data':
+        return <DataSettings />
+      case 'about':
+        return <AboutSettings />
+      case 'danger':
+        return <DangerSettings />
+      default:
+        return null
     }
-
-    const onKeyDown = (event: KeyboardEvent) => {
-      event.preventDefault()
-      event.stopPropagation()
-
-      if (event.key === 'Escape') {
-        setIsCapturingShortcut(false)
-        return
-      }
-
-      const key = keyFromKeyboardEvent(event)
-      if (!key) {
-        setShortcutError(t('settings.unsupportedKey'))
-        return
-      }
-
-      const modifiers: string[] = []
-      if (event.metaKey) {
-        modifiers.push('CmdOrCtrl')
-      }
-      if (event.ctrlKey && !modifiers.includes('CmdOrCtrl')) {
-        modifiers.push('Ctrl')
-      }
-      if (event.altKey) {
-        modifiers.push('Alt')
-      }
-      if (event.shiftKey) {
-        modifiers.push('Shift')
-      }
-
-      const combo = [...modifiers, key].join('+')
-      setShortcutDraft(combo)
-      setShortcutError(null)
-      setIsCapturingShortcut(false)
-    }
-
-    window.addEventListener('keydown', onKeyDown, { capture: true })
-    return () => {
-      window.removeEventListener('keydown', onKeyDown, { capture: true })
-    }
-  }, [isCapturingShortcut, t])
-
-  const sortedLabels = useMemo(
-    () => [...settings.labels].sort((a, b) => a.name.localeCompare(b.name, 'fr-FR')),
-    [settings.labels],
-  )
-
-  const applyShortcut = async () => {
-    setShortcutError(null)
-    setIsSavingShortcut(true)
-    try {
-      await onSetGlobalShortcut(shortcutDraft.trim())
-    } catch (error) {
-      setShortcutError(error instanceof Error ? error.message : t('settings.invalidShortcut'))
-    } finally {
-      setIsSavingShortcut(false)
-    }
-  }
-
-  const updateLabel = async (labelId: string, partial: Partial<TodoLabel>) => {
-    const nextLabels = settings.labels.map((label) =>
-      label.id === labelId ? { ...label, ...partial } : label,
-    )
-    await onUpdateSettings({ labels: nextLabels })
-  }
-
-  const removeLabel = async (labelId: string) => {
-    const nextLabels = settings.labels.filter((label) => label.id !== labelId)
-    await onUpdateSettings({ labels: nextLabels })
-  }
-
-  const addLabel = async () => {
-    const newLabel: TodoLabel = {
-      id: `label-${Date.now()}`,
-      name: t('settings.newLabel'),
-      color: 'slate',
-    }
-    await onUpdateSettings({ labels: [...settings.labels, newLabel] })
   }
 
   return (
     <TooltipProvider>
-      <div className="h-full overflow-y-auto pr-2">
-        <div className="mb-4 flex items-center justify-between">
-          <Button type="button" variant="ghost" className="h-7 gap-1 px-2" onClick={onBack}>
-            <ArrowLeft className="h-3.5 w-3.5" />
-            {t('common.back')}
-          </Button>
-          <p className="text-sm font-medium">{t('app.settings')}</p>
-          <div className="w-7" /> {/* Spacer pour centrer le titre */}
+      <div className="flex h-full">
+        {/* Sidebar */}
+        <div className="w-48 border-r border-border bg-muted/30 flex flex-col">
+          {/* Navigation */}
+          <div className="flex-1 overflow-y-auto p-2">
+            <nav className="space-y-1">
+              {sections.map((section) => {
+                const Icon = section.icon
+                const isActive = activeSection === section.id
+                const isDanger = section.id === 'danger'
+                
+                return (
+                  <button
+                    key={section.id}
+                    onClick={() => setActiveSection(section.id)}
+                    className={cn(
+                      'w-full flex items-center gap-2 px-3 py-2 text-xs rounded-md transition-colors',
+                      isActive && !isDanger && 'bg-primary/10 text-primary font-medium',
+                      isActive && isDanger && 'bg-red-500/10 text-red-600 font-medium',
+                      !isActive && !isDanger && 'text-muted-foreground hover:bg-muted hover:text-foreground',
+                      !isActive && isDanger && 'text-red-600/70 hover:bg-red-500/5 hover:text-red-600'
+                    )}
+                  >
+                    <Icon className="h-3.5 w-3.5 shrink-0" />
+                    <span className="truncate">{section.label}</span>
+                  </button>
+                )
+              })}
+            </nav>
+          </div>
         </div>
 
-        <div className="space-y-5 pb-1">
-          {/* Général */}
-          <section>
-            <div className="mb-3 flex items-center gap-2">
-              <SlidersHorizontal className="h-4 w-4 text-muted-foreground" />
-              <p className="text-sm font-medium">{t('settings.general')}</p>
-            </div>
-            <div className="space-y-3 pl-6">
-              <div className="flex items-center justify-between gap-3">
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <span className="text-xs text-muted-foreground cursor-help">{t('settings.autoCloseOnBlur')}</span>
-                  </TooltipTrigger>
-                  <TooltipContent side="left" className="max-w-xs">
-                    <p>{t('settings.autoCloseOnBlurTooltip')}</p>
-                  </TooltipContent>
-                </Tooltip>
-                <Switch
-                  checked={settings.autoCloseOnBlur}
-                  onCheckedChange={async (checked) => {
-                    await onUpdateSettings({ autoCloseOnBlur: checked })
-                  }}
-                />
-              </div>
-              <div className="flex items-center justify-between gap-3">
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <span className="text-xs text-muted-foreground cursor-help">{t('settings.enableAutostart')}</span>
-                  </TooltipTrigger>
-                  <TooltipContent side="left" className="max-w-xs">
-                    <p>{t('settings.enableAutostartTooltip')}</p>
-                  </TooltipContent>
-                </Tooltip>
-                <Switch
-                  checked={settings.enableAutostart}
-                  onCheckedChange={async (checked) => {
-                    await onSetAutostartEnabled(checked)
-                  }}
-                />
-              </div>
-              <div className="flex items-center justify-between gap-3">
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <span className="text-xs text-muted-foreground cursor-help">{t('settings.enableSoundEffects')}</span>
-                  </TooltipTrigger>
-                  <TooltipContent side="left" className="max-w-xs">
-                    <p>{t('settings.enableSoundEffectsTooltip')}</p>
-                  </TooltipContent>
-                </Tooltip>
-                <Switch
-                  checked={settings.enableSoundEffects}
-                  onCheckedChange={async (checked) => {
-                    await onUpdateSettings({ enableSoundEffects: checked })
-                  }}
-                />
-              </div>
-              <div className="flex items-center justify-between gap-3">
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <span className="text-xs text-muted-foreground cursor-help">{t('settings.sortMode')}</span>
-                  </TooltipTrigger>
-                  <TooltipContent side="left" className="max-w-xs">
-                    <p>{t('settings.sortModeTooltip')}</p>
-                  </TooltipContent>
-                </Tooltip>
-                <Select
-                  value={settings.sortMode}
-                  onValueChange={async (value) => {
-                  await onUpdateSettings({ sortMode: value as typeof settings.sortMode })
-                }}
-              >
-                <SelectTrigger className="h-8 w-[140px] text-xs">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="recent">{t('settings.sortRecent')}</SelectItem>
-                  <SelectItem value="oldest">{t('settings.sortOldest')}</SelectItem>
-                  <SelectItem value="title">{t('settings.sortTitle')}</SelectItem>
-                  <SelectItem value="dueDate">{t('settings.sortDueDate')}</SelectItem>
-                  <SelectItem value="manual">{t('settings.sortManual')}</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        </section>
-
-        <div className="border-t border-border/50" />
-
-        {/* Apparence */}
-        <section>
-          <div className="mb-3 flex items-center gap-2">
-            <Palette className="h-4 w-4 text-muted-foreground" />
-            <p className="text-sm font-medium">{t('settings.appearance')}</p>
-          </div>
-          <div className="flex items-center justify-between gap-3 pl-6">
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <span className="text-xs text-muted-foreground cursor-help">{t('settings.theme')}</span>
-              </TooltipTrigger>
-              <TooltipContent side="left" className="max-w-xs">
-                <p>{t('settings.themeTooltip')}</p>
-              </TooltipContent>
-            </Tooltip>
-            <Select
-              value={settings.themeMode}
-              onValueChange={async (value) => {
-                await onUpdateSettings({ themeMode: value as ThemeMode })
-              }}
-            >
-              <SelectTrigger className="h-8 w-[120px] text-xs">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="system">{t('settings.themeSystem')}</SelectItem>
-                <SelectItem value="light">{t('settings.themeLight')}</SelectItem>
-                <SelectItem value="dark">{t('settings.themeDark')}</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </section>
-
-        <div className="border-t border-border/50" />
-
-        {/* Langue */}
-        <section>
-          <div className="mb-3 flex items-center gap-2">
-            <Languages className="h-4 w-4 text-muted-foreground" />
-            <p className="text-sm font-medium">{t('settings.language')}</p>
-          </div>
-          <div className="flex items-center justify-between gap-3 pl-6">
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <span className="text-xs text-muted-foreground cursor-help">{t('settings.interface')}</span>
-              </TooltipTrigger>
-              <TooltipContent side="left" className="max-w-xs">
-                <p>{t('settings.languageTooltip')}</p>
-              </TooltipContent>
-            </Tooltip>
-            <Select
-              value={settings.language}
-              onValueChange={async (value) => {
-                await onUpdateSettings({ language: value })
-              }}
-            >
-              <SelectTrigger className="h-8 w-[160px] text-xs">
-                <SelectValue>
-                  {LANGUAGE_OPTIONS.find((lang) => lang.value === settings.language) ? (
-                    <span className="flex items-center gap-1.5">
-                      {LANGUAGE_OPTIONS.find((lang) => lang.value === settings.language)?.flag}
-                      {' '}
-                      {LANGUAGE_OPTIONS.find((lang) => lang.value === settings.language)?.label}
-                    </span>
-                  ) : (
-                    'Select language'
-                  )}
-                </SelectValue>
-              </SelectTrigger>
-              <SelectContent>
-                {LANGUAGE_OPTIONS.map((lang) => (
-                  <SelectItem key={lang.value} value={lang.value}>
-                    <span className="flex items-center gap-1.5">
-                      {lang.flag} {lang.label}
-                    </span>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </section>
-
-        <div className="border-t border-border/50" />
-
-        {/* Raccourci global */}
-        <section>
-          <div className="mb-3 flex items-center gap-2">
-            <Keyboard className="h-4 w-4 text-muted-foreground" />
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <p className="text-sm font-medium cursor-help">{t('settings.globalShortcut')}</p>
-              </TooltipTrigger>
-              <TooltipContent side="right" className="max-w-xs">
-                <p>{t('settings.globalShortcutTooltip')}</p>
-              </TooltipContent>
-            </Tooltip>
-          </div>
-          <div className="space-y-2 pl-6">
-            <p className="text-xs text-muted-foreground">
-              {t('settings.shortcutExample')}: <code className="rounded bg-muted px-1 py-0.5 text-[10px]">Shift+Space</code> {t('common.or')} <code className="rounded bg-muted px-1 py-0.5 text-[10px]">CmdOrCtrl+Shift+T</code>
-            </p>
-            <div className="flex gap-2">
-              <Input
-                value={shortcutDraft}
-                onChange={(event) => {
-                  setShortcutDraft(event.currentTarget.value)
-                  setShortcutError(null)
-                }}
-                className="h-8 text-xs"
-                placeholder="Shift+Space"
-                aria-label={t('settings.globalShortcut')}
-              />
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant={isCapturingShortcut ? 'default' : 'outline'}
-                    className="h-8 px-2 text-xs"
-                    onClick={() => {
-                      setShortcutError(null)
-                    setIsCapturingShortcut((current) => !current)
-                  }}
-                >
-                  {isCapturingShortcut ? t('settings.listening') : t('settings.capture')}
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="top" className="max-w-xs">
-                <p>{t('settings.captureTooltip')}</p>
-              </TooltipContent>
-            </Tooltip>
-            <Button
-              type="button"
-              size="sm"
-              className="h-8 px-2 text-xs"
-              onClick={() => {
-                void applyShortcut()
-              }}
-              disabled={isSavingShortcut}
-            >
-              {t('settings.apply')}
-            </Button>
-            </div>
-            {shortcutError ? <p className="text-xs text-destructive">{shortcutError}</p> : null}
-            
-            {/* Info sur la limitation macOS plein écran */}
-            <div className="mt-3 flex flex-col gap-2 rounded-md border border-yellow-500/30 bg-yellow-500/5 p-3">
-              <div className="flex items-start gap-2">
-                <Info className="h-4 w-4 shrink-0 text-yellow-600 dark:text-yellow-500 mt-0.5" />
-                <div className="flex-1 space-y-1 text-xs">
-                  <p className="font-medium text-yellow-700 dark:text-yellow-400">
-                    {t('settings.fullscreenLimitationTitle')}
-                  </p>
-                  <p className="text-muted-foreground">
-                    {t('settings.fullscreenLimitationDescription')}
-                  </p>
-                </div>
-              </div>
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                className="h-7 w-full text-xs border-yellow-500/30 hover:bg-yellow-500/10"
-                onClick={() => {
-                  void openAccessibilitySettings()
-                }}
-              >
-                <ExternalLink className="h-3 w-3 mr-1.5" />
-                {t('settings.openAccessibilitySettings')}
-              </Button>
-            </div>
-          </div>
-        </section>
-
-        <div className="border-t border-border/50" />
-
-        {/* Labels */}
-        <section>
-          <div className="mb-3 flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2">
-              <Tags className="h-4 w-4 text-muted-foreground" />
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <p className="text-sm font-medium cursor-help">{t('settings.labels')}</p>
-                </TooltipTrigger>
-                <TooltipContent side="right" className="max-w-xs">
-                  <p>{t('settings.labelsTooltip')}</p>
-                </TooltipContent>
-              </Tooltip>
-            </div>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button type="button" variant="ghost" size="sm" className="h-7 gap-1 px-2 text-xs" onClick={addLabel}>
-                  <Plus className="h-3.5 w-3.5" />
-                  {t('settings.addLabel')}
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="left" className="max-w-xs">
-                <p>{t('settings.addLabelTooltip')}</p>
-              </TooltipContent>
-            </Tooltip>
-          </div>
-          <div className="space-y-2 pl-6">
-            {sortedLabels.map((label) => (
-              <div key={label.id} className="flex items-center gap-2">
-                <span className={cn(
-                  'inline-flex h-2.5 w-2.5 rounded-full border',
-                  label.color === 'slate' && 'bg-slate-500/15 text-slate-700 border-slate-700/30 dark:text-slate-300 dark:border-slate-500/30',
-                  label.color === 'blue' && 'bg-blue-500/15 text-blue-600 border-blue-600/30 dark:text-blue-300 dark:border-blue-400/30',
-                  label.color === 'green' && 'bg-green-500/15 text-green-600 border-green-600/30 dark:text-green-300 dark:border-green-500/30',
-                  label.color === 'amber' && 'bg-amber-500/15 text-amber-700 border-amber-700/30 dark:text-amber-300 dark:border-amber-500/30',
-                  label.color === 'rose' && 'bg-rose-500/15 text-rose-700 border-rose-700/30 dark:text-rose-300 dark:border-rose-500/30',
-                  label.color === 'violet' && 'bg-violet-500/15 text-violet-700 border-violet-700/30 dark:text-violet-300 dark:border-violet-500/30',
-                )} />
-                <Input
-                  value={labelDrafts[label.id] ?? label.name}
-                  onChange={(event) => {
-                    setLabelDrafts((current) => ({
-                      ...current,
-                      [label.id]: event.currentTarget.value,
-                    }))
-                  }}
-                  onBlur={() => {
-                    const draftName = labelDrafts[label.id] ?? label.name
-                    const normalizedName = draftName.trim() || label.name
-                    if (normalizedName !== label.name) {
-                      void updateLabel(label.id, { name: normalizedName })
-                    }
-                  }}
-                  onKeyDown={(event) => {
-                    if (event.key === 'Enter') {
-                      event.preventDefault()
-                      event.currentTarget.blur()
-                    }
-                  }}
-                  className="h-7 flex-1 text-xs"
-                  aria-label={`Nom du label ${label.name}`}
-                />
-                <Select
-                  value={label.color}
-                  onValueChange={(value) => {
-                    void updateLabel(label.id, { color: value as TodoLabel['color'] })
-                  }}
-                >
-                  <SelectTrigger className="h-7 w-[100px] text-xs">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {COLOR_OPTIONS.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {option.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="h-7 w-7 shrink-0"
-                  onClick={() => {
-                    void removeLabel(label.id)
-                  }}
-                  aria-label={t('labels.deleteLabel', { name: label.name })}
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                </Button>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        <div className="border-t border-border/50" />
-
-        {/* Synchronisation Cloud */}
-        <section>
-          <div className="mb-3 flex items-center gap-2">
-            <Cloud className="h-4 w-4 text-muted-foreground" />
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <p className="text-sm font-medium cursor-help">{t('settings.synchronization')}</p>
-              </TooltipTrigger>
-              <TooltipContent side="right" className="max-w-xs">
-                <p>{t('settings.synchronizationTooltip')}</p>
-              </TooltipContent>
-            </Tooltip>
-          </div>
-          <div className="pl-6">
-            <StorageSettings />
-          </div>
-        </section>
-
-        <div className="border-t border-border/50" />
-
-        {/* Stockage */}
-        <section>
-          <div className="mb-3 flex items-center gap-2">
-            <FileText className="h-4 w-4 text-muted-foreground" />
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <p className="text-sm font-medium cursor-help">{t('settings.localData')}</p>
-              </TooltipTrigger>
-              <TooltipContent side="right" className="max-w-xs">
-                <p>{t('settings.localDataTooltip')}</p>
-              </TooltipContent>
-            </Tooltip>
-          </div>
-          <div className="pl-6">
-            <div className="flex items-center gap-2">
-              <p className="break-all text-[10px] text-muted-foreground/70 flex-1">{dataFilePath}</p>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    type="button"
-                    size="icon"
-                    variant="ghost"
-                    className="h-6 w-6 shrink-0"
-                    onClick={() => {
-                      void openDataFile()
-                    }}
-                  >
-                    <ExternalLink className="h-3.5 w-3.5" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="left" className="max-w-xs">
-                <p>{t('settings.openDataFileTooltip')}</p>
-              </TooltipContent>
-            </Tooltip>
-            </div>
-          </div>
-        </section>
-
-        <div className="border-t border-border/50" />
-
-        {/* Logs */}
-        <section>
-          <div className="mb-3 flex items-center gap-2">
-            <ScrollText className="h-4 w-4 text-muted-foreground" />
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <p className="text-sm font-medium cursor-help">{t('settings.logs')}</p>
-              </TooltipTrigger>
-              <TooltipContent side="right" className="max-w-xs">
-                <p>{t('settings.logsTooltip')}</p>
-              </TooltipContent>
-            </Tooltip>
-          </div>
-          <div className="pl-6">
-            <div className="flex items-center gap-2">
-              <p className="break-all text-[10px] text-muted-foreground/70 flex-1">{logFilePath}</p>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    type="button"
-                    size="icon"
-                    variant="ghost"
-                    className="h-6 w-6 shrink-0"
-                    onClick={() => {
-                      void openLogFile()
-                    }}
-                  >
-                    <ExternalLink className="h-3.5 w-3.5" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="left" className="max-w-xs">
-                <p>{t('settings.openLogFileTooltip')}</p>
-              </TooltipContent>
-            </Tooltip>
-            </div>
-          </div>
-        </section>
-
-        <div className="border-t border-border/50" />
-
-        {/* À propos */}
-        <section>
-          <div className="mb-3 flex items-center gap-2">
-            <Info className="h-4 w-4 text-muted-foreground" />
-            <p className="text-sm font-medium">{t('settings.about')}</p>
-          </div>
-          <div className="space-y-3 pl-6">
-            <div className="flex items-center justify-between gap-3">
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <span className="text-xs text-muted-foreground cursor-help">{t('settings.version')}</span>
-                </TooltipTrigger>
-                <TooltipContent side="left" className="max-w-xs">
-                  <p>{t('settings.versionTooltip')}</p>
-                </TooltipContent>
-              </Tooltip>
-              <span className="text-xs font-mono font-medium">{appVersion}</span>
-            </div>
-            {lastChecked && (
-              <div className="flex items-center justify-between gap-3">
-                <span className="text-xs text-muted-foreground">{t('settings.lastCheck')}</span>
-                <span className="text-xs text-muted-foreground">
-                  {new Intl.DateTimeFormat('fr-FR', {
-                    dateStyle: 'short',
-                    timeStyle: 'short',
-                  }).format(lastChecked)}
-                </span>
-              </div>
-            )}
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="ghost"
-                  className="h-7 gap-1 px-2 text-xs"
-                  onClick={async () => {
-                    await checkForUpdate()
-                    
-                    // Show feedback toast based on result
-                    if (updateState === 'available') {
-                      toast({
-                        title: t('settings.updateAvailable'),
-                        description: t('settings.updateAvailableDesc'),
-                      })
-                    } else if (updateState === 'error') {
-                      toast({
-                        title: t('common.error'),
-                        description: t('settings.updateError'),
-                        variant: 'destructive',
-                      })
-                    } else {
-                      toast({
-                        title: t('settings.noUpdate'),
-                        description: t('settings.noUpdateDesc'),
-                      })
-                    }
-                  }}
-                  disabled={updateState === 'checking'}
-                >
-                  <RefreshCw className={cn('h-3.5 w-3.5', updateState === 'checking' && 'animate-spin')} />
-                  {updateState === 'checking' ? t('settings.checking') : t('settings.checkForUpdates')}
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="left" className="max-w-xs">
-                <p>{t('settings.checkForUpdatesTooltip')}</p>
-              </TooltipContent>
-            </Tooltip>
-          </div>
-        </section>
-
-        <div className="border-t border-red-500/30" />
-
-        {/* Danger Zone */}
-        <section>
-          <div className="mb-3 flex items-center gap-2">
-            <AlertTriangle className="h-4 w-4 text-red-600" />
-            <p className="text-sm font-medium text-red-600">{t('settings.dangerZone')}</p>
-          </div>
-          <div className="space-y-2 pl-6">
-            <p className="text-xs text-muted-foreground">
-              {t('settings.dangerZoneWarning')}
-            </p>
-            <AlertDialog>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <AlertDialogTrigger asChild>
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="outline"
-                      className="h-7 gap-1 px-2 text-xs border-red-500/50 text-red-600 hover:bg-red-500/10 hover:text-red-700"
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                      {t('settings.deleteAllData')}
-                    </Button>
-                  </AlertDialogTrigger>
-                </TooltipTrigger>
-                <TooltipContent side="right" className="max-w-xs">
-                  <p>{t('settings.deleteAllDataTooltip')}</p>
-                </TooltipContent>
-              </Tooltip>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>{t('settings.confirmDeleteTitle')}</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    {t('settings.confirmDeleteDesc')}
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
-                  <AlertDialogAction
-                    className="bg-red-600 text-white hover:bg-red-700"
-                    onClick={async () => {
-                      try {
-                        console.log('🔴 Starting reset all data...')
-                        const result = await resetAllData()
-                        console.log('✅ Reset all data result:', result)
-                        // Backend will emit 'data-reset' event, App.tsx will handle rehydration
-                      } catch (error) {
-                        console.error('❌ Failed to reset data:', error)
-                        alert(`${t('common.error')}: ${error}`)
-                      }
-                    }}
-                  >
-                    {t('settings.confirmDelete')}
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-          </div>
-        </section>
+        {/* Content */}
+        <div className="flex-1 overflow-y-auto p-6">
+          {renderContent()}
+        </div>
       </div>
-    </div>
     </TooltipProvider>
   )
 }

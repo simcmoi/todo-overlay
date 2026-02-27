@@ -27,6 +27,7 @@ import { useWindowBehavior } from '@/hooks/use-window-behavior'
 import { useSoundEffects } from '@/hooks/useSoundEffects'
 import { useTodoStore } from '@/store/use-todo-store'
 import { useUpdateStore } from '@/store/use-update-store'
+import { setWindowWidth, isOverlayWindow } from '@/lib/tauri'
 import { cn } from '@/lib/utils'
 import type { SortMode, Todo, TodoPriority } from '@/types/todo'
 
@@ -198,6 +199,23 @@ export default function App() {
   useEffect(() => {
     void hydrate()
   }, [hydrate])
+
+  // Initialize window width on mount (only once after hydration)
+  useEffect(() => {
+    const initializeWindowWidth = async () => {
+      if (!hydrated) return
+      
+      try {
+        const defaultWidth = isOverlayWindow() ? 500 : 800
+        const settingsWidth = isOverlayWindow() ? 900 : 1200
+        await setWindowWidth(settingsPageOpen ? settingsWidth : defaultWidth)
+      } catch (error) {
+        console.error('Failed to initialize window width:', error)
+      }
+    }
+    
+    void initializeWindowWidth()
+  }, [hydrated]) // Only run on hydration, not when settingsPageOpen changes
 
   // Listen for data-reset event from backend
   useEffect(() => {
@@ -648,8 +666,29 @@ export default function App() {
                 type="button"
                 variant="ghost"
                 size="icon"
-                onClick={() => {
-                  setSettingsPageOpen(!settingsPageOpen)
+                onClick={async () => {
+                  const newState = !settingsPageOpen
+                  setSettingsPageOpen(newState)
+                  // Resize window based on context
+                  // Settings: 900px (overlay) or 1200px (main), Main view: 500px (overlay) or 800px (main)
+                  try {
+                    if (newState) {
+                      // Opening settings
+                      const settingsWidth = isOverlayWindow() ? 900 : 1200
+                      await setWindowWidth(settingsWidth)
+                    } else {
+                      // Closing settings
+                      const defaultWidth = isOverlayWindow() ? 500 : 800
+                      await setWindowWidth(defaultWidth)
+                    }
+                  } catch (error) {
+                    console.error('Failed to resize window:', error)
+                    toast({
+                      title: t('app.errors.windowResize'),
+                      description: error instanceof Error ? error.message : String(error),
+                      variant: 'destructive',
+                    })
+                  }
                 }}
                 aria-label={settingsPageOpen ? t('app.backToHome') : t('app.openSettings')}
               >
@@ -763,9 +802,6 @@ export default function App() {
             settingsPageOpen ? (
               <SettingsPage
                 settings={settings}
-                onBack={() => {
-                  setSettingsPageOpen(false)
-                }}
                 onUpdateSettings={async (partial) => {
                   await updateSettings(partial)
                 }}

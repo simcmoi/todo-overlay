@@ -898,6 +898,12 @@ export class CloudStorageProvider implements StorageProvider {
       })),
       enableAutostart: dbSettings.enable_autostart,
       enableSoundEffects: dbSettings.enable_sound_effects,
+      soundSettings: {
+        enabled: dbSettings.enable_sound_effects,
+        onCreate: true,
+        onComplete: true,
+        onDelete: true,
+      },
       language: dbSettings.language || 'auto'
     }
   }
@@ -922,6 +928,12 @@ export class CloudStorageProvider implements StorageProvider {
       })),
       enableAutostart: true,
       enableSoundEffects: true,
+      soundSettings: {
+        enabled: true,
+        onCreate: true,
+        onComplete: true,
+        onDelete: true,
+      },
       language: 'auto'
     }
   }

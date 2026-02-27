@@ -117,6 +117,7 @@ pub fn run() {
             commands::get_log_file_path,
             commands::open_log_file,
             commands::reset_all_data,
+            commands::set_window_width,
             changelog::get_changelog,
             updater::check_for_update,
             updater::install_update,

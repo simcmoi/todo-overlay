@@ -218,9 +218,74 @@ fn push_todo(
 }
 
 #[tauri::command]
-pub fn get_log_file_path(app: AppHandle) -> Result<String, String> {
-    log::info!("Getting log file path");
+pub fn set_window_width(app: AppHandle, width: f64) -> Result<(), String> {
+    // Try overlay window first, then main window
+    let window = app
+        .get_webview_window("overlay")
+        .or_else(|| app.get_webview_window("main"))
+        .ok_or_else(|| "no window found".to_string())?;
+    
+    let scale_factor = window.scale_factor().unwrap_or(1.0);
+    let is_overlay = window.label() == "overlay";
+    
+    // Get current size in LOGICAL pixels
+    let current_size = window
+        .inner_size()
+        .map_err(|error| format!("failed to get window size: {error}"))?
+        .to_logical::<f64>(scale_factor);
+    
+    log::info!(
+        "Setting window width: requested={}, scale={}, current_logical={:?}, is_overlay={}",
+        width, scale_factor, current_size, is_overlay
+    );
+    
+    // For overlay window, calculate centered position before resizing
+    if is_overlay {
+        // Get current monitor
+        let monitor = window
+            .current_monitor()
+            .map_err(|error| format!("failed to get current monitor: {error}"))?
+            .ok_or_else(|| "no monitor found".to_string())?;
+        
+        let monitor_size = monitor.size().to_logical::<f64>(scale_factor);
+        let monitor_position = monitor.position().to_logical::<f64>(scale_factor);
+        
+        // Calculate centered position for the new width
+        let new_x = monitor_position.x + (monitor_size.width - width) / 2.0;
+        let new_y = monitor_position.y + (monitor_size.height - current_size.height) / 2.0;
+        
+        log::info!(
+            "Centering overlay: monitor_size={:?}, new_position=({}, {})",
+            monitor_size, new_x, new_y
+        );
+        
+        // Set position and size together
+        window
+            .set_position(tauri::LogicalPosition { x: new_x, y: new_y })
+            .map_err(|error| format!("failed to set window position: {error}"))?;
+        
+        window
+            .set_size(tauri::LogicalSize {
+                width,
+                height: current_size.height,
+            })
+            .map_err(|error| format!("failed to set window size: {error}"))?;
+    } else {
+        // For main window, just resize without centering
+        window
+            .set_size(tauri::LogicalSize {
+                width,
+                height: current_size.height,
+            })
+            .map_err(|error| format!("failed to set window size: {error}"))?;
+    }
+    
+    Ok(())
+}
 
+
+#[tauri::command]
+pub fn get_log_file_path(app: AppHandle) -> Result<String, String> {
     let log_dir = app
         .path()
         .app_log_dir()

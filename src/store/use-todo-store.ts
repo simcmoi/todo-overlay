@@ -90,7 +90,13 @@ const defaultSettings: Settings = {
   lists: [{ id: 'default', name: 'Mes tâches', createdAt: 0 }],
   labels: [{ id: 'general', name: 'Général', color: 'slate' }],
   enableAutostart: true,
-  enableSoundEffects: true,
+  enableSoundEffects: true, // Deprecated - kept for backward compatibility
+  soundSettings: {
+    enabled: true,
+    onCreate: true,
+    onComplete: true,
+    onDelete: true,
+  },
   language: 'auto',
 }
 
@@ -244,11 +250,23 @@ export const useTodoStore = create<TodoStore>((set, get) => ({
 
       // Load data
       const data = await provider.load()
+      
+      // Migration: ajouter soundSettings si manquant
+      const settings = {
+        ...data.settings,
+        soundSettings: data.settings.soundSettings ?? {
+          enabled: data.settings.enableSoundEffects ?? true,
+          onCreate: true,
+          onComplete: true,
+          onDelete: true,
+        }
+      }
+      
       set({
         hydrated: true,
         loading: false,
         todos: data.todos,
-        settings: data.settings,
+        settings,
         syncStatus: provider.getSyncStatus(),
       })
 
@@ -701,24 +719,35 @@ export const useTodoStore = create<TodoStore>((set, get) => ({
   },
 
   updateSettings: async (partial) => {
-    const provider = get().storageProvider
-    const mode = get().storageMode
-    const mergedSettings = { ...get().settings, ...partial }
+    const { storageProvider, storageMode } = get()
 
-    if (mode === 'local') {
+    // Use atomic state update to prevent race conditions
+    set((state) => {
+      // Deep merge for soundSettings
+      const mergedSettings = {
+        ...state.settings,
+        ...partial,
+        soundSettings: partial.soundSettings
+          ? { ...state.settings.soundSettings, ...partial.soundSettings }
+          : state.settings.soundSettings,
+      }
+      return { settings: mergedSettings }
+    })
+
+    const mergedSettings = get().settings
+
+    if (storageMode === 'local') {
       const data = await updateSettingsCommand(mergedSettings)
       set({ todos: data.todos, settings: data.settings, error: null })
     } else {
-      if (!provider) throw new Error('Storage provider not initialized')
+      if (!storageProvider) throw new Error('Storage provider not initialized')
 
-      set({ settings: mergedSettings, error: null })
-
-      await provider.save({
+      await storageProvider.save({
         todos: get().todos,
         settings: mergedSettings,
       })
 
-      set({ syncStatus: provider.getSyncStatus() })
+      set({ syncStatus: storageProvider.getSyncStatus() })
     }
   },
 

@@ -8,16 +8,14 @@ import { useTodoStore } from '@/store/use-todo-store'
 export function useSoundEffects() {
   const settings = useTodoStore((state) => state.settings)
 
-  // Sync sound effects enabled state with settings
+  // Sync sound effects settings with store
   useEffect(() => {
-    soundEffects.setEnabled(settings.enableSoundEffects ?? true)
-  }, [settings.enableSoundEffects])
+    soundEffects.setSettings(settings.soundSettings)
+  }, [settings.soundSettings])
 
   return {
     playSound: (type: SoundType) => {
-      if (settings.enableSoundEffects !== false) {
-        soundEffects.play(type)
-      }
+      soundEffects.play(type)
     },
     playAdd: () => soundEffects.playAdd(),
     playDelete: () => soundEffects.playDelete(),
