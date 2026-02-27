@@ -27,7 +27,7 @@ import { useWindowBehavior } from '@/hooks/use-window-behavior'
 import { useSoundEffects } from '@/hooks/useSoundEffects'
 import { useTodoStore } from '@/store/use-todo-store'
 import { useUpdateStore } from '@/store/use-update-store'
-import { setWindowWidth, isOverlayWindow } from '@/lib/tauri'
+import { setWindowWidth, setOverlayVisorEffect, isOverlayWindow } from '@/lib/tauri'
 import { cn } from '@/lib/utils'
 import type { SortMode, Todo, TodoPriority } from '@/types/todo'
 
@@ -216,6 +216,36 @@ export default function App() {
     
     void initializeWindowWidth()
   }, [hydrated]) // Only run on hydration, not when settingsPageOpen changes
+
+  // Apply overlay visor effect when enableOverlayBlur setting changes
+  useEffect(() => {
+    const applyVisorEffect = async () => {
+      if (!hydrated || !isOverlayWindow()) return
+      
+      try {
+        await setOverlayVisorEffect(settings.enableOverlayBlur)
+      } catch (error) {
+        console.error('Failed to apply visor effect:', error)
+      }
+    }
+    
+    void applyVisorEffect()
+  }, [hydrated, settings.enableOverlayBlur])
+
+  // Listen for data-reset event from backend
+  useEffect(() => {
+    const applyVisorEffect = async () => {
+      if (!hydrated || !isOverlayWindow()) return
+      
+      try {
+        await setOverlayVisorEffect(settings.enableOverlayBlur)
+      } catch (error) {
+        console.error('Failed to apply visor effect:', error)
+      }
+    }
+    
+    void applyVisorEffect()
+  }, [hydrated, settings.enableOverlayBlur])
 
   // Listen for data-reset event from backend
   useEffect(() => {

@@ -98,6 +98,7 @@ const defaultSettings: Settings = {
     onDelete: true,
   },
   language: 'auto',
+  enableOverlayBlur: false,
 }
 
 // Récupérer le mode de stockage depuis localStorage (par défaut: local)

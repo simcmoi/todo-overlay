@@ -143,6 +143,8 @@ pub struct Settings {
     pub sound_settings: SoundSettings,
     #[serde(default = "default_language")]
     pub language: String,
+    #[serde(default = "default_false")]
+    pub enable_overlay_blur: bool,
     #[serde(default, alias = "listName", alias = "list_name", skip_serializing)]
     pub legacy_list_name: Option<String>,
 }
@@ -162,6 +164,7 @@ impl Default for Settings {
             enable_sound_effects: true,
             sound_settings: SoundSettings::default(),
             language: default_language(),
+            enable_overlay_blur: false,
             legacy_list_name: None,
         }
     }
@@ -237,6 +240,10 @@ fn default_enable_sound_effects() -> bool {
 
 fn default_true() -> bool {
     true
+}
+
+fn default_false() -> bool {
+    false
 }
 
 fn default_sound_settings() -> SoundSettings {

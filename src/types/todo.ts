@@ -51,6 +51,7 @@ export type Settings = {
   enableSoundEffects: boolean // Deprecated - kept for backward compatibility
   soundSettings: SoundSettings
   language: string
+  enableOverlayBlur: boolean // Blur effect around overlay window (macOS only)
 }
 
 export type AppData = {

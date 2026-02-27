@@ -42,6 +42,7 @@ describe('useTodoStore', () => {
           onDelete: true,
         },
         language: 'auto',
+        enableOverlayBlur: false,
       },
     }
 
@@ -99,6 +100,7 @@ describe('useTodoStore', () => {
           onDelete: true,
         },
         language: 'auto',
+        enableOverlayBlur: false,
       },
     }
 
@@ -139,6 +141,7 @@ describe('useTodoStore', () => {
           onDelete: true,
         },
         language: 'auto',
+        enableOverlayBlur: false,
       },
     }
 
@@ -174,6 +177,7 @@ describe('useTodoStore', () => {
           onDelete: true,
         },
         language: 'auto',
+        enableOverlayBlur: false,
       },
     }
 
@@ -215,6 +219,7 @@ describe('useTodoStore', () => {
           onDelete: true,
         },
         language: 'auto',
+        enableOverlayBlur: false,
       },
     }
 
