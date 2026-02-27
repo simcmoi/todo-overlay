@@ -46,10 +46,12 @@ fn create_backdrop_window(app: &AppHandle) -> tauri::Result<WebviewWindow> {
                 unsafe {
                     // NSFloatingWindowLevel + 1 (level 23, one below overlay's 24)
                     ns_window.setLevel_((NSMainMenuWindowLevel + 1) as i64);
+                    
+                    log::info!("Backdrop window created at level 23");
                 }
             }
             Err(error) => {
-                log::warn!("Failed to set NSWindow level for backdrop: {error}");
+                log::warn!("Failed to configure backdrop window: {error}");
             }
         }
     }

@@ -335,6 +335,7 @@ dependencies = [
  "cocoa",
  "core-foundation 0.10.1",
  "log",
+ "objc",
  "reqwest",
  "serde",
  "serde_json",

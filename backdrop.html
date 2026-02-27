@@ -15,23 +15,21 @@
         width: 100vw;
         height: 100vh;
         overflow: hidden;
+        background: transparent;
       }
 
       body {
-        /* Semi-transparent dark background with backdrop blur */
-        background: rgba(0, 0, 0, 0.5);
-        backdrop-filter: blur(20px);
-        -webkit-backdrop-filter: blur(20px);
-        
-        /* Allow clicks to close overlay */
-        cursor: pointer;
-        
-        /* Ensure fullscreen */
         position: fixed;
         top: 0;
         left: 0;
         right: 0;
         bottom: 0;
+        cursor: pointer;
+        
+        /* Dark semi-transparent background with blur attempt */
+        background: rgba(0, 0, 0, 0.7);
+        backdrop-filter: blur(40px) saturate(180%);
+        -webkit-backdrop-filter: blur(40px) saturate(180%);
       }
     </style>
   </head>
